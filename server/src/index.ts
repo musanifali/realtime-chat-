@@ -1,30 +1,40 @@
 // server/src/index.ts
-import { WebSocketServer, WebSocket } from 'ws';
+import express from 'express';
+import { createServer } from 'http';
+import { Server, Socket } from 'socket.io';
 import { createClient } from 'redis';
 import type { RedisClientType } from 'redis';
+
 
 // ============================================
 // Types
 // ============================================
 
-type ClientMessage = 
-  | { type: 'register'; username: string }
-  | { type: 'message'; message: string }
-  | { type: 'private_message'; to: string; message: string };
+// Events from Client to Server
+interface ClientToServerEvents {
+  register: (username: string) => void;
+  message: (message: string) => void;
+  private_message: (data: { to: string; message: string }) => void;
+}
 
-type ServerMessage = 
-  | { type: 'broadcast'; username: string; message: string }
-  | { type: 'private'; from: string; to: string; message: string }
-  | { type: 'user_list'; users: string[] }
-  | { type: 'system'; message: string };
+// Events from Server to Client
+interface ServerToClientEvents {
+  broadcast: (data: { username: string; message: string }) => void;
+  private_message: (data: { from: string; to: string; message: string }) => void;
+  user_list: (users: string[]) => void;
+  system: (message: string) => void;
+  error: (message: string) => void;
+}
 
-// NEW: Messages that go through Redis
-type RedisMessage = 
-  | { type: 'broadcast'; username: string; message: string }
-  | { type: 'private'; from: string; to: string; message: string }
-  | { type: 'user_joined'; username: string }
-  | { type: 'user_left'; username: string }
-  | { type: 'user_list_request'; requestingServer: string };
+// Internal server events (for Redis)
+interface InterServerEvents {
+  // Empty for now, used for server-to-server communication
+}
+
+// Data attached to each socket
+interface SocketData {
+  username: string;
+}
 
 // ============================================
 // Configuration
@@ -33,117 +43,123 @@ type RedisMessage =
 const PORT = parseInt(process.argv[2] || '3001');
 const SERVER_ID = `Server-${PORT}`;
 const REDIS_URL = 'redis://localhost:6381';
+const USERS_KEY = 'online_users';
 const CHANNEL = 'chat_messages';
 
 console.log(`${SERVER_ID}: Starting...`);
 
 // ============================================
+// Express + Socket.io Setup
+// ============================================
+
+const app = express();
+const httpServer = createServer(app);
+
+// Create Socket.io server with types
+const io = new Server<
+  ClientToServerEvents,
+  ServerToClientEvents,
+  InterServerEvents,
+  SocketData
+>(httpServer, {
+  cors: {
+    origin: ['http://localhost:5173', 'http://localhost:5174'],  // React dev server
+    methods: ['GET', 'POST']
+  }
+});
+
+// ============================================
 // Redis Setup
 // ============================================
 
-// Two connections: one for publishing, one for subscribing
 const redisPublisher: RedisClientType = createClient({ url: REDIS_URL });
 const redisSubscriber: RedisClientType = createClient({ url: REDIS_URL });
 
 // ============================================
-// Local State (only users on THIS server)
+// Redis Helper Functions
 // ============================================
 
-const localSockets = new Set<WebSocket>();
-const localUsernames = new Map<WebSocket, string>();       // socket → username
-const localUsernameToSocket = new Map<string, WebSocket>(); // username → socket
+async function addUserToRedis(username: string): Promise<void> {
+  await redisPublisher.sAdd(USERS_KEY, username);
+}
+
+async function removeUserFromRedis(username: string): Promise<void> {
+  await redisPublisher.sRem(USERS_KEY, username);
+}
+
+async function getAllUsers(): Promise<string[]> {
+  return await redisPublisher.sMembers(USERS_KEY);
+}
+
+async function isUsernameTaken(username: string): Promise<boolean> {
+  const result = await redisPublisher.sIsMember(USERS_KEY, username);
+  return result === 1;
+}
 
 // ============================================
-// Helper Functions
+// Broadcast User List to All Local Sockets
 // ============================================
 
-function sendToSocket(socket: WebSocket, data: ServerMessage): void {
-  if (socket.readyState === WebSocket.OPEN) {
-    socket.send(JSON.stringify(data));
-  }
+async function broadcastUserList(): Promise<void> {
+  const users = await getAllUsers();
+  io.emit('user_list', users);
 }
 
-function broadcastToLocalSockets(data: ServerMessage): void {
-  localSockets.forEach((socket) => {
-    sendToSocket(socket, data);
-  });
-}
+// ============================================
+// Redis Pub/Sub Message Types
+// ============================================
 
-function getLocalUsers(): string[] {
-  return Array.from(localUsernames.values());
-}
+type RedisMessage =
+  | { type: 'broadcast'; username: string; message: string }
+  | { type: 'private'; from: string; to: string; message: string }
+  | { type: 'user_joined'; username: string }
+  | { type: 'user_left'; username: string };
 
-// NEW: Publish message to Redis (all servers will receive)
+// Publish to Redis
 async function publishToRedis(data: RedisMessage): Promise<void> {
   await redisPublisher.publish(CHANNEL, JSON.stringify(data));
-  console.log(`${SERVER_ID}: Published to Redis:`, data.type);
+  console.log(`${SERVER_ID}: Published:`, data.type);
 }
 
-// ============================================
-// Redis Message Handler
-// ============================================
-
+// Handle messages from Redis
 function handleRedisMessage(rawMessage: string): void {
   try {
     const data: RedisMessage = JSON.parse(rawMessage);
     console.log(`${SERVER_ID}: Received from Redis:`, data.type);
 
-    // Handle broadcast message
     if (data.type === 'broadcast') {
-      // Send to ALL local users
-      broadcastToLocalSockets({
-        type: 'broadcast',
+      // Send to all connected clients on this server
+      io.emit('broadcast', {
         username: data.username,
         message: data.message
       });
       return;
     }
 
-    // Handle private message
     if (data.type === 'private') {
-      // Check if recipient is on THIS server
-      const recipientSocket = localUsernameToSocket.get(data.to);
+      // Find recipient and sender on this server
+      const sockets = io.sockets.sockets;
       
-      if (recipientSocket) {
-        console.log(`${SERVER_ID}: Delivering private message to ${data.to}`);
-        sendToSocket(recipientSocket, {
-          type: 'private',
-          from: data.from,
-          to: data.to,
-          message: data.message
-        });
-      }
-
-      // Also send to sender if they're on this server
-      const senderSocket = localUsernameToSocket.get(data.from);
-      if (senderSocket) {
-        sendToSocket(senderSocket, {
-          type: 'private',
-          from: data.from,
-          to: data.to,
-          message: data.message
-        });
-      }
+      sockets.forEach((socket) => {
+        if (socket.data.username === data.to || socket.data.username === data.from) {
+          socket.emit('private_message', {
+            from: data.from,
+            to: data.to,
+            message: data.message
+          });
+        }
+      });
       return;
     }
 
-    // Handle user joined
     if (data.type === 'user_joined') {
-      broadcastToLocalSockets({
-        type: 'system',
-        message: `${data.username} joined the chat`
-      });
-      // Request updated user list
+      io.emit('system', `${data.username} joined the chat`);
       broadcastUserList();
       return;
     }
 
-    // Handle user left
     if (data.type === 'user_left') {
-      broadcastToLocalSockets({
-        type: 'system',
-        message: `${data.username} left the chat`
-      });
+      io.emit('system', `${data.username} left the chat`);
       broadcastUserList();
       return;
     }
@@ -154,147 +170,97 @@ function handleRedisMessage(rawMessage: string): void {
 }
 
 // ============================================
-// User List Management
+// Socket.io Connection Handler
 // ============================================
 
-// For simplicity, we'll use Redis to store all online users
-const USERS_KEY = 'online_users';
+io.on('connection', (socket: Socket<ClientToServerEvents, ServerToClientEvents, InterServerEvents, SocketData>) => {
+  console.log(`${SERVER_ID}: New connection - ${socket.id}`);
 
-async function addUserToRedis(username: string): Promise<void> {
-  await redisPublisher.sAdd(USERS_KEY, username);
-}
+  // ========================================
+  // Handle: Register
+  // ========================================
+  socket.on('register', async (username: string) => {
+    console.log(`${SERVER_ID}: Register request - ${username}`);
 
-async function removeUserFromRedis(username: string): Promise<void> {
-  await redisPublisher.sRem(USERS_KEY, username);
-}
-
-async function getAllUsersFromRedis(): Promise<string[]> {
-  return await redisPublisher.sMembers(USERS_KEY);
-}
-
-async function broadcastUserList(): Promise<void> {
-  const allUsers = await getAllUsersFromRedis();
-  broadcastToLocalSockets({
-    type: 'user_list',
-    users: allUsers
-  });
-}
-
-// ============================================
-// WebSocket Server Setup
-// ============================================
-
-const wss = new WebSocketServer({ port: PORT });
-
-wss.on('connection', (socket: WebSocket) => {
-  console.log(`${SERVER_ID}: New connection`);
-  localSockets.add(socket);
-
-  // Handle messages from client
-  socket.on('message', async (rawData: Buffer) => {
-    try {
-      const data: ClientMessage = JSON.parse(rawData.toString());
-      console.log(`${SERVER_ID}: Received from client:`, data);
-
-      // ========================================
-      // Handle: Register
-      // ========================================
-      if (data.type === 'register') {
-        const username = data.username;
-
-        // Check if username already taken (in Redis)
-        const existingUsers = await getAllUsersFromRedis();
-        if (existingUsers.includes(username)) {
-          sendToSocket(socket, {
-            type: 'system',
-            message: `Username "${username}" is already taken!`
-          });
-          socket.close();
-          return;
-        }
-
-        // Register locally
-        localUsernames.set(socket, username);
-        localUsernameToSocket.set(username, socket);
-
-        // Register in Redis
-        await addUserToRedis(username);
-
-        console.log(`${SERVER_ID}: ${username} registered`);
-
-        // Notify all servers
-        await publishToRedis({
-          type: 'user_joined',
-          username: username
-        });
-
-        // Send current user list to this user
-        await broadcastUserList();
-
-        return;
-      }
-
-      // ========================================
-      // Handle: Broadcast Message
-      // ========================================
-      if (data.type === 'message') {
-        const username = localUsernames.get(socket);
-        if (!username) return;
-
-        // Publish to Redis (all servers will receive)
-        await publishToRedis({
-          type: 'broadcast',
-          username: username,
-          message: data.message
-        });
-
-        return;
-      }
-
-      // ========================================
-      // Handle: Private Message
-      // ========================================
-      if (data.type === 'private_message') {
-        const fromUsername = localUsernames.get(socket);
-        if (!fromUsername) return;
-
-        // Check if recipient exists (in Redis)
-        const existingUsers = await getAllUsersFromRedis();
-        if (!existingUsers.includes(data.to)) {
-          sendToSocket(socket, {
-            type: 'system',
-            message: `User "${data.to}" is not online`
-          });
-          return;
-        }
-
-        // Publish to Redis (the server with recipient will deliver)
-        await publishToRedis({
-          type: 'private',
-          from: fromUsername,
-          to: data.to,
-          message: data.message
-        });
-
-        return;
-      }
-
-    } catch (error) {
-      console.error(`${SERVER_ID}: Error handling client message:`, error);
+    // Check if username taken
+    if (await isUsernameTaken(username)) {
+      socket.emit('error', `Username "${username}" is already taken`);
+      socket.disconnect();
+      return;
     }
+
+    // Store username in socket data
+    socket.data.username = username;
+
+    // Add to Redis
+    await addUserToRedis(username);
+
+    console.log(`${SERVER_ID}: ${username} registered`);
+
+    // Notify all servers
+    await publishToRedis({
+      type: 'user_joined',
+      username: username
+    });
   });
 
-  // Handle disconnection
-  socket.on('close', async () => {
-    const username = localUsernames.get(socket);
-    console.log(`${SERVER_ID}: ${username || 'Unknown'} disconnected`);
+  // ========================================
+  // Handle: Broadcast Message
+  // ========================================
+  socket.on('message', async (message: string) => {
+    const username = socket.data.username;
+    
+    if (!username) {
+      socket.emit('error', 'You must register first');
+      return;
+    }
 
-    // Clean up locally
-    localSockets.delete(socket);
+    console.log(`${SERVER_ID}: Message from ${username}: ${message}`);
+
+    // Publish to Redis (all servers will receive)
+    await publishToRedis({
+      type: 'broadcast',
+      username: username,
+      message: message
+    });
+  });
+
+  // ========================================
+  // Handle: Private Message
+  // ========================================
+  socket.on('private_message', async (data: { to: string; message: string }) => {
+    const fromUsername = socket.data.username;
+
+    if (!fromUsername) {
+      socket.emit('error', 'You must register first');
+      return;
+    }
+
+    // Check if recipient exists
+    if (!(await isUsernameTaken(data.to))) {
+      socket.emit('system', `User "${data.to}" is not online`);
+      return;
+    }
+
+    console.log(`${SERVER_ID}: Private message ${fromUsername} → ${data.to}`);
+
+    // Publish to Redis
+    await publishToRedis({
+      type: 'private',
+      from: fromUsername,
+      to: data.to,
+      message: data.message
+    });
+  });
+
+  // ========================================
+  // Handle: Disconnect
+  // ========================================
+  socket.on('disconnect', async () => {
+    const username = socket.data.username;
+    console.log(`${SERVER_ID}: Disconnected - ${username || socket.id}`);
+
     if (username) {
-      localUsernames.delete(socket);
-      localUsernameToSocket.delete(username);
-
       // Remove from Redis
       await removeUserFromRedis(username);
 
@@ -304,11 +270,6 @@ wss.on('connection', (socket: WebSocket) => {
         username: username
       });
     }
-  });
-
-  // Handle errors
-  socket.on('error', (error: Error) => {
-    console.error(`${SERVER_ID}: Socket error:`, error);
   });
 });
 
@@ -327,10 +288,13 @@ async function startServer(): Promise<void> {
 
     // Subscribe to channel
     await redisSubscriber.subscribe(CHANNEL, handleRedisMessage);
-    console.log(`${SERVER_ID}: Subscribed to channel "${CHANNEL}"`);
+    console.log(`${SERVER_ID}: Subscribed to "${CHANNEL}"`);
 
-    console.log(`${SERVER_ID}: WebSocket server running on port ${PORT}`);
-    console.log(`${SERVER_ID}: Ready!`);
+    // Start HTTP server
+    httpServer.listen(PORT, () => {
+      console.log(`${SERVER_ID}: Server running on port ${PORT}`);
+      console.log(`${SERVER_ID}: Ready!`);
+    });
 
   } catch (error) {
     console.error(`${SERVER_ID}: Failed to start:`, error);
@@ -338,18 +302,21 @@ async function startServer(): Promise<void> {
   }
 }
 
-// Handle graceful shutdown
+// Graceful shutdown
 process.on('SIGINT', async () => {
   console.log(`\n${SERVER_ID}: Shutting down...`);
-  
+
   // Remove all local users from Redis
-  for (const username of localUsernames.values()) {
-    await removeUserFromRedis(username);
+  const sockets = io.sockets.sockets;
+  for (const [, socket] of sockets) {
+    if (socket.data.username) {
+      await removeUserFromRedis(socket.data.username);
+    }
   }
-  
+
   await redisPublisher.quit();
   await redisSubscriber.quit();
-  
+
   process.exit(0);
 });
 

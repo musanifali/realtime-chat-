@@ -1,20 +1,24 @@
 // client/src/App.tsx
 import { useState, useRef, useEffect } from 'react';
+import { io, Socket } from 'socket.io-client';
 
 // ============================================
-// Types
+// Types (must match server)
 // ============================================
 
-type ClientMessage = 
-  | { type: 'register'; username: string }
-  | { type: 'message'; message: string }
-  | { type: 'private_message'; to: string; message: string };
+interface ServerToClientEvents {
+  broadcast: (data: { username: string; message: string }) => void;
+  private_message: (data: { from: string; to: string; message: string }) => void;
+  user_list: (users: string[]) => void;
+  system: (message: string) => void;
+  error: (message: string) => void;
+}
 
-type ServerMessage = 
-  | { type: 'broadcast'; username: string; message: string }
-  | { type: 'private'; from: string; to: string; message: string }
-  | { type: 'user_list'; users: string[] }
-  | { type: 'system'; message: string };
+interface ClientToServerEvents {
+  register: (username: string) => void;
+  message: (message: string) => void;
+  private_message: (data: { to: string; message: string }) => void;
+}
 
 interface ChatMessage {
   type: 'sent' | 'received' | 'system' | 'private_sent' | 'private_received';
@@ -40,24 +44,24 @@ function App() {
   const [connectionError, setConnectionError] = useState<string>('');
 
   // Refs
-  const socketRef = useRef<WebSocket | null>(null);
+  const socketRef = useRef<Socket<ServerToClientEvents, ClientToServerEvents> | null>(null);
   const messagesEndRef = useRef<HTMLDivElement | null>(null);
 
-  // Auto-scroll to bottom when new messages arrive
+  // Auto-scroll
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages]);
 
   // Add message helper
   const addMessage = (
-    type: ChatMessage['type'], 
-    text: string, 
-    username?: string
+    type: ChatMessage['type'],
+    text: string,
+    msgUsername?: string
   ): void => {
     setMessages(prev => [...prev, {
       type,
       text,
-      username,
+      username: msgUsername,
       timestamp: new Date()
     }]);
   };
@@ -72,77 +76,82 @@ function App() {
     setIsConnecting(true);
     setConnectionError('');
 
-    const socket = new WebSocket(`ws://localhost:${serverPort}`);
+    // Create Socket.io connection
+    const socket: Socket<ServerToClientEvents, ClientToServerEvents> = io(
+      `http://localhost:${serverPort}`,
+      {
+        autoConnect: true,
+        reconnection: true,
+        reconnectionAttempts: 5,
+        reconnectionDelay: 1000
+      }
+    );
+
     socketRef.current = socket;
 
-    // Connection opened
-    socket.onopen = (): void => {
-      console.log(`Connected to server on port ${serverPort}`);
+    // ========================================
+    // Socket.io Event Handlers
+    // ========================================
+
+    // Connected
+    socket.on('connect', () => {
+      console.log('Connected to server!');
       
-      // Send registration
-      const registerMessage: ClientMessage = {
-        type: 'register',
-        username: username.trim()
-      };
-      socket.send(JSON.stringify(registerMessage));
-    };
+      // Register username
+      socket.emit('register', username.trim());
+    });
 
-    // Message received
-    socket.onmessage = (event: MessageEvent): void => {
-      const data: ServerMessage = JSON.parse(event.data);
-      console.log('Received:', data);
-
-      // Handle user list
-      if (data.type === 'user_list') {
-        // Filter out our own username
-        setOnlineUsers(data.users.filter(u => u !== username));
-        
-        // If this is first user_list, we're fully connected
-        if (!isConnected) {
-          setIsConnected(true);
-          setIsConnecting(false);
-          addMessage('system', 'Connected to chat!');
-        }
-        return;
+    // User list received (means registration successful)
+    socket.on('user_list', (users: string[]) => {
+      setOnlineUsers(users.filter(u => u !== username));
+      
+      if (!isConnected) {
+        setIsConnected(true);
+        setIsConnecting(false);
+        addMessage('system', 'Connected to chat!');
       }
+    });
 
-      // Handle system message
-      if (data.type === 'system') {
-        // Check if username taken
-        if (data.message.includes('already taken')) {
-          setConnectionError(data.message);
-          setIsConnecting(false);
-          return;
-        }
-        addMessage('system', data.message);
-        return;
+    // System message
+    socket.on('system', (message: string) => {
+      addMessage('system', message);
+    });
+
+    // Error
+    socket.on('error', (message: string) => {
+      console.error('Server error:', message);
+      
+      if (message.includes('already taken')) {
+        setConnectionError(message);
+        setIsConnecting(false);
+        socket.disconnect();
+      } else {
+        addMessage('system', `Error: ${message}`);
       }
+    });
 
-      // Handle broadcast message
-      if (data.type === 'broadcast') {
-        const isMine = data.username === username;
-        addMessage(
-          isMine ? 'sent' : 'received',
-          data.message,
-          data.username
-        );
-        return;
-      }
+    // Broadcast message
+    socket.on('broadcast', (data) => {
+      const isMine = data.username === username;
+      addMessage(
+        isMine ? 'sent' : 'received',
+        data.message,
+        data.username
+      );
+    });
 
-      // Handle private message
-      if (data.type === 'private') {
-        const isSentByMe = data.from === username;
-        addMessage(
-          isSentByMe ? 'private_sent' : 'private_received',
-          data.message,
-          isSentByMe ? `To ${data.to}` : `From ${data.from}`
-        );
-        return;
-      }
-    };
+    // Private message
+    socket.on('private_message', (data) => {
+      const isSentByMe = data.from === username;
+      addMessage(
+        isSentByMe ? 'private_sent' : 'private_received',
+        data.message,
+        isSentByMe ? `To ${data.to}` : `From ${data.from}`
+      );
+    });
 
-    // Connection closed
-    socket.onclose = (): void => {
+    // Disconnected
+    socket.on('disconnect', () => {
       console.log('Disconnected from server');
       
       if (isConnected) {
@@ -152,21 +161,20 @@ function App() {
       setIsConnected(false);
       setIsConnecting(false);
       setOnlineUsers([]);
-      socketRef.current = null;
-    };
+    });
 
     // Connection error
-    socket.onerror = (error: Event): void => {
-      console.error('WebSocket error:', error);
+    socket.on('connect_error', (error) => {
+      console.error('Connection error:', error);
       setConnectionError(`Could not connect to server on port ${serverPort}`);
       setIsConnecting(false);
-    };
+    });
   };
 
-  // Disconnect from server
+  // Disconnect
   const disconnect = (): void => {
     if (socketRef.current) {
-      socketRef.current.close();
+      socketRef.current.disconnect();
       socketRef.current = null;
     }
   };
@@ -175,24 +183,17 @@ function App() {
   const sendMessage = (): void => {
     if (!input.trim() || !socketRef.current) return;
 
-    let message: ClientMessage;
-
     if (selectedUser) {
       // Private message
-      message = {
-        type: 'private_message',
+      socketRef.current.emit('private_message', {
         to: selectedUser,
         message: input.trim()
-      };
+      });
     } else {
-      // Broadcast message
-      message = {
-        type: 'message',
-        message: input.trim()
-      };
+      // Broadcast
+      socketRef.current.emit('message', input.trim());
     }
 
-    socketRef.current.send(JSON.stringify(message));
     setInput('');
   };
 
@@ -207,7 +208,7 @@ function App() {
     }
   };
 
-  // Format timestamp
+  // Format time
   const formatTime = (date: Date): string => {
     return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
   };
@@ -220,8 +221,8 @@ function App() {
     return (
       <div style={styles.loginContainer}>
         <div style={styles.loginBox}>
-          <h1 style={styles.loginTitle}>💬 Real-Time Chat</h1>
-          <p style={styles.loginSubtitle}>Connect to start chatting</p>
+          <h1 style={styles.loginTitle}>💬 Socket.io Chat</h1>
+          <p style={styles.loginSubtitle}>Real-time chat with rooms</p>
 
           {/* Server Selection */}
           <div style={styles.inputGroup}>
@@ -237,7 +238,7 @@ function App() {
             </select>
           </div>
 
-          {/* Username Input */}
+          {/* Username */}
           <div style={styles.inputGroup}>
             <label style={styles.label}>Username</label>
             <input
@@ -252,14 +253,12 @@ function App() {
             />
           </div>
 
-          {/* Error Message */}
+          {/* Error */}
           {connectionError && (
-            <div style={styles.error}>
-              ⚠️ {connectionError}
-            </div>
+            <div style={styles.error}>⚠️ {connectionError}</div>
           )}
 
-          {/* Connect Button */}
+          {/* Button */}
           <button
             onClick={connect}
             style={{
@@ -281,7 +280,6 @@ function App() {
 
   return (
     <div style={styles.chatContainer}>
-      
       {/* Sidebar */}
       <div style={styles.sidebar}>
         {/* User Info */}
@@ -297,9 +295,9 @@ function App() {
 
         {/* Online Users */}
         <div style={styles.onlineSection}>
-          <h3 style={styles.sidebarTitle}>Online Users</h3>
+          <h3 style={styles.sidebarTitle}>Send To</h3>
 
-          {/* Everyone Option */}
+          {/* Everyone */}
           <div
             onClick={() => setSelectedUser(null)}
             style={{
@@ -311,7 +309,7 @@ function App() {
             <span>Everyone</span>
           </div>
 
-          {/* User List */}
+          {/* Users */}
           {onlineUsers.length > 0 ? (
             onlineUsers.map((user) => (
               <div
@@ -331,15 +329,15 @@ function App() {
           )}
         </div>
 
-        {/* Disconnect Button */}
+        {/* Disconnect */}
         <button onClick={disconnect} style={styles.disconnectButton}>
           Disconnect
         </button>
       </div>
 
-      {/* Main Chat Area */}
+      {/* Chat Area */}
       <div style={styles.mainChat}>
-        {/* Chat Header */}
+        {/* Header */}
         <div style={styles.chatHeader}>
           <h2 style={styles.chatTitle}>
             {selectedUser ? `Chat with ${selectedUser}` : 'Public Chat'}
@@ -356,7 +354,7 @@ function App() {
               key={index}
               style={{
                 ...styles.messageWrapper,
-                justifyContent: 
+                justifyContent:
                   msg.type === 'sent' || msg.type === 'private_sent'
                     ? 'flex-end'
                     : msg.type === 'system'
@@ -388,7 +386,7 @@ function App() {
           <div ref={messagesEndRef} />
         </div>
 
-        {/* Input Area */}
+        {/* Input */}
         <div style={styles.inputArea}>
           <input
             type="text"
@@ -401,7 +399,6 @@ function App() {
                 : 'Message everyone...'
             }
             style={styles.messageInput}
-            autoFocus
           />
           <button onClick={sendMessage} style={styles.sendButton}>
             Send
@@ -417,7 +414,7 @@ function App() {
 // ============================================
 
 const styles: { [key: string]: React.CSSProperties } = {
-  // Login Screen
+  // Login
   loginContainer: {
     display: 'flex',
     justifyContent: 'center',
@@ -497,7 +494,7 @@ const styles: { [key: string]: React.CSSProperties } = {
     fontSize: '14px'
   },
 
-  // Chat Screen
+  // Chat Container
   chatContainer: {
     display: 'flex',
     height: '100vh',
@@ -660,7 +657,7 @@ const styles: { [key: string]: React.CSSProperties } = {
     textAlign: 'right'
   },
 
-  // Input Area
+  // Input
   inputArea: {
     display: 'flex',
     gap: '10px',
