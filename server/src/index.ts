@@ -1,6 +1,7 @@
 // server/src/index.ts
 import { WebSocketServer, WebSocket } from 'ws';
-import { createClient, RedisClientType } from 'redis';
+import { createClient } from 'redis';
+import type { RedisClientType } from 'redis';
 
 // ============================================
 // Types
@@ -31,7 +32,7 @@ type RedisMessage =
 
 const PORT = parseInt(process.argv[2] || '3001');
 const SERVER_ID = `Server-${PORT}`;
-const REDIS_URL = 'redis://localhost:6379';
+const REDIS_URL = 'redis://localhost:6381';
 const CHANNEL = 'chat_messages';
 
 console.log(`${SERVER_ID}: Starting...`);
