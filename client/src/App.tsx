@@ -3,6 +3,12 @@ import { useState, useRef, useEffect } from 'react';
 import { io, Socket } from 'socket.io-client';
 
 // ============================================
+// Configuration
+// ============================================
+
+const SERVER_URL = 'http://13.62.231.238';
+
+// ============================================
 // Types
 // ============================================
 
@@ -51,7 +57,6 @@ function App() {
   const [isConnected, setIsConnected] = useState(false);
   const [isConnecting, setIsConnecting] = useState(false);
   const [connectionError, setConnectionError] = useState('');
-  const [serverPort, setServerPort] = useState('4001');
   const [username, setUsername] = useState('');
 
   // Chat state
@@ -118,7 +123,7 @@ function App() {
     setConnectionError('');
 
     const socket: Socket<ServerToClientEvents, ClientToServerEvents> = io(
-      `http://localhost:${serverPort}`,
+      SERVER_URL,
       { reconnection: true, reconnectionAttempts: 5 }
     );
 
@@ -126,7 +131,7 @@ function App() {
 
     // Connected
     socket.on('connect', () => {
-      console.log('Connected!');
+      console.log('Connected to server!');
       socket.emit('register', username.trim());
     });
 
@@ -227,7 +232,7 @@ function App() {
 
     // Connection error
     socket.on('connect_error', () => {
-      setConnectionError(`Could not connect to server on port ${serverPort}`);
+      setConnectionError('Could not connect to server');
       setIsConnecting(false);
     });
   };
@@ -294,10 +299,8 @@ function App() {
   // Filter messages for current view
   const filteredMessages = messages.filter(msg => {
     if (chatTarget.type === 'room') {
-      // Show room messages + global system messages
       return msg.room === chatTarget.room || (msg.type === 'system' && !msg.room);
     } else {
-      // Show DMs with this user + global system messages
       if (msg.type === 'private_sent' || msg.type === 'private_received') {
         const otherUser = msg.username?.replace('To ', '').replace('From ', '');
         return otherUser === chatTarget.username;
@@ -319,21 +322,8 @@ function App() {
     return (
       <div style={styles.loginContainer}>
         <div style={styles.loginBox}>
-          <h1 style={styles.loginTitle}>💬 Chat with Rooms</h1>
+          <h1 style={styles.loginTitle}>💬 Real-Time Chat</h1>
           <p style={styles.loginSubtitle}>Join rooms, chat with everyone</p>
-
-          <div style={styles.inputGroup}>
-            <label style={styles.label}>Server</label>
-            <select
-              value={serverPort}
-              onChange={(e) => setServerPort(e.target.value)}
-              style={styles.select}
-              disabled={isConnecting}
-            >
-              <option value="4001">Server 1 (Port 4001)</option>
-              <option value="4002">Server 2 (Port 4002)</option>
-            </select>
-          </div>
 
           <div style={styles.inputGroup}>
             <label style={styles.label}>Username</label>
@@ -381,7 +371,7 @@ function App() {
           <div style={styles.avatar}>{username.charAt(0).toUpperCase()}</div>
           <div>
             <div style={styles.userName}>{username}</div>
-            <div style={styles.serverInfo}>Server {serverPort}</div>
+            <div style={styles.serverInfo}>Connected</div>
           </div>
         </div>
 
@@ -631,17 +621,6 @@ const styles: { [key: string]: React.CSSProperties } = {
     color: '#d1d2d3'
   },
   input: {
-    width: '100%',
-    padding: '12px',
-    fontSize: '16px',
-    border: '1px solid #3c3f44',
-    borderRadius: '8px',
-    boxSizing: 'border-box',
-    outline: 'none',
-    backgroundColor: '#1a1d21',
-    color: '#fff'
-  },
-  select: {
     width: '100%',
     padding: '12px',
     fontSize: '16px',
