@@ -5,46 +5,55 @@ import { Server, Socket } from 'socket.io';
 import { createClient } from 'redis';
 import type { RedisClientType } from 'redis';
 
-
 // ============================================
 // Types
 // ============================================
 
-// Events from Client to Server
 interface ClientToServerEvents {
   register: (username: string) => void;
-  message: (message: string) => void;
+  join_room: (room: string) => void;
+  leave_room: (room: string) => void;
+  create_room: (room: string) => void;
+  room_message: (data: { room: string; message: string }) => void;
   private_message: (data: { to: string; message: string }) => void;
+  get_room_users: (room: string) => void;
 }
 
-// Events from Server to Client
 interface ServerToClientEvents {
-  broadcast: (data: { username: string; message: string }) => void;
+  room_message: (data: { room: string; username: string; message: string }) => void;
   private_message: (data: { from: string; to: string; message: string }) => void;
+  room_list: (rooms: string[]) => void;
+  room_users: (data: { room: string; users: string[] }) => void;
   user_list: (users: string[]) => void;
   system: (message: string) => void;
+  room_system: (data: { room: string; message: string }) => void;
   error: (message: string) => void;
+  joined_room: (room: string) => void;
+  left_room: (room: string) => void;
 }
 
-// Internal server events (for Redis)
-interface InterServerEvents {
-  // Empty for now, used for server-to-server communication
-}
+interface InterServerEvents {}
 
-// Data attached to each socket
 interface SocketData {
   username: string;
+  rooms: Set<string>;
 }
 
 // ============================================
 // Configuration
 // ============================================
 
-const PORT = parseInt(process.argv[2] || '3001');
+const PORT = parseInt(process.argv[2] || '4001');
 const SERVER_ID = `Server-${PORT}`;
 const REDIS_URL = 'redis://localhost:6381';
+
+// Redis keys
 const USERS_KEY = 'online_users';
+const ROOMS_KEY = 'chat_rooms';
 const CHANNEL = 'chat_messages';
+
+// Default rooms
+const DEFAULT_ROOMS = ['general', 'random', 'gaming'];
 
 console.log(`${SERVER_ID}: Starting...`);
 
@@ -55,7 +64,6 @@ console.log(`${SERVER_ID}: Starting...`);
 const app = express();
 const httpServer = createServer(app);
 
-// Create Socket.io server with types
 const io = new Server<
   ClientToServerEvents,
   ServerToClientEvents,
@@ -63,7 +71,7 @@ const io = new Server<
   SocketData
 >(httpServer, {
   cors: {
-    origin: ['http://localhost:5173', 'http://localhost:5174'],  // React dev server
+    origin: 'http://localhost:5173',
     methods: ['GET', 'POST']
   }
 });
@@ -79,11 +87,12 @@ const redisSubscriber: RedisClientType = createClient({ url: REDIS_URL });
 // Redis Helper Functions
 // ============================================
 
-async function addUserToRedis(username: string): Promise<void> {
+// Users
+async function addUser(username: string): Promise<void> {
   await redisPublisher.sAdd(USERS_KEY, username);
 }
 
-async function removeUserFromRedis(username: string): Promise<void> {
+async function removeUser(username: string): Promise<void> {
   await redisPublisher.sRem(USERS_KEY, username);
 }
 
@@ -92,54 +101,94 @@ async function getAllUsers(): Promise<string[]> {
 }
 
 async function isUsernameTaken(username: string): Promise<boolean> {
-  const result = await redisPublisher.sIsMember(USERS_KEY, username);
-  return result === 1;
+  return (await redisPublisher.sIsMember(USERS_KEY, username)) === 1;
+}
+
+// Rooms
+async function addRoom(room: string): Promise<void> {
+  await redisPublisher.sAdd(ROOMS_KEY, room);
+}
+
+async function getAllRooms(): Promise<string[]> {
+  return await redisPublisher.sMembers(ROOMS_KEY);
+}
+
+async function roomExists(room: string): Promise<boolean> {
+  return (await redisPublisher.sIsMember(ROOMS_KEY, room)) === 1;
+}
+
+// Room members (track who's in which room)
+function getRoomMembersKey(room: string): string {
+  return `room:${room}:members`;
+}
+
+async function addUserToRoom(room: string, username: string): Promise<void> {
+  await redisPublisher.sAdd(getRoomMembersKey(room), username);
+}
+
+async function removeUserFromRoom(room: string, username: string): Promise<void> {
+  await redisPublisher.sRem(getRoomMembersKey(room), username);
+}
+
+async function getRoomMembers(room: string): Promise<string[]> {
+  return await redisPublisher.sMembers(getRoomMembersKey(room));
 }
 
 // ============================================
-// Broadcast User List to All Local Sockets
+// Broadcast Helpers
 // ============================================
+
+async function broadcastRoomList(): Promise<void> {
+  const rooms = await getAllRooms();
+  io.emit('room_list', rooms);
+}
 
 async function broadcastUserList(): Promise<void> {
   const users = await getAllUsers();
   io.emit('user_list', users);
 }
 
+async function broadcastRoomUsers(room: string): Promise<void> {
+  const users = await getRoomMembers(room);
+  io.to(room).emit('room_users', { room, users });
+}
+
 // ============================================
-// Redis Pub/Sub Message Types
+// Redis Pub/Sub
 // ============================================
 
 type RedisMessage =
-  | { type: 'broadcast'; username: string; message: string }
-  | { type: 'private'; from: string; to: string; message: string }
+  | { type: 'room_message'; room: string; username: string; message: string }
+  | { type: 'private_message'; from: string; to: string; message: string }
   | { type: 'user_joined'; username: string }
-  | { type: 'user_left'; username: string };
+  | { type: 'user_left'; username: string }
+  | { type: 'room_created'; room: string; creator: string }
+  | { type: 'user_joined_room'; room: string; username: string }
+  | { type: 'user_left_room'; room: string; username: string };
 
-// Publish to Redis
 async function publishToRedis(data: RedisMessage): Promise<void> {
   await redisPublisher.publish(CHANNEL, JSON.stringify(data));
   console.log(`${SERVER_ID}: Published:`, data.type);
 }
 
-// Handle messages from Redis
 function handleRedisMessage(rawMessage: string): void {
   try {
     const data: RedisMessage = JSON.parse(rawMessage);
     console.log(`${SERVER_ID}: Received from Redis:`, data.type);
 
-    if (data.type === 'broadcast') {
-      // Send to all connected clients on this server
-      io.emit('broadcast', {
+    // Room message
+    if (data.type === 'room_message') {
+      io.to(data.room).emit('room_message', {
+        room: data.room,
         username: data.username,
         message: data.message
       });
       return;
     }
 
-    if (data.type === 'private') {
-      // Find recipient and sender on this server
+    // Private message
+    if (data.type === 'private_message') {
       const sockets = io.sockets.sockets;
-      
       sockets.forEach((socket) => {
         if (socket.data.username === data.to || socket.data.username === data.from) {
           socket.emit('private_message', {
@@ -152,15 +201,44 @@ function handleRedisMessage(rawMessage: string): void {
       return;
     }
 
+    // User joined
     if (data.type === 'user_joined') {
       io.emit('system', `${data.username} joined the chat`);
       broadcastUserList();
       return;
     }
 
+    // User left
     if (data.type === 'user_left') {
       io.emit('system', `${data.username} left the chat`);
       broadcastUserList();
+      return;
+    }
+
+    // Room created
+    if (data.type === 'room_created') {
+      io.emit('system', `Room #${data.room} created by ${data.creator}`);
+      broadcastRoomList();
+      return;
+    }
+
+    // User joined room
+    if (data.type === 'user_joined_room') {
+      io.to(data.room).emit('room_system', {
+        room: data.room,
+        message: `${data.username} joined #${data.room}`
+      });
+      broadcastRoomUsers(data.room);
+      return;
+    }
+
+    // User left room
+    if (data.type === 'user_left_room') {
+      io.to(data.room).emit('room_system', {
+        room: data.room,
+        message: `${data.username} left #${data.room}`
+      });
+      broadcastRoomUsers(data.room);
       return;
     }
 
@@ -173,124 +251,218 @@ function handleRedisMessage(rawMessage: string): void {
 // Socket.io Connection Handler
 // ============================================
 
-io.on('connection', (socket: Socket<ClientToServerEvents, ServerToClientEvents, InterServerEvents, SocketData>) => {
+io.on('connection', (socket) => {
   console.log(`${SERVER_ID}: New connection - ${socket.id}`);
+  socket.data.rooms = new Set();
 
   // ========================================
-  // Handle: Register
+  // Register
   // ========================================
   socket.on('register', async (username: string) => {
-    console.log(`${SERVER_ID}: Register request - ${username}`);
+    console.log(`${SERVER_ID}: Register - ${username}`);
 
-    // Check if username taken
     if (await isUsernameTaken(username)) {
       socket.emit('error', `Username "${username}" is already taken`);
       socket.disconnect();
       return;
     }
 
-    // Store username in socket data
     socket.data.username = username;
+    await addUser(username);
 
-    // Add to Redis
-    await addUserToRedis(username);
+    // Auto-join #general
+    socket.join('general');
+    socket.data.rooms.add('general');
+    await addUserToRoom('general', username);
 
-    console.log(`${SERVER_ID}: ${username} registered`);
+    // Send initial data
+    const rooms = await getAllRooms();
+    socket.emit('room_list', rooms);
+    socket.emit('joined_room', 'general');
 
-    // Notify all servers
-    await publishToRedis({
-      type: 'user_joined',
-      username: username
-    });
+    await publishToRedis({ type: 'user_joined', username });
+    await publishToRedis({ type: 'user_joined_room', room: 'general', username });
+
+    console.log(`${SERVER_ID}: ${username} registered and joined #general`);
   });
 
   // ========================================
-  // Handle: Broadcast Message
+  // Create Room
   // ========================================
-  socket.on('message', async (message: string) => {
+  socket.on('create_room', async (room: string) => {
     const username = socket.data.username;
-    
-    if (!username) {
-      socket.emit('error', 'You must register first');
+    if (!username) return;
+
+    // Validate room name
+    const roomName = room.toLowerCase().replace(/[^a-z0-9-]/g, '');
+    if (!roomName || roomName.length < 2) {
+      socket.emit('error', 'Invalid room name (use letters, numbers, dashes)');
       return;
     }
 
-    console.log(`${SERVER_ID}: Message from ${username}: ${message}`);
+    if (await roomExists(roomName)) {
+      socket.emit('error', `Room #${roomName} already exists`);
+      return;
+    }
 
-    // Publish to Redis (all servers will receive)
-    await publishToRedis({
-      type: 'broadcast',
-      username: username,
-      message: message
-    });
+    await addRoom(roomName);
+    await publishToRedis({ type: 'room_created', room: roomName, creator: username });
+
+    console.log(`${SERVER_ID}: ${username} created room #${roomName}`);
   });
 
   // ========================================
-  // Handle: Private Message
+  // Join Room
+  // ========================================
+  socket.on('join_room', async (room: string) => {
+    const username = socket.data.username;
+    if (!username) return;
+
+    if (!(await roomExists(room))) {
+      socket.emit('error', `Room #${room} doesn't exist`);
+      return;
+    }
+
+    if (socket.data.rooms.has(room)) {
+      socket.emit('error', `You're already in #${room}`);
+      return;
+    }
+
+    socket.join(room);
+    socket.data.rooms.add(room);
+    await addUserToRoom(room, username);
+
+    socket.emit('joined_room', room);
+    await publishToRedis({ type: 'user_joined_room', room, username });
+
+    console.log(`${SERVER_ID}: ${username} joined #${room}`);
+  });
+
+  // ========================================
+  // Leave Room
+  // ========================================
+  socket.on('leave_room', async (room: string) => {
+    const username = socket.data.username;
+    if (!username) return;
+
+    if (room === 'general') {
+      socket.emit('error', "You can't leave #general");
+      return;
+    }
+
+    if (!socket.data.rooms.has(room)) {
+      socket.emit('error', `You're not in #${room}`);
+      return;
+    }
+
+    socket.leave(room);
+    socket.data.rooms.delete(room);
+    await removeUserFromRoom(room, username);
+
+    socket.emit('left_room', room);
+    await publishToRedis({ type: 'user_left_room', room, username });
+
+    console.log(`${SERVER_ID}: ${username} left #${room}`);
+  });
+
+  // ========================================
+  // Room Message
+  // ========================================
+  socket.on('room_message', async (data: { room: string; message: string }) => {
+    const username = socket.data.username;
+    if (!username) return;
+
+    if (!socket.data.rooms.has(data.room)) {
+      socket.emit('error', `You're not in #${data.room}`);
+      return;
+    }
+
+    await publishToRedis({
+      type: 'room_message',
+      room: data.room,
+      username,
+      message: data.message
+    });
+
+    console.log(`${SERVER_ID}: ${username} → #${data.room}: ${data.message}`);
+  });
+
+  // ========================================
+  // Private Message
   // ========================================
   socket.on('private_message', async (data: { to: string; message: string }) => {
-    const fromUsername = socket.data.username;
+    const username = socket.data.username;
+    if (!username) return;
 
-    if (!fromUsername) {
-      socket.emit('error', 'You must register first');
-      return;
-    }
-
-    // Check if recipient exists
     if (!(await isUsernameTaken(data.to))) {
-      socket.emit('system', `User "${data.to}" is not online`);
+      socket.emit('error', `User "${data.to}" is not online`);
       return;
     }
 
-    console.log(`${SERVER_ID}: Private message ${fromUsername} → ${data.to}`);
-
-    // Publish to Redis
     await publishToRedis({
-      type: 'private',
-      from: fromUsername,
+      type: 'private_message',
+      from: username,
       to: data.to,
       message: data.message
     });
+
+    console.log(`${SERVER_ID}: ${username} → ${data.to} (private): ${data.message}`);
   });
 
   // ========================================
-  // Handle: Disconnect
+  // Get Room Users
+  // ========================================
+  socket.on('get_room_users', async (room: string) => {
+    const users = await getRoomMembers(room);
+    socket.emit('room_users', { room, users });
+  });
+
+  // ========================================
+  // Disconnect
   // ========================================
   socket.on('disconnect', async () => {
     const username = socket.data.username;
-    console.log(`${SERVER_ID}: Disconnected - ${username || socket.id}`);
+    console.log(`${SERVER_ID}: Disconnect - ${username || socket.id}`);
 
     if (username) {
-      // Remove from Redis
-      await removeUserFromRedis(username);
+      // Remove from all rooms
+      for (const room of socket.data.rooms) {
+        await removeUserFromRoom(room, username);
+        await publishToRedis({ type: 'user_left_room', room, username });
+      }
 
-      // Notify all servers
-      await publishToRedis({
-        type: 'user_left',
-        username: username
-      });
+      await removeUser(username);
+      await publishToRedis({ type: 'user_left', username });
     }
   });
 });
 
 // ============================================
-// Start Server
+// Initialize & Start Server
 // ============================================
+
+async function initializeRooms(): Promise<void> {
+  for (const room of DEFAULT_ROOMS) {
+    if (!(await roomExists(room))) {
+      await addRoom(room);
+      console.log(`${SERVER_ID}: Created default room #${room}`);
+    }
+  }
+}
 
 async function startServer(): Promise<void> {
   try {
-    // Connect to Redis
     await redisPublisher.connect();
     console.log(`${SERVER_ID}: Redis publisher connected`);
 
     await redisSubscriber.connect();
     console.log(`${SERVER_ID}: Redis subscriber connected`);
 
-    // Subscribe to channel
     await redisSubscriber.subscribe(CHANNEL, handleRedisMessage);
     console.log(`${SERVER_ID}: Subscribed to "${CHANNEL}"`);
 
-    // Start HTTP server
+    await initializeRooms();
+
     httpServer.listen(PORT, () => {
       console.log(`${SERVER_ID}: Server running on port ${PORT}`);
       console.log(`${SERVER_ID}: Ready!`);
@@ -302,23 +474,23 @@ async function startServer(): Promise<void> {
   }
 }
 
-// Graceful shutdown
 process.on('SIGINT', async () => {
   console.log(`\n${SERVER_ID}: Shutting down...`);
 
-  // Remove all local users from Redis
   const sockets = io.sockets.sockets;
   for (const [, socket] of sockets) {
-    if (socket.data.username) {
-      await removeUserFromRedis(socket.data.username);
+    const username = socket.data.username;
+    if (username) {
+      for (const room of socket.data.rooms) {
+        await removeUserFromRoom(room, username);
+      }
+      await removeUser(username);
     }
   }
 
   await redisPublisher.quit();
   await redisSubscriber.quit();
-
   process.exit(0);
 });
 
-// Start!
 startServer();
