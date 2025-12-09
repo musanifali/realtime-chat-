@@ -6,7 +6,7 @@ import { io, Socket } from 'socket.io-client';
 // Configuration
 // ============================================
 
-const SERVER_URL = 'http://13.62.231.238';
+const SERVER_URL = 'http://13.49.78.104';
 
 // ============================================
 // Types
