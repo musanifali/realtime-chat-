@@ -42,10 +42,11 @@ interface SocketData {
 // ============================================
 // Configuration
 // ============================================
-
-const PORT = parseInt(process.argv[2] || '4001');
+const PORT = parseInt(process.env.PORT || '3001');
 const SERVER_ID = `Server-${PORT}`;
-const REDIS_URL = 'redis://localhost:6381';
+const REDIS_URL = process.env.REDIS_URL || 'redis://localhost:6379';
+const CLIENT_URL = process.env.CLIENT_URL || '*';
+
 
 // Redis keys
 const USERS_KEY = 'online_users';
@@ -62,6 +63,9 @@ console.log(`${SERVER_ID}: Starting...`);
 // ============================================
 
 const app = express();
+app.get('/health', (req, res) => {
+  res.json({ status: 'ok', server: SERVER_ID });
+});
 const httpServer = createServer(app);
 
 const io = new Server<
@@ -463,10 +467,9 @@ async function startServer(): Promise<void> {
 
     await initializeRooms();
 
-    httpServer.listen(PORT, () => {
-      console.log(`${SERVER_ID}: Server running on port ${PORT}`);
-      console.log(`${SERVER_ID}: Ready!`);
-    });
+    httpServer.listen(PORT, '0.0.0.0', () => {
+    console.log(`${SERVER_ID}: Server running on port ${PORT}`);
+ });
 
   } catch (error) {
     console.error(`${SERVER_ID}: Failed to start:`, error);
