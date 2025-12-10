@@ -1,6 +1,6 @@
 server {
     listen 80;
-    server_name 13.62.231.238;
+    server_name 13.49.78.104;
 
     # Serve React app (we'll add files later)
     root /var/www/chat;
