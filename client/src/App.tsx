@@ -6,10 +6,11 @@ import { UserInfo } from './components/Sidebar/UserInfo';
 import { ChatArea } from './components/Chat/ChatArea';
 import { useChatApp } from './hooks/useChatApp';
 import { filterMessagesForTarget } from './utils/messageFilter';
-import { LogOut } from 'lucide-react';
+import { LogOut, Menu, X } from 'lucide-react';
 
 function App() {
   const [input, setInput] = useState('');
+  const [showMobileSidebar, setShowMobileSidebar] = useState(false);
   
   const {
     isConnected,
@@ -63,23 +64,42 @@ function App() {
 
   // Chat Screen
   return (
-    <div className="flex h-screen text-gray-900" style={{ backgroundColor: 'var(--color-bg-primary)' }}>
+    <div className="flex h-screen text-gray-900 relative overflow-hidden" style={{ backgroundColor: 'var(--color-bg-primary)' }}>
+      {/* Mobile Sidebar Overlay */}
+      {showMobileSidebar && (
+        <div 
+          className="fixed inset-0 bg-black bg-opacity-50 z-40 md:hidden"
+          onClick={() => setShowMobileSidebar(false)}
+        />
+      )}
+
       {/* Sidebar with user list */}
-      <div className="w-64 lg:w-80 flex flex-col bendots-bg" style={{ backgroundColor: 'var(--color-bg-secondary)', borderRight: '4px solid var(--color-border)', boxShadow: '4px 0 0 var(--color-border)' }}>
+      <div 
+        className={`
+          w-64 lg:w-80 flex flex-col bendots-bg z-50
+          fixed md:relative inset-y-0 left-0
+          transform transition-transform duration-300 ease-in-out
+          ${showMobileSidebar ? 'translate-x-0' : '-translate-x-full md:translate-x-0'}
+        `}
+        style={{ backgroundColor: 'var(--color-bg-secondary)', borderRight: '4px solid var(--color-border)', boxShadow: '4px 0 0 var(--color-border)' }}
+      >
         <UserInfo username={username} />
         
         <div className="flex-1 overflow-y-auto p-4">
           <DirectMessages
             allUsers={allUsers}
             currentUser={chatTarget?.username || null}
-            onUserSelect={(user) => setChatTarget({ type: 'user', username: user })}
+            onUserSelect={(user) => {
+              setChatTarget({ type: 'user', username: user });
+              setShowMobileSidebar(false);
+            }}
           />
         </div>
         
-        <div className="p-4" style={{ borderTop: '4px solid var(--color-border)', boxShadow: '0 -4px 0 var(--color-primary)' }}>
+        <div className="p-3 md:p-4" style={{ borderTop: '4px solid var(--color-border)', boxShadow: '0 -4px 0 var(--color-primary)' }}>
           <button
             onClick={disconnect}
-            className="w-full flex items-center justify-center gap-2 px-4 py-3 transition-all duration-200 font-black uppercase text-sm"
+            className="w-full flex items-center justify-center gap-2 px-3 md:px-4 py-2 md:py-3 transition-all duration-200 font-black uppercase text-xs md:text-sm"
             style={{ 
               background: 'var(--color-primary)', 
               color: 'white',
@@ -105,7 +125,28 @@ function App() {
       </div>
 
       {/* Main Chat Area */}
-      <div className="flex-1 flex flex-col min-w-0">
+      <div className="flex-1 flex flex-col min-w-0 w-full md:w-auto">
+        {/* Mobile Header with Hamburger */}
+        <div className="md:hidden flex items-center p-4 gap-3" style={{ backgroundColor: 'var(--color-bg-secondary)', borderBottom: '4px solid var(--color-border)', boxShadow: '0 4px 0 var(--color-primary)' }}>
+          <button
+            onClick={() => setShowMobileSidebar(!showMobileSidebar)}
+            className="p-2 transition-all duration-200"
+            style={{ 
+              background: 'var(--color-accent)', 
+              border: '3px solid var(--color-border)',
+              boxShadow: '3px 3px 0 var(--color-border)',
+              borderRadius: '8px',
+            }}
+          >
+            {showMobileSidebar ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
+          </button>
+          <div className="flex-1">
+            <h1 className="text-xl font-black uppercase" style={{ color: 'var(--color-primary)', textShadow: '2px 2px 0 var(--color-border)' }}>
+              💬 CHAT!
+            </h1>
+          </div>
+        </div>
+
         <ChatArea
           chatTarget={chatTarget}
           messages={filteredMessages}

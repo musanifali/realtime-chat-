@@ -20,15 +20,15 @@ export const MessageInput: React.FC<MessageInputProps> = ({
   onKeyPress,
 }) => {
   return (
-    <div className="p-4 halftone-bg" style={{ backgroundColor: 'var(--color-bg-primary)', borderTop: '4px solid var(--color-border)', boxShadow: '0 -4px 0 var(--color-accent)' }}>
-      <div className="flex gap-3">
+    <div className="p-3 md:p-4 halftone-bg" style={{ backgroundColor: 'var(--color-bg-primary)', borderTop: '4px solid var(--color-border)', boxShadow: '0 -4px 0 var(--color-accent)' }}>
+      <div className="flex gap-2 md:gap-3">
         <input
           type="text"
           value={input}
           onChange={(e) => onInputChange(e.target.value)}
           onKeyPress={onKeyPress}
-          placeholder={`💬 Message @${chatTarget.username}...`}
-          className="flex-1 px-4 py-3 focus:outline-none comic-outline font-bold text-base"
+          placeholder={`💬 @${chatTarget.username}...`}
+          className="flex-1 px-3 md:px-4 py-2 md:py-3 focus:outline-none comic-outline font-bold text-sm md:text-base"
           style={{ 
             backgroundColor: 'white', 
             border: '3px solid var(--color-border)', 
@@ -49,7 +49,7 @@ export const MessageInput: React.FC<MessageInputProps> = ({
         <button
           onClick={onSendMessage}
           disabled={!input.trim()}
-          className="px-4 md:px-6 py-3 disabled:cursor-not-allowed disabled:opacity-50 transition-all flex items-center gap-2 font-black uppercase text-sm md:text-base"
+          className="px-3 md:px-6 py-2 md:py-3 disabled:cursor-not-allowed disabled:opacity-50 transition-all flex items-center gap-1 md:gap-2 font-black uppercase text-sm md:text-base"
           style={{ 
             background: input.trim() ? 'var(--color-primary)' : '#9ca3af',
             color: 'white',

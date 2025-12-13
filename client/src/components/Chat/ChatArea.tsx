@@ -63,13 +63,14 @@ export const ChatArea: React.FC<ChatAreaProps> = ({
 
   if (!chatTarget) {
     return (
-      <div className="flex flex-col h-full items-center justify-center halftone-bg" style={{ backgroundColor: 'var(--color-bg-primary)' }}>
-        <div className="text-center p-8">
-          <h2 className="text-4xl font-black uppercase mb-4" style={{ color: 'var(--color-primary)', textShadow: '4px 4px 0 var(--color-border)' }}>
+      <div className="flex flex-col h-full items-center justify-center halftone-bg px-4" style={{ backgroundColor: 'var(--color-bg-primary)' }}>
+        <div className="text-center p-4 md:p-8">
+          <h2 className="text-3xl md:text-4xl font-black uppercase mb-4" style={{ color: 'var(--color-primary)', textShadow: '3px 3px 0 var(--color-border)' }}>
             💬 SELECT A HERO!
           </h2>
-          <p className="text-lg font-bold" style={{ color: 'var(--color-text-secondary)' }}>
-            Choose someone from the list to start chatting! 💥
+          <p className="text-base md:text-lg font-bold" style={{ color: 'var(--color-text-secondary)' }}>
+            <span className="hidden sm:inline">Choose someone from the list to start chatting! 💥</span>
+            <span className="sm:hidden">Tap the menu to select! 💥</span>
           </p>
         </div>
       </div>

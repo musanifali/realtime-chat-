@@ -175,3 +175,36 @@ h1, h2, h3, h4, h5, h6, .comic-text {
   filter: drop-shadow(2px 2px 0 var(--color-border));
 }
 
+/* Mobile Responsive Adjustments */
+@media (max-width: 768px) {
+  /* Reduce shadow sizes on mobile for better performance */
+  .comic-outline {
+    box-shadow: 2px 2px 0 var(--color-border) !important;
+  }
+  
+  /* Smaller speech bubble tails on mobile */
+  .speech-bubble-tail::after {
+    border-left: 10px solid transparent;
+    border-top: 10px solid currentColor;
+    bottom: -8px;
+  }
+  
+  /* Adjust font sizes for better readability */
+  body {
+    font-size: 14px;
+  }
+  
+  /* Ensure sidebar is full height on mobile */
+  .fixed.inset-y-0 {
+    height: 100vh;
+    height: 100dvh; /* Use dynamic viewport height for mobile browsers */
+  }
+}
+
+/* Smooth transitions for mobile sidebar */
+@media (prefers-reduced-motion: no-preference) {
+  .transform {
+    transition: transform 0.3s ease-in-out;
+  }
+}
+

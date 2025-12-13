@@ -41,14 +41,14 @@ export const Login: React.FC<LoginProps> = ({
             }}>
               <MessageSquare className="w-10 h-10" style={{ color: 'var(--color-text-primary)', strokeWidth: 3 }} />
             </div>
-            <h1 className="comic-text text-5xl mb-2" style={{ 
+            <h1 className="comic-text text-4xl md:text-5xl mb-2" style={{ 
               color: 'var(--color-primary)',
               textShadow: '3px 3px 0 var(--color-border)',
               WebkitTextStroke: '2px var(--color-border)'
             }}>
               CHAT!
             </h1>
-            <p className="font-bold text-lg" style={{ color: 'var(--color-text-primary)' }}>
+            <p className="font-bold text-base md:text-lg" style={{ color: 'var(--color-text-primary)' }}>
               🎨 POP INTO THE CONVERSATION! 💥
             </p>
           </div>
@@ -109,7 +109,7 @@ export const Login: React.FC<LoginProps> = ({
             <button
               onClick={onConnect}
               disabled={isConnecting || !username.trim()}
-              className="w-full py-4 px-6 rounded-lg transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-3 comic-text text-2xl comic-outline"
+              className="w-full py-4 px-6 rounded-lg transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-3 comic-text text-xl md:text-2xl comic-outline"
               style={{ 
                 backgroundColor: 'var(--color-accent)',
                 border: '4px solid var(--color-border)',
