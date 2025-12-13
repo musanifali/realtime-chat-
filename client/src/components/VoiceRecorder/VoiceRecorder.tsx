@@ -36,7 +36,19 @@ export const VoiceRecorder: React.FC<VoiceRecorderProps> = ({ onSendVoice, onClo
 
   const startRecording = async () => {
     try {
-      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      // Check if browser supports getUserMedia
+      if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+        alert('❌ Your browser does not support audio recording. Please use Chrome, Firefox, or Edge.');
+        return;
+      }
+
+      const stream = await navigator.mediaDevices.getUserMedia({ 
+        audio: {
+          echoCancellation: true,
+          noiseSuppression: true,
+          autoGainControl: true
+        } 
+      });
       
       // Setup audio context for visualization
       const audioContext = new AudioContext();
@@ -78,9 +90,33 @@ export const VoiceRecorder: React.FC<VoiceRecorderProps> = ({ onSendVoice, onClo
 
       // Start waveform animation
       visualizeAudio();
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error accessing microphone:', error);
-      alert('Unable to access microphone. Please grant permission.');
+      
+      let errorMessage = '❌ Unable to access microphone.\n\n';
+      
+      if (error.name === 'NotAllowedError' || error.name === 'PermissionDeniedError') {
+        errorMessage += '🔒 Permission Denied!\n\n';
+        errorMessage += 'Please allow microphone access:\n';
+        errorMessage += '1. Click the 🔒 or 🎤 icon in your browser address bar\n';
+        errorMessage += '2. Select "Allow" for microphone permission\n';
+        errorMessage += '3. Refresh the page and try again';
+      } else if (error.name === 'NotFoundError' || error.name === 'DevicesNotFoundError') {
+        errorMessage += '🎤 No microphone found!\n\n';
+        errorMessage += 'Please check:\n';
+        errorMessage += '1. Your microphone is connected\n';
+        errorMessage += '2. Check system audio settings\n';
+        errorMessage += '3. Try plugging in a microphone';
+      } else if (error.name === 'NotReadableError' || error.name === 'TrackStartError') {
+        errorMessage += '⚠️ Microphone is busy!\n\n';
+        errorMessage += 'The microphone might be in use by another application.\n';
+        errorMessage += 'Close other apps using the microphone and try again.';
+      } else {
+        errorMessage += `Error: ${error.message || 'Unknown error'}\n\n`;
+        errorMessage += 'Please check your browser settings and try again.';
+      }
+      
+      alert(errorMessage);
     }
   };
 
