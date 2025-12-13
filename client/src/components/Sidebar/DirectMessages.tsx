@@ -3,6 +3,7 @@
 import React from 'react';
 import * as Avatar from '@radix-ui/react-avatar';
 import { User } from 'lucide-react';
+import { soundManager } from '../../services/SoundManager';
 
 interface DirectMessagesProps {
   allUsers: string[];
@@ -15,6 +16,10 @@ export const DirectMessages: React.FC<DirectMessagesProps> = ({
   currentUser,
   onUserSelect,
 }) => {
+  const handleUserSelect = (user: string) => {
+    soundManager.play('click');
+    onUserSelect(user);
+  };
   return (
     <div className="space-y-2">
       <h3 className="text-sm font-black uppercase tracking-wider mb-3" style={{ color: 'var(--color-border)', textShadow: '2px 2px 0 var(--color-accent)' }}>
@@ -28,7 +33,7 @@ export const DirectMessages: React.FC<DirectMessagesProps> = ({
             return (
               <button
                 key={user}
-                onClick={() => onUserSelect(user)}
+                onClick={() => handleUserSelect(user)}
                 className="w-full flex items-center gap-3 px-3 py-2 rounded-lg transition-all font-bold"
                 style={{
                   background: isActive ? 'var(--color-tertiary)' : 'white',

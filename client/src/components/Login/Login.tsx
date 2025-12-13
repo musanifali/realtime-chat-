@@ -2,6 +2,7 @@
 
 import React from 'react';
 import { MessageSquare, Loader2 } from 'lucide-react';
+import { soundManager } from '../../services/SoundManager';
 
 interface LoginProps {
   username: string;
@@ -20,6 +21,12 @@ export const Login: React.FC<LoginProps> = ({
   onConnect,
   onKeyPress,
 }) => {
+  const handleConnect = () => {
+    if (username.trim() && !isConnecting) {
+      soundManager.play('click');
+      onConnect();
+    }
+  };
   return (
     <div className="flex items-center justify-center min-h-screen px-4 halftone-bg" style={{ backgroundColor: 'var(--color-bg-primary)' }}>
       <div className="w-full max-w-md animate-comic-pop">
@@ -107,7 +114,7 @@ export const Login: React.FC<LoginProps> = ({
 
             {/* Connect Button */}
             <button
-              onClick={onConnect}
+              onClick={handleConnect}
               disabled={isConnecting || !username.trim()}
               className="w-full py-4 px-6 rounded-lg transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-3 comic-text text-xl md:text-2xl comic-outline"
               style={{ 

@@ -1,8 +1,9 @@
 // client/src/components/Chat/Message.tsx
 
-import React from 'react';
+import React, { useEffect } from 'react';
 import { ChatMessage } from '../../types';
 import { formatTime } from '../../utils/messageUtils';
+import { soundManager } from '../../services/SoundManager';
 
 interface MessageProps {
   message: ChatMessage;
@@ -10,6 +11,12 @@ interface MessageProps {
 }
 
 export const Message: React.FC<MessageProps> = ({ message, isOwn }) => {
+  useEffect(() => {
+    // Play pop sound for received messages
+    if (!isOwn && message.type !== 'system') {
+      soundManager.play('pop');
+    }
+  }, [isOwn, message.type]);
   if (message.type === 'system') {
     return (
       <div className="flex justify-center animate-comic-pop">

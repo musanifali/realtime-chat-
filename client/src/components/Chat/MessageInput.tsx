@@ -1,8 +1,9 @@
 // client/src/components/Chat/MessageInput.tsx
 
-import React from 'react';
+import React, { useRef } from 'react';
 import { ChatTarget } from '../../types';
 import { Send } from 'lucide-react';
+import { soundManager } from '../../services/SoundManager';
 
 interface MessageInputProps {
   chatTarget: ChatTarget;
@@ -19,14 +20,67 @@ export const MessageInput: React.FC<MessageInputProps> = ({
   onSendMessage,
   onKeyPress,
 }) => {
+  const typingTimeoutRef = useRef<number | null>(null);
+  const isTypingRef = useRef(false);
+
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const value = e.target.value;
+    
+    // Start typing sound if not already playing
+    if (value && !isTypingRef.current) {
+      soundManager.startTypingSound();
+      isTypingRef.current = true;
+    }
+    
+    // Clear existing timeout
+    if (typingTimeoutRef.current) {
+      clearTimeout(typingTimeoutRef.current);
+    }
+    
+    // Stop typing sound after 500ms of no input
+    typingTimeoutRef.current = window.setTimeout(() => {
+      soundManager.stopTypingSound();
+      isTypingRef.current = false;
+    }, 500);
+    
+    onInputChange(value);
+  };
+
+  const handleSendClick = () => {
+    if (input.trim()) {
+      // Stop typing sound
+      soundManager.stopTypingSound();
+      isTypingRef.current = false;
+      
+      // Play whoosh with pitch based on message length
+      const pitch = Math.min(1.5, 0.5 + (input.length / 100));
+      soundManager.play('whoosh', pitch);
+      
+      onSendMessage();
+    }
+  };
+
+  const handleKeyPress = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === 'Enter' && input.trim()) {
+      // Stop typing sound
+      soundManager.stopTypingSound();
+      isTypingRef.current = false;
+      
+      // Play whoosh
+      const pitch = Math.min(1.5, 0.5 + (input.length / 100));
+      soundManager.play('whoosh', pitch);
+    }
+    onKeyPress(e);
+  };
+
   return (
     <div className="p-3 md:p-4 halftone-bg" style={{ backgroundColor: 'var(--color-bg-primary)', borderTop: '4px solid var(--color-border)', boxShadow: '0 -4px 0 var(--color-accent)' }}>
       <div className="flex gap-2 md:gap-3">
         <input
           type="text"
           value={input}
-          onChange={(e) => onInputChange(e.target.value)}
-          onKeyPress={onKeyPress}
+          onChange={handleInputChange}
+          onKeyPress={handleKeyPress}
           placeholder={`💬 @${chatTarget.username}...`}
           className="flex-1 px-3 md:px-4 py-2 md:py-3 focus:outline-none comic-outline font-bold text-sm md:text-base"
           style={{ 
@@ -47,7 +101,7 @@ export const MessageInput: React.FC<MessageInputProps> = ({
           }}
         />
         <button
-          onClick={onSendMessage}
+          onClick={handleSendClick}
           disabled={!input.trim()}
           className="px-3 md:px-6 py-2 md:py-3 disabled:cursor-not-allowed disabled:opacity-50 transition-all flex items-center gap-1 md:gap-2 font-black uppercase text-sm md:text-base"
           style={{ 

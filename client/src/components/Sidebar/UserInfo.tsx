@@ -3,6 +3,7 @@
 import React from 'react';
 import * as Avatar from '@radix-ui/react-avatar';
 import { Wifi } from 'lucide-react';
+import { SoundToggle } from '../SoundToggle/SoundToggle';
 
 interface UserInfoProps {
   username: string;
@@ -18,13 +19,14 @@ export const UserInfo: React.FC<UserInfoProps> = ({ username }) => {
           </Avatar.Fallback>
         </Avatar.Root>
         <div className="flex-1 min-w-0">
-          <div className="font-black text-base md:text-lg truncate uppercase" style={{ color: 'var(--color-border)', textShadow: '2px 2px 0 white' }}>{username}</div>
+          <div className="font-black text-base md:text-lg truncate uppercase" style={{ color: 'var(--color-border)', textShadow: '2px 2px 0 var(--color-accent-light)' }}>{username}</div>
           <div className="flex items-center gap-1.5 text-xs font-bold uppercase px-2 py-0.5 rounded-full" style={{ backgroundColor: 'var(--color-quaternary)', color: 'var(--color-border)', border: '2px solid var(--color-border)' }}>
             <Wifi className="w-3 h-3" />
             <span className="hidden sm:inline">⚡ ONLINE</span>
             <span className="sm:hidden">⚡</span>
           </div>
         </div>
+        <SoundToggle />
       </div>
     </div>
   );

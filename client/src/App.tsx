@@ -4,9 +4,11 @@ import { Login } from './components/Login/Login';
 import { DirectMessages } from './components/Sidebar/DirectMessages';
 import { UserInfo } from './components/Sidebar/UserInfo';
 import { ChatArea } from './components/Chat/ChatArea';
+import { SoundToggle } from './components/SoundToggle/SoundToggle';
 import { useChatApp } from './hooks/useChatApp';
 import { filterMessagesForTarget } from './utils/messageFilter';
 import { LogOut, Menu, X } from 'lucide-react';
+import { soundManager } from './services/SoundManager';
 
 function App() {
   const [input, setInput] = useState('');
@@ -98,7 +100,10 @@ function App() {
         
         <div className="p-3 md:p-4" style={{ borderTop: '4px solid var(--color-border)', boxShadow: '0 -4px 0 var(--color-primary)' }}>
           <button
-            onClick={disconnect}
+            onClick={() => {
+              soundManager.play('click');
+              disconnect();
+            }}
             className="w-full flex items-center justify-center gap-2 px-3 md:px-4 py-2 md:py-3 transition-all duration-200 font-black uppercase text-xs md:text-sm"
             style={{ 
               background: 'var(--color-primary)', 
@@ -144,6 +149,9 @@ function App() {
             <h1 className="text-xl font-black uppercase" style={{ color: 'var(--color-primary)', textShadow: '2px 2px 0 var(--color-border)' }}>
               💬 CHAT!
             </h1>
+          </div>
+          <div className="flex gap-2">
+            <SoundToggle />
           </div>
         </div>
 
