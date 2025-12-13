@@ -21,10 +21,16 @@ export const Login: React.FC<LoginProps> = ({
   onConnect,
   onKeyPress,
 }) => {
+  const [isClicking, setIsClicking] = React.useState(false);
+
   const handleConnect = () => {
     if (username.trim() && !isConnecting) {
-      soundManager.play('click');
-      onConnect();
+      setIsClicking(true);
+      soundManager.playClick();
+      setTimeout(() => {
+        onConnect();
+        setIsClicking(false);
+      }, 200);
     }
   };
   return (
@@ -116,25 +122,29 @@ export const Login: React.FC<LoginProps> = ({
             <button
               onClick={handleConnect}
               disabled={isConnecting || !username.trim()}
-              className="w-full py-4 px-6 rounded-lg transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-3 comic-text text-xl md:text-2xl comic-outline"
+              className={`w-full py-4 px-6 rounded-lg transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-3 comic-text text-xl md:text-2xl comic-outline ${isClicking ? 'animate-pulse' : ''}`}
               style={{ 
                 backgroundColor: 'var(--color-accent)',
                 border: '4px solid var(--color-border)',
                 color: 'var(--color-text-on-yellow)',
-                boxShadow: 'var(--shadow-lg)',
+                boxShadow: isClicking ? 'var(--shadow-sm)' : 'var(--shadow-lg)',
                 borderRadius: 'var(--radius-sm)',
-                transform: 'rotate(-1deg)',
+                transform: isClicking ? 'rotate(-1deg) scale(0.95)' : 'rotate(-1deg)',
                 textShadow: '2px 2px 0 rgba(255,255,255,0.5)'
               }}
               onMouseEnter={(e) => { 
-                e.currentTarget.style.transform = 'rotate(-1deg) scale(1.05)';
-                e.currentTarget.style.boxShadow = 'var(--shadow-xl)';
-                e.currentTarget.classList.add('animate-kapow');
+                if (!isClicking) {
+                  e.currentTarget.style.transform = 'rotate(-1deg) scale(1.05)';
+                  e.currentTarget.style.boxShadow = 'var(--shadow-xl)';
+                  e.currentTarget.classList.add('animate-kapow');
+                }
               }}
               onMouseLeave={(e) => { 
-                e.currentTarget.style.transform = 'rotate(-1deg) scale(1)';
-                e.currentTarget.style.boxShadow = 'var(--shadow-lg)';
-                e.currentTarget.classList.remove('animate-kapow');
+                if (!isClicking) {
+                  e.currentTarget.style.transform = 'rotate(-1deg) scale(1)';
+                  e.currentTarget.style.boxShadow = 'var(--shadow-lg)';
+                  e.currentTarget.classList.remove('animate-kapow');
+                }
               }}
             >
               {isConnecting ? (

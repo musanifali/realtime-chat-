@@ -148,9 +148,20 @@ h1, h2, h3, h4, h5, h6, .comic-text {
   100% { transform: scale(2) rotate(180deg); opacity: 0; }
 }
 
+@keyframes glow-pulse {
+  0%, 100% { box-shadow: 0 0 5px var(--color-primary), 0 0 10px var(--color-primary); }
+  50% { box-shadow: 0 0 10px var(--color-primary), 0 0 20px var(--color-primary), 0 0 30px var(--color-primary); }
+}
+
+@keyframes ripple {
+  0% { transform: scale(1); opacity: 0.8; }
+  100% { transform: scale(1.5); opacity: 0; }
+}
+
 .animate-kapow { animation: kapow 0.5s ease-out; }
 .animate-comic-pop { animation: comic-pop 0.4s cubic-bezier(0.68, -0.55, 0.265, 1.55); }
 .animate-comic-shake { animation: comic-shake 0.3s ease-in-out; }
+.animate-glow { animation: glow-pulse 1s ease-in-out infinite; }
 
 /* Bold Comic Outlines */
 .comic-outline {

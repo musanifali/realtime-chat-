@@ -1,6 +1,6 @@
 // client/src/components/Chat/Message.tsx
 
-import React, { useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import { ChatMessage } from '../../types';
 import { formatTime } from '../../utils/messageUtils';
 import { soundManager } from '../../services/SoundManager';
@@ -11,10 +11,14 @@ interface MessageProps {
 }
 
 export const Message: React.FC<MessageProps> = ({ message, isOwn }) => {
+  const [justReceived, setJustReceived] = useState(!isOwn && message.type !== 'system');
+
   useEffect(() => {
-    // Play pop sound for received messages
+    // Play receive sound and animate for received messages
     if (!isOwn && message.type !== 'system') {
-      soundManager.play('pop');
+      soundManager.playReceive();
+      setJustReceived(true);
+      setTimeout(() => setJustReceived(false), 600);
     }
   }, [isOwn, message.type]);
   if (message.type === 'system') {
@@ -38,7 +42,7 @@ export const Message: React.FC<MessageProps> = ({ message, isOwn }) => {
   const isPrivate = message.type === 'private_sent' || message.type === 'private_received';
 
   return (
-    <div className={`flex ${isOwn ? 'justify-end' : 'justify-start'} animate-comic-pop`}>
+    <div className={`flex ${isOwn ? 'justify-end' : 'justify-start'} ${justReceived ? 'animate-bounce' : 'animate-comic-pop'}`}>
       <div 
         className="speech-bubble-tail px-4 py-3 max-w-[75%] md:max-w-[60%] lg:max-w-[50%] relative"
         style={{

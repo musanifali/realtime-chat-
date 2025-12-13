@@ -13,6 +13,8 @@ import { soundManager } from './services/SoundManager';
 function App() {
   const [input, setInput] = useState('');
   const [showMobileSidebar, setShowMobileSidebar] = useState(false);
+  const [isExiting, setIsExiting] = useState(false);
+  const [menuClicked, setMenuClicked] = useState(false);
   
   const {
     isConnected,
@@ -101,26 +103,34 @@ function App() {
         <div className="p-3 md:p-4" style={{ borderTop: '4px solid var(--color-border)', boxShadow: '0 -4px 0 var(--color-primary)' }}>
           <button
             onClick={() => {
-              soundManager.play('click');
-              disconnect();
+              setIsExiting(true);
+              soundManager.playClick();
+              setTimeout(() => {
+                disconnect();
+                setIsExiting(false);
+              }, 300);
             }}
-            className="w-full flex items-center justify-center gap-2 px-3 md:px-4 py-2 md:py-3 transition-all duration-200 font-black uppercase text-xs md:text-sm"
+            className={`w-full flex items-center justify-center gap-2 px-3 md:px-4 py-2 md:py-3 transition-all duration-200 font-black uppercase text-xs md:text-sm ${isExiting ? 'animate-pulse' : ''}`}
             style={{ 
               background: 'var(--color-primary)', 
               color: 'white',
               border: '3px solid var(--color-border)',
-              boxShadow: '4px 4px 0 var(--color-border)',
+              boxShadow: isExiting ? '2px 2px 0 var(--color-border)' : '4px 4px 0 var(--color-border)',
               borderRadius: '12px',
-              transform: 'rotate(-1deg)',
+              transform: isExiting ? 'rotate(-1deg) scale(0.95)' : 'rotate(-1deg)',
               textShadow: '2px 2px 0 var(--color-border)'
             }}
             onMouseEnter={(e) => { 
-              e.currentTarget.style.transform = 'rotate(-1deg) scale(1.05)'; 
-              e.currentTarget.style.animation = 'comic-shake 0.3s ease-in-out';
+              if (!isExiting) {
+                e.currentTarget.style.transform = 'rotate(-1deg) scale(1.05)'; 
+                e.currentTarget.style.animation = 'comic-shake 0.3s ease-in-out';
+              }
             }}
             onMouseLeave={(e) => { 
-              e.currentTarget.style.transform = 'rotate(-1deg) scale(1)'; 
-              e.currentTarget.style.animation = '';
+              if (!isExiting) {
+                e.currentTarget.style.transform = 'rotate(-1deg) scale(1)'; 
+                e.currentTarget.style.animation = '';
+              }
             }}
           >
             <LogOut className="w-4 h-4" />
@@ -134,13 +144,21 @@ function App() {
         {/* Mobile Header with Hamburger */}
         <div className="md:hidden flex items-center p-4 gap-3" style={{ backgroundColor: 'var(--color-bg-secondary)', borderBottom: '4px solid var(--color-border)', boxShadow: '0 4px 0 var(--color-primary)' }}>
           <button
-            onClick={() => setShowMobileSidebar(!showMobileSidebar)}
-            className="p-2 transition-all duration-200"
+            onClick={() => {
+              setMenuClicked(true);
+              soundManager.playClick();
+              setTimeout(() => {
+                setShowMobileSidebar(!showMobileSidebar);
+                setMenuClicked(false);
+              }, 150);
+            }}
+            className={`p-2 transition-all duration-200 ${menuClicked ? 'animate-pulse' : ''}`}
             style={{ 
               background: 'var(--color-accent)', 
               border: '3px solid var(--color-border)',
-              boxShadow: '3px 3px 0 var(--color-border)',
+              boxShadow: menuClicked ? '1px 1px 0 var(--color-border)' : '3px 3px 0 var(--color-border)',
               borderRadius: '8px',
+              transform: menuClicked ? 'scale(0.9)' : 'scale(1)'
             }}
           >
             {showMobileSidebar ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}

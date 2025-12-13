@@ -15,14 +15,14 @@ export const useUserManagement = () => {
     // Detect new users (joined)
     filteredUsers.forEach(user => {
       if (!previousUsers.has(user)) {
-        soundManager.play('swoosh-in');
+        soundManager.playUserJoin();
       }
     });
     
     // Detect removed users (left)
     previousUsers.forEach(user => {
       if (!newUsersSet.has(user)) {
-        soundManager.play('swoosh-out');
+        soundManager.playUserLeave();
       }
     });
     
