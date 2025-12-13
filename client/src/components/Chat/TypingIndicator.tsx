@@ -10,8 +10,8 @@ export const TypingIndicator: React.FC<TypingIndicatorProps> = ({ usernames }) =
   if (usernames.length === 0) return null;
 
   const displayText = usernames.length === 1 
-    ? `${usernames[0]} is typing...`
-    : `${usernames.length} heroes are typing...`;
+    ? `${usernames[0]}`
+    : `${usernames.length} heroes`;
 
   return (
     <div className="px-4 py-2 animate-comic-pop">

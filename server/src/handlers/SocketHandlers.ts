@@ -159,8 +159,12 @@ export class SocketHandlers {
 
   async handleTypingStart(socket: SocketType, room: string): Promise<void> {
     const username = socket.data.username;
-    if (!username || !socket.data.rooms.has(room)) return;
+    if (!username || !socket.data.rooms.has(room)) {
+      console.log(`${SERVER_ID}: Typing start rejected - username: ${username}, room: ${room}, hasRoom: ${socket.data.rooms.has(room)}`);
+      return;
+    }
 
+    console.log(`${SERVER_ID}: ${username} started typing in #${room}`);
     // Broadcast to room members except sender
     socket.to(room).emit('typing_start', { username, room });
   }
@@ -169,6 +173,7 @@ export class SocketHandlers {
     const username = socket.data.username;
     if (!username || !socket.data.rooms.has(room)) return;
 
+    console.log(`${SERVER_ID}: ${username} stopped typing in #${room}`);
     // Broadcast to room members except sender
     socket.to(room).emit('typing_stop', { username, room });
   }

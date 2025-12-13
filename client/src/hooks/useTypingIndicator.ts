@@ -1,16 +1,17 @@
 // client/src/hooks/useTypingIndicator.ts
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { SocketService } from '../services/SocketService';
 
 export const useTypingIndicator = (socketService: SocketService | null, currentRoom: string | null) => {
   const [typingUsers, setTypingUsers] = useState<string[]>([]);
-  const [typingTimeout, setTypingTimeout] = useState<number | null>(null);
+  const typingTimeoutRef = useRef<number | null>(null);
 
   useEffect(() => {
     if (!socketService) return;
 
     const handleTypingStart = (data: { username: string; room: string }) => {
+      console.log('Typing start received:', data);
       if (data.room === currentRoom) {
         setTypingUsers(prev => {
           if (!prev.includes(data.username)) {
@@ -22,6 +23,7 @@ export const useTypingIndicator = (socketService: SocketService | null, currentR
     };
 
     const handleTypingStop = (data: { username: string; room: string }) => {
+      console.log('Typing stop received:', data);
       if (data.room === currentRoom) {
         setTypingUsers(prev => prev.filter(user => user !== data.username));
       }
@@ -31,25 +33,29 @@ export const useTypingIndicator = (socketService: SocketService | null, currentR
     socketService.onTypingStop(handleTypingStop);
 
     return () => {
-      // Cleanup if needed
+      // Clean up timeout on unmount
+      if (typingTimeoutRef.current) {
+        clearTimeout(typingTimeoutRef.current);
+      }
     };
   }, [socketService, currentRoom]);
 
   const notifyTyping = useCallback(() => {
     if (!socketService || !currentRoom) return;
 
+    console.log('Sending typing start to room:', currentRoom);
     socketService.sendTypingStart(currentRoom);
 
-    if (typingTimeout) {
-      clearTimeout(typingTimeout);
+    if (typingTimeoutRef.current) {
+      clearTimeout(typingTimeoutRef.current);
     }
 
-    const timeout = setTimeout(() => {
+    typingTimeoutRef.current = window.setTimeout(() => {
+      console.log('Sending typing stop to room:', currentRoom);
       socketService.sendTypingStop(currentRoom);
+      typingTimeoutRef.current = null;
     }, 3000);
-
-    setTypingTimeout(timeout);
-  }, [socketService, currentRoom, typingTimeout]);
+  }, [socketService, currentRoom]);
 
   return { typingUsers, notifyTyping };
 };
