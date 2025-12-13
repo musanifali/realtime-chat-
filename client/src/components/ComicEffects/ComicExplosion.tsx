@@ -4,27 +4,25 @@ import React, { useEffect, useState } from 'react';
 
 interface ComicExplosionProps {
   text?: string;
-  show: boolean;
+  show?: boolean;
   onComplete?: () => void;
 }
 
 export const ComicExplosion: React.FC<ComicExplosionProps> = ({ 
   text = 'KAPOW!', 
-  show,
+  show = true,
   onComplete 
 }) => {
   const [visible, setVisible] = useState(show);
 
   useEffect(() => {
-    if (show) {
-      setVisible(true);
-      const timer = setTimeout(() => {
-        setVisible(false);
-        onComplete?.();
-      }, 800);
-      return () => clearTimeout(timer);
-    }
-  }, [show, onComplete]);
+    setVisible(true);
+    const timer = setTimeout(() => {
+      setVisible(false);
+      onComplete?.();
+    }, 800);
+    return () => clearTimeout(timer);
+  }, [onComplete]);
 
   if (!visible) return null;
 

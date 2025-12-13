@@ -16,7 +16,7 @@ export const useChatApp = () => {
   const [chatTarget, setChatTarget] = useState<ChatTarget>({ type: 'room', room: DEFAULT_ROOM });
 
   const { socketService, chatService, connect: connectSocket, disconnect: disconnectSocket } = useSocketConnection();
-  const { messages, addMessage, clearMessages } = useChatMessages();
+  const { messages, addMessage } = useChatMessages();
   const { 
     allRooms, 
     myRooms, 

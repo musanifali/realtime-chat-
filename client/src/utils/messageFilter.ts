@@ -5,7 +5,7 @@ import { ChatMessage, ChatTarget } from '../types';
 export const filterMessagesForTarget = (
   messages: ChatMessage[],
   chatTarget: ChatTarget,
-  username: string
+  _username: string
 ): ChatMessage[] => {
   return messages.filter(msg => {
     if (chatTarget.type === 'room') {

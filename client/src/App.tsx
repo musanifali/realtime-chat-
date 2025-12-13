@@ -78,25 +78,29 @@ function App() {
   return (
     <div className="flex h-screen text-gray-900" style={{ backgroundColor: 'var(--color-bg-primary)' }}>
       {/* Mobile Header with Menu Buttons */}
-      <div className="md:hidden fixed top-0 left-0 right-0 z-40 flex items-center justify-between px-4 py-3 backdrop-blur-md" style={{ backgroundColor: 'var(--color-surface)', borderBottom: '1px solid var(--color-border)', boxShadow: 'var(--shadow-sm)' }}>
+      <div className="md:hidden fixed top-0 left-0 right-0 z-40 flex items-center justify-between px-4 py-3 halftone-bg" style={{ backgroundColor: 'var(--color-secondary)', borderBottom: '4px solid var(--color-border)', boxShadow: '0 4px 0 var(--color-border)' }}>
         <button
           onClick={() => setShowMobileSidebar(!showMobileSidebar)}
-          className="p-2 rounded-lg transition-colors"
-          onMouseEnter={(e) => e.currentTarget.style.backgroundColor = 'var(--color-surface-hover)'}
-          onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'transparent'}
+          className="p-2 rounded-lg transition-all"
+          style={{ backgroundColor: 'var(--color-accent)', border: '2px solid var(--color-border)', boxShadow: '2px 2px 0 var(--color-border)' }}
+          onMouseEnter={(e) => { e.currentTarget.style.transform = 'scale(1.1)'; }}
+          onMouseLeave={(e) => { e.currentTarget.style.transform = 'scale(1)'; }}
         >
-          {showMobileSidebar ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
+          {showMobileSidebar ? <X className="w-5 h-5" style={{ color: 'var(--color-border)' }} /> : <Menu className="w-5 h-5" style={{ color: 'var(--color-border)' }} />}
         </button>
-        <h1 className="text-lg font-semibold">
-          {chatTarget.type === 'room' ? `# ${chatTarget.room}` : `@ ${chatTarget.username}`}
+        <h1 className="text-lg font-black uppercase" style={{ color: 'white', textShadow: '2px 2px 0 var(--color-border)' }}>
+          {chatTarget.type === 'room' ? `#${chatTarget.room}` : `@${chatTarget.username}`}
         </h1>
         {chatTarget.type === 'room' && (
           <button
             onClick={() => setShowMobileMembers(!showMobileMembers)}
-            className="p-2 hover:bg-[#3d3450] rounded-lg transition-colors relative"
+            className="p-2 rounded-lg transition-all relative"
+            style={{ backgroundColor: 'var(--color-accent)', border: '2px solid var(--color-border)', boxShadow: '2px 2px 0 var(--color-border)' }}
+            onMouseEnter={(e) => { e.currentTarget.style.transform = 'scale(1.1)'; }}
+            onMouseLeave={(e) => { e.currentTarget.style.transform = 'scale(1)'; }}
           >
-            <Users className="w-6 h-6" />
-            <span className="absolute -top-1 -right-1 text-xs rounded-full w-5 h-5 flex items-center justify-center" style={{ background: 'linear-gradient(135deg, var(--color-primary) 0%, var(--color-accent) 100%)', color: 'var(--color-text-on-primary)' }}>
+            <Users className="w-5 h-5" style={{ color: 'var(--color-border)' }} />
+            <span className="absolute -top-1 -right-1 text-xs rounded-full w-5 h-5 flex items-center justify-center font-black" style={{ backgroundColor: 'var(--color-primary)', color: 'white', border: '2px solid var(--color-border)' }}>
               {currentRoomUsers.length}
             </span>
           </button>

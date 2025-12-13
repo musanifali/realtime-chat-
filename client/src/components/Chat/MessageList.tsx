@@ -35,10 +35,11 @@ export const MessageList: React.FC<MessageListProps> = ({
         </div>
       </ScrollArea.Viewport>
       <ScrollArea.Scrollbar
-        className="flex select-none touch-none p-0.5 bg-gray-900 transition-colors duration-150 ease-out hover:bg-gray-700 data-[orientation=vertical]:w-2.5 data-[orientation=horizontal]:flex-col data-[orientation=horizontal]:h-2.5"
+        className="flex select-none touch-none p-1 transition-colors duration-150 ease-out data-[orientation=vertical]:w-4 data-[orientation=horizontal]:flex-col data-[orientation=horizontal]:h-4"
+        style={{ backgroundColor: 'var(--color-accent)', border: '2px solid var(--color-border)' }}
         orientation="vertical"
       >
-          <ScrollArea.Thumb className="flex-1 bg-purple-300 rounded-full relative before:content-[''] before:absolute before:top-1/2 before:left-1/2 before:-translate-x-1/2 before:-translate-y-1/2 before:w-full before:h-full before:min-w-[44px] before:min-h-[44px]" />
+          <ScrollArea.Thumb className="flex-1 relative before:content-[''] before:absolute before:top-1/2 before:left-1/2 before:-translate-x-1/2 before:-translate-y-1/2 before:w-full before:h-full before:min-w-[44px] before:min-h-[44px]" style={{ backgroundColor: 'var(--color-primary)', border: '2px solid var(--color-border)', borderRadius: '8px' }} />
       </ScrollArea.Scrollbar>
     </ScrollArea.Root>
   );
