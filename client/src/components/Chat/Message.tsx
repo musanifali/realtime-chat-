@@ -31,7 +31,7 @@ export const Message: React.FC<MessageProps> = ({ message, isOwn }) => {
   const isPrivate = message.type === 'private_sent' || message.type === 'private_received';
 
   return (
-    <div className={`flex ${isOwn ? 'justify-end' : 'justify-start'} animate-comic-pop`}>
+    <div className={`flex ${isOwn ? 'justify-start' : 'justify-end'} animate-comic-pop`}>
       <div 
         className="speech-bubble-tail px-4 py-3 max-w-[75%] md:max-w-[60%] lg:max-w-[50%] relative"
         style={{
