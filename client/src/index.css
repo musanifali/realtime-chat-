@@ -1,62 +1,74 @@
 @import "tailwindcss";
+@import url('https://fonts.googleapis.com/css2?family=Bangers&family=Luckiest+Guy&display=swap');
 
 :root {
-  /* Brand Colors - Soft & Modern */
-  --color-primary: #8b5cf6;        /* Vibrant Purple */
-  --color-primary-light: #a78bfa;  /* Light Purple */
-  --color-primary-dark: #7c3aed;   /* Deep Purple */
+  /* Pop Art/Comic Book Colors - Bold & Vibrant! */
+  --color-primary: #ff0000;        /* Comic Red */
+  --color-primary-light: #ff4444;  /* Light Red */
+  --color-primary-dark: #cc0000;   /* Dark Red */
   
-  --color-secondary: #3b82f6;      /* Bright Blue */
-  --color-secondary-light: #60a5fa; /* Sky Blue */
-  --color-secondary-dark: #2563eb;  /* Deep Blue */
+  --color-secondary: #0066ff;      /* Comic Blue */
+  --color-secondary-light: #3399ff; /* Sky Blue */
+  --color-secondary-dark: #0047b3;  /* Deep Blue */
   
-  --color-accent: #ec4899;         /* Pink Accent */
-  --color-accent-light: #f472b6;   /* Light Pink */
+  --color-accent: #ffff00;         /* Bright Yellow */
+  --color-accent-light: #ffff66;   /* Light Yellow */
   
-  /* Background Colors */
-  --color-bg-primary: #faf8ff;     /* Soft Lavender White */
-  --color-bg-secondary: #f5f3ff;   /* Light Purple Tint */
+  --color-tertiary: #ff00ff;       /* Magenta */
+  --color-quaternary: #00ffff;     /* Cyan */
+  
+  /* Background Colors - Comic Book Style */
+  --color-bg-primary: #fff5e6;     /* Cream/Paper */
+  --color-bg-secondary: #ffffcc;   /* Light Yellow Tint */
   --color-bg-tertiary: #ffffff;    /* Pure White */
+  --color-bg-dots: #ffeecc;        /* Halftone Background */
   
   /* Surface Colors */
   --color-surface: #ffffff;        /* White Cards */
-  --color-surface-hover: #f5f3ff;  /* Hover State */
-  --color-surface-active: #ede9fe; /* Active/Selected */
+  --color-surface-hover: #ffff99;  /* Yellow Hover */
+  --color-surface-active: #ffcc00; /* Active Yellow */
   
-  /* Border Colors */
-  --color-border: #e9d5ff;         /* Soft Purple Border */
-  --color-border-light: #f3e8ff;   /* Very Light Border */
-  --color-border-dark: #d8b4fe;    /* Darker Border */
+  /* Border Colors - Bold Comic Outlines */
+  --color-border: #000000;         /* Black Outlines */
+  --color-border-light: #333333;   /* Dark Gray */
+  --color-border-dark: #000000;    /* Pure Black */
+  --color-border-width: 3px;       /* Bold Borders */
   
   /* Text Colors */
-  --color-text-primary: #1f2937;   /* Dark Gray */
-  --color-text-secondary: #6b7280; /* Medium Gray */
-  --color-text-tertiary: #9ca3af;  /* Light Gray */
+  --color-text-primary: #000000;   /* Black */
+  --color-text-secondary: #333333; /* Dark Gray */
+  --color-text-tertiary: #666666;  /* Medium Gray */
   --color-text-on-primary: #ffffff; /* White on Colored BG */
+  --color-text-on-yellow: #000000; /* Black on Yellow */
   
-  /* Message Bubbles */
-  --color-message-own: linear-gradient(135deg, #8b5cf6 0%, #3b82f6 100%);
-  --color-message-received: #ffffff;
-  --color-message-private: linear-gradient(135deg, #ec4899 0%, #f472b6 100%);
+  /* Message Bubbles - Speech Bubble Style */
+  --color-message-own: #ffff00;    /* Yellow Bubble */
+  --color-message-received: #ffffff; /* White Bubble */
+  --color-message-private: #ff00ff; /* Magenta Bubble */
   
-  /* Status Colors */
-  --color-success: #10b981;        /* Green */
-  --color-error: #ef4444;          /* Red */
-  --color-warning: #f59e0b;        /* Amber */
-  --color-info: #3b82f6;           /* Blue */
+  /* Status Colors - Primary Comic Colors */
+  --color-success: #00ff00;        /* Bright Green */
+  --color-error: #ff0000;          /* Bright Red */
+  --color-warning: #ffff00;        /* Bright Yellow */
+  --color-info: #0066ff;           /* Bright Blue */
   
-  /* Shadows */
-  --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.05);
-  --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.1);
-  --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.1);
-  --shadow-xl: 0 20px 25px -5px rgb(0 0 0 / 0.1);
+  /* Comic Shadows - Dramatic Offset */
+  --shadow-sm: 2px 2px 0 rgba(0, 0, 0, 0.8);
+  --shadow-md: 4px 4px 0 rgba(0, 0, 0, 0.8);
+  --shadow-lg: 6px 6px 0 rgba(0, 0, 0, 0.8);
+  --shadow-xl: 8px 8px 0 rgba(0, 0, 0, 0.8);
+  --shadow-pop: 3px 3px 0 #000000;
   
-  /* Border Radius */
-  --radius-sm: 0.375rem;
-  --radius-md: 0.5rem;
-  --radius-lg: 0.75rem;
-  --radius-xl: 1rem;
+  /* Border Radius - Less rounded, more angular */
+  --radius-sm: 0.25rem;
+  --radius-md: 0.375rem;
+  --radius-lg: 0.5rem;
+  --radius-xl: 0.75rem;
   --radius-full: 9999px;
+  
+  /* Comic Book Fonts */
+  --font-comic: 'Bangers', 'Comic Sans MS', cursive, sans-serif;
+  --font-body: 'Arial Black', sans-serif;
 }
 
 html, body, #root {
@@ -67,12 +79,99 @@ html, body, #root {
 }
 
 body {
-  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen',
-    'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue',
-    sans-serif;
+  font-family: 'Arial Black', 'Arial Bold', sans-serif;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   background-color: var(--color-bg-primary);
+  background-image: 
+    repeating-linear-gradient(
+      0deg,
+      transparent,
+      transparent 2px,
+      rgba(0, 0, 0, 0.03) 2px,
+      rgba(0, 0, 0, 0.03) 4px
+    ),
+    repeating-linear-gradient(
+      90deg,
+      transparent,
+      transparent 2px,
+      rgba(0, 0, 0, 0.03) 2px,
+      rgba(0, 0, 0, 0.03) 4px
+    );
   color: var(--color-text-primary);
+  font-weight: bold;
+}
+
+/* Comic Book Heading Font */
+h1, h2, h3, h4, h5, h6, .comic-text {
+  font-family: 'Bangers', cursive;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+}
+
+/* Halftone Dot Pattern */
+.halftone-bg {
+  background-image: radial-gradient(circle, rgba(0, 0, 0, 0.15) 1px, transparent 1px);
+  background-size: 4px 4px;
+}
+
+/* Ben-Day Dots Effect */
+.bendots-bg {
+  background-image: radial-gradient(circle, var(--color-primary) 1.5px, transparent 1.5px);
+  background-size: 6px 6px;
+  background-color: var(--color-accent);
+}
+
+/* Comic Book Animations */
+@keyframes kapow {
+  0%, 100% { transform: scale(1) rotate(0deg); }
+  25% { transform: scale(1.2) rotate(-5deg); }
+  50% { transform: scale(1.3) rotate(5deg); }
+  75% { transform: scale(1.2) rotate(-3deg); }
+}
+
+@keyframes comic-pop {
+  0% { transform: scale(0) rotate(-15deg); opacity: 0; }
+  50% { transform: scale(1.1) rotate(5deg); }
+  100% { transform: scale(1) rotate(0deg); opacity: 1; }
+}
+
+@keyframes comic-shake {
+  0%, 100% { transform: translateX(0); }
+  25% { transform: translateX(-5px) rotate(-2deg); }
+  50% { transform: translateX(5px) rotate(2deg); }
+  75% { transform: translateX(-3px) rotate(-1deg); }
+}
+
+@keyframes starburst {
+  0% { transform: scale(0) rotate(0deg); opacity: 1; }
+  100% { transform: scale(2) rotate(180deg); opacity: 0; }
+}
+
+.animate-kapow { animation: kapow 0.5s ease-out; }
+.animate-comic-pop { animation: comic-pop 0.4s cubic-bezier(0.68, -0.55, 0.265, 1.55); }
+.animate-comic-shake { animation: comic-shake 0.3s ease-in-out; }
+
+/* Bold Comic Outlines */
+.comic-outline {
+  border: var(--color-border-width) solid var(--color-border) !important;
+}
+
+/* Speech Bubble Tail */
+.speech-bubble-tail {
+  position: relative;
+}
+
+.speech-bubble-tail::after {
+  content: '';
+  position: absolute;
+  bottom: -10px;
+  left: 20px;
+  width: 0;
+  height: 0;
+  border-left: 15px solid transparent;
+  border-right: 0px solid transparent;
+  border-top: 15px solid currentColor;
+  filter: drop-shadow(2px 2px 0 var(--color-border));
 }
 

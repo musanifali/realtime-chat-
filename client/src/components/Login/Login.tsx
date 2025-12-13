@@ -21,42 +21,70 @@ export const Login: React.FC<LoginProps> = ({
   onKeyPress,
 }) => {
   return (
-    <div className="flex items-center justify-center min-h-screen px-4" style={{ backgroundColor: 'var(--color-bg-primary)' }}>
-      <div className="w-full max-w-md">
-        <div className="rounded-2xl p-8" style={{ backgroundColor: 'var(--color-surface)', border: '1px solid var(--color-border)', boxShadow: 'var(--shadow-xl)', borderRadius: 'var(--radius-xl)' }}>
+    <div className="flex items-center justify-center min-h-screen px-4 halftone-bg" style={{ backgroundColor: 'var(--color-bg-primary)' }}>
+      <div className="w-full max-w-md animate-comic-pop">
+        <div className="comic-outline p-8" style={{ 
+          backgroundColor: 'var(--color-surface)', 
+          border: '4px solid var(--color-border)', 
+          boxShadow: 'var(--shadow-xl)', 
+          borderRadius: 'var(--radius-md)',
+          transform: 'rotate(-1deg)'
+        }}>
           {/* Header */}
           <div className="text-center mb-8">
-            <div className="inline-flex items-center justify-center w-16 h-16 rounded-full mb-4" style={{ background: 'linear-gradient(135deg, var(--color-primary) 0%, var(--color-secondary) 100%)', boxShadow: 'var(--shadow-lg)' }}>
-              <MessageSquare className="w-8 h-8 text-white" />
+            <div className="inline-flex items-center justify-center w-20 h-20 mb-4 animate-comic-shake" style={{ 
+              backgroundColor: 'var(--color-accent)',
+              border: '4px solid var(--color-border)',
+              boxShadow: 'var(--shadow-pop)',
+              borderRadius: '50%',
+              transform: 'rotate(5deg)'
+            }}>
+              <MessageSquare className="w-10 h-10" style={{ color: 'var(--color-text-primary)', strokeWidth: 3 }} />
             </div>
-            <h1 className="text-3xl font-bold mb-2" style={{ color: 'var(--color-text-primary)' }}>
-              Real-Time Chat
+            <h1 className="comic-text text-5xl mb-2" style={{ 
+              color: 'var(--color-primary)',
+              textShadow: '3px 3px 0 var(--color-border)',
+              WebkitTextStroke: '2px var(--color-border)'
+            }}>
+              CHAT!
             </h1>
-            <p className="text-gray-600 text-sm">
-              Connect instantly with people around the world
+            <p className="font-bold text-lg" style={{ color: 'var(--color-text-primary)' }}>
+              🎨 POP INTO THE CONVERSATION! 💥
             </p>
           </div>
 
           {/* Input Section */}
           <div className="space-y-4">
             <div>
-              <label className="block text-sm font-medium mb-2" style={{ color: 'var(--color-text-primary)' }}>
-                Username
+              <label className="block text-sm font-black mb-2 comic-text" style={{ 
+                color: 'var(--color-text-primary)',
+                textTransform: 'uppercase',
+                letterSpacing: '0.1em'
+              }}>
+                HERO NAME:
               </label>
               <input
                 type="text"
                 value={username}
                 onChange={(e) => onUsernameChange(e.target.value)}
                 onKeyPress={onKeyPress}
-                placeholder="Enter your username..."
-                className="w-full px-4 py-3 rounded-lg focus:outline-none focus:ring-2 focus:border-transparent transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+                placeholder="TYPE YOUR NAME!"
+                className="w-full px-4 py-3 font-bold focus:outline-none transition-all disabled:opacity-50 disabled:cursor-not-allowed comic-outline"
                 style={{ 
-                  backgroundColor: 'var(--color-bg-secondary)', 
-                  border: '1px solid var(--color-border)', 
+                  backgroundColor: 'var(--color-surface)', 
+                  border: '3px solid var(--color-border)', 
                   color: 'var(--color-text-primary)',
-                  borderRadius: 'var(--radius-md)'
+                  borderRadius: 'var(--radius-sm)',
+                  boxShadow: 'var(--shadow-md)'
                 }}
-                onFocus={(e) => { e.currentTarget.style.borderColor = 'var(--color-primary)'; }}
+                onFocus={(e) => { 
+                  e.currentTarget.style.border = '3px solid var(--color-primary)';
+                  e.currentTarget.style.transform = 'scale(1.02)';
+                }}
+                onBlur={(e) => {
+                  e.currentTarget.style.border = '3px solid var(--color-border)';
+                  e.currentTarget.style.transform = 'scale(1)';
+                }}
                 disabled={isConnecting}
                 autoFocus
               />
@@ -64,9 +92,16 @@ export const Login: React.FC<LoginProps> = ({
 
             {/* Error Message */}
             {connectionError && (
-              <div className="flex items-center gap-2 px-4 py-3 bg-red-50 border border-red-200 rounded-lg text-red-600 text-sm">
-                <span>⚠️</span>
-                <span>{connectionError}</span>
+              <div className="flex items-center gap-2 px-4 py-3 comic-outline animate-comic-shake" style={{
+                backgroundColor: 'var(--color-error)',
+                border: '3px solid var(--color-border)',
+                borderRadius: 'var(--radius-sm)',
+                color: 'var(--color-text-on-primary)',
+                boxShadow: 'var(--shadow-md)',
+                fontWeight: 'bold'
+              }}>
+                <span className="text-2xl">⚠️</span>
+                <span className="uppercase">{connectionError}</span>
               </div>
             )}
 
@@ -74,30 +109,43 @@ export const Login: React.FC<LoginProps> = ({
             <button
               onClick={onConnect}
               disabled={isConnecting || !username.trim()}
-              className="w-full py-3 px-4 font-medium rounded-lg transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+              className="w-full py-4 px-6 rounded-lg transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-3 comic-text text-2xl comic-outline"
               style={{ 
-                background: 'linear-gradient(135deg, var(--color-primary) 0%, var(--color-secondary) 100%)', 
-                color: 'var(--color-text-on-primary)',
-                boxShadow: 'var(--shadow-md)',
-                borderRadius: 'var(--radius-md)'
+                backgroundColor: 'var(--color-accent)',
+                border: '4px solid var(--color-border)',
+                color: 'var(--color-text-on-yellow)',
+                boxShadow: 'var(--shadow-lg)',
+                borderRadius: 'var(--radius-sm)',
+                transform: 'rotate(-1deg)',
+                textShadow: '2px 2px 0 rgba(255,255,255,0.5)'
               }}
-              onMouseEnter={(e) => { e.currentTarget.style.boxShadow = 'var(--shadow-lg)'; }}
-              onMouseLeave={(e) => { e.currentTarget.style.boxShadow = 'var(--shadow-md)'; }}
+              onMouseEnter={(e) => { 
+                e.currentTarget.style.transform = 'rotate(-1deg) scale(1.05)';
+                e.currentTarget.style.boxShadow = 'var(--shadow-xl)';
+                e.currentTarget.classList.add('animate-kapow');
+              }}
+              onMouseLeave={(e) => { 
+                e.currentTarget.style.transform = 'rotate(-1deg) scale(1)';
+                e.currentTarget.style.boxShadow = 'var(--shadow-lg)';
+                e.currentTarget.classList.remove('animate-kapow');
+              }}
             >
               {isConnecting ? (
                 <>
-                  <Loader2 className="w-5 h-5 animate-spin" />
-                  <span>Connecting...</span>
+                  <Loader2 className="w-6 h-6 animate-spin" strokeWidth={3} />
+                  <span>ZAP! CONNECTING...</span>
                 </>
               ) : (
-                <span>Join Chat</span>
+                <>
+                  <span>💥 JOIN CHAT! 💥</span>
+                </>
               )}
             </button>
           </div>
 
           {/* Footer */}
-          <div className="mt-6 text-center text-xs text-gray-600">
-            Press Enter to join • No signup required
+          <div className="mt-6 text-center font-bold" style={{ color: 'var(--color-text-primary)' }}>
+            <span className="text-sm">⚡ PRESS ENTER TO ZAP IN! ⚡</span>
           </div>
         </div>
       </div>
