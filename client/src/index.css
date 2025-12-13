@@ -1,7 +1,7 @@
 @import "tailwindcss";
 @import url('https://fonts.googleapis.com/css2?family=Bangers&family=Luckiest+Guy&display=swap');
 
-:root {
+:root, [data-theme="light"] {
   /* Pop Art/Comic Book Colors - Bold & Vibrant! */
   --color-primary: #ff0000;        /* Comic Red */
   --color-primary-light: #ff4444;  /* Light Red */
@@ -51,6 +51,59 @@
   --color-error: #ff0000;          /* Bright Red */
   --color-warning: #ffff00;        /* Bright Yellow */
   --color-info: #0066ff;           /* Bright Blue */
+}
+
+/* Dark Theme - Neon Comic Book Style! */
+[data-theme="dark"] {
+  /* Neon Pop Art Colors */
+  --color-primary: #ff1744;        /* Neon Red */
+  --color-primary-light: #ff5252;  /* Light Neon Red */
+  --color-primary-dark: #d50000;   /* Deep Red */
+  
+  --color-secondary: #00b0ff;      /* Neon Blue */
+  --color-secondary-light: #40c4ff; /* Sky Neon Blue */
+  --color-secondary-dark: #0091ea;  /* Deep Neon Blue */
+  
+  --color-accent: #ffea00;         /* Neon Yellow */
+  --color-accent-light: #ffff00;   /* Bright Yellow */
+  
+  --color-tertiary: #e040fb;       /* Neon Magenta */
+  --color-quaternary: #00e5ff;     /* Neon Cyan */
+  
+  /* Dark Background Colors */
+  --color-bg-primary: #1a1a2e;     /* Dark Navy */
+  --color-bg-secondary: #16213e;   /* Darker Blue */
+  --color-bg-tertiary: #0f0f23;    /* Almost Black */
+  --color-bg-dots: #252540;        /* Dark Halftone */
+  
+  /* Dark Surface Colors */
+  --color-surface: #252540;        /* Dark Purple */
+  --color-surface-hover: #2d2d4a;  /* Lighter Dark */
+  --color-surface-active: #3a3a5a; /* Active Dark */
+  
+  /* Neon Border Colors */
+  --color-border: #00e5ff;         /* Neon Cyan Outlines */
+  --color-border-light: #40c4ff;   /* Light Cyan */
+  --color-border-dark: #00b0ff;    /* Deep Cyan */
+  --color-border-width: 3px;
+  
+  /* Dark Text Colors */
+  --color-text-primary: #ffffff;   /* White */
+  --color-text-secondary: #b0b0b0; /* Light Gray */
+  --color-text-tertiary: #808080;  /* Medium Gray */
+  --color-text-on-primary: #ffffff; /* White */
+  --color-text-on-yellow: #000000; /* Black on Yellow */
+  
+  /* Dark Message Bubbles */
+  --color-message-own: #7c4dff;    /* Purple Bubble */
+  --color-message-received: #252540; /* Dark Bubble */
+  --color-message-private: #e040fb; /* Neon Magenta Bubble */
+  
+  /* Neon Status Colors */
+  --color-success: #00e676;        /* Neon Green */
+  --color-error: #ff1744;          /* Neon Red */
+  --color-warning: #ffea00;        /* Neon Yellow */
+  --color-info: #00b0ff;           /* Neon Blue */
   
   /* Comic Shadows - Dramatic Offset */
   --shadow-sm: 2px 2px 0 rgba(0, 0, 0, 0.8);
@@ -83,6 +136,7 @@ body {
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   background-color: var(--color-bg-primary);
+  transition: background-color 0.3s ease, color 0.3s ease;
   background-image: 
     repeating-linear-gradient(
       0deg,
@@ -102,6 +156,14 @@ body {
   font-weight: bold;
 }
 
+/* Smooth theme transitions */
+* {
+  transition: background-color 0.3s ease, 
+              border-color 0.3s ease, 
+              color 0.3s ease,
+              box-shadow 0.3s ease;
+}
+
 /* Comic Book Heading Font */
 h1, h2, h3, h4, h5, h6, .comic-text {
   font-family: 'Bangers', cursive;
@@ -115,11 +177,21 @@ h1, h2, h3, h4, h5, h6, .comic-text {
   background-size: 4px 4px;
 }
 
+[data-theme="dark"] .halftone-bg {
+  background-image: radial-gradient(circle, rgba(0, 229, 255, 0.1) 1px, transparent 1px);
+  background-size: 4px 4px;
+}
+
 /* Ben-Day Dots Effect */
 .bendots-bg {
   background-image: radial-gradient(circle, var(--color-primary) 1.5px, transparent 1.5px);
   background-size: 6px 6px;
   background-color: var(--color-accent);
+}
+
+[data-theme="dark"] .bendots-bg {
+  background-image: radial-gradient(circle, var(--color-secondary) 1.5px, transparent 1.5px);
+  background-size: 6px 6px;
 }
 
 /* Comic Book Animations */

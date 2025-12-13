@@ -4,6 +4,7 @@ import { Login } from './components/Login/Login';
 import { DirectMessages } from './components/Sidebar/DirectMessages';
 import { UserInfo } from './components/Sidebar/UserInfo';
 import { ChatArea } from './components/Chat/ChatArea';
+import { ThemeToggle } from './components/ThemeToggle/ThemeToggle';
 import { useChatApp } from './hooks/useChatApp';
 import { filterMessagesForTarget } from './utils/messageFilter';
 import { LogOut, Menu, X } from 'lucide-react';
@@ -145,6 +146,7 @@ function App() {
               💬 CHAT!
             </h1>
           </div>
+          <ThemeToggle />
         </div>
 
         <ChatArea
