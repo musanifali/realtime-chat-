@@ -10,6 +10,7 @@ import { useComicExplosion } from '../../hooks/useComicExplosion';
 import { useTypingIndicator } from '../../hooks/useTypingIndicator';
 import { ChatMessage, ChatTarget } from '../../types';
 import { SocketService } from '../../services/SocketService';
+import { VoiceEffect } from '../VoiceRecorder/VoiceRecorder';
 
 interface ChatAreaProps {
   chatTarget: ChatTarget | null;
@@ -18,6 +19,7 @@ interface ChatAreaProps {
   input: string;
   onInputChange: (value: string) => void;
   onSendMessage: () => void;
+  onSendVoice?: (audioBlob: Blob, duration: number, effect?: VoiceEffect) => void;
   onKeyPress: (e: React.KeyboardEvent<HTMLInputElement>) => void;
   socketService: SocketService | null;
 }
@@ -31,6 +33,7 @@ export const ChatArea: React.FC<ChatAreaProps> = ({
   input,
   onInputChange,
   onSendMessage,
+  onSendVoice,
   onKeyPress,
   socketService,
 }) => {
@@ -50,6 +53,14 @@ export const ChatArea: React.FC<ChatAreaProps> = ({
       const randomText = explosionTexts[Math.floor(Math.random() * explosionTexts.length)];
       triggerExplosion(randomText);
       onSendMessage();
+    }
+  };
+
+  const handleSendVoice = (audioBlob: Blob, duration: number, effect?: VoiceEffect) => {
+    if (onSendVoice) {
+      const randomText = explosionTexts[Math.floor(Math.random() * explosionTexts.length)];
+      triggerExplosion(randomText);
+      onSendVoice(audioBlob, duration, effect);
     }
   };
 
@@ -97,6 +108,7 @@ export const ChatArea: React.FC<ChatAreaProps> = ({
         input={input}
         onInputChange={handleInputChange}
         onSendMessage={handleSendMessage}
+        onSendVoice={handleSendVoice}
         onKeyPress={handleKeyPress}
       />
 

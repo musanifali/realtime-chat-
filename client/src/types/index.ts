@@ -22,6 +22,11 @@ export interface ChatMessage {
   username?: string;
   text: string;
   timestamp: Date;
+  voiceData?: {
+    audioURL: string;
+    duration: number;
+    effect?: 'normal' | 'robot' | 'echo' | 'chipmunk';
+  };
 }
 
 export type ChatTarget = { type: 'user'; username: string };

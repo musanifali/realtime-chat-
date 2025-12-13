@@ -2,14 +2,16 @@
 
 import React, { useState } from 'react';
 import { ChatTarget } from '../../types';
-import { Send } from 'lucide-react';
+import { Send, Mic } from 'lucide-react';
 import { soundManager } from '../../services/SoundManager';
+import { VoiceRecorder, VoiceEffect } from '../VoiceRecorder/VoiceRecorder';
 
 interface MessageInputProps {
   chatTarget: ChatTarget;
   input: string;
   onInputChange: (value: string) => void;
   onSendMessage: () => void;
+  onSendVoice?: (audioBlob: Blob, duration: number, effect?: VoiceEffect) => void;
   onKeyPress: (e: React.KeyboardEvent<HTMLInputElement>) => void;
 }
 
@@ -18,9 +20,11 @@ export const MessageInput: React.FC<MessageInputProps> = ({
   input,
   onInputChange,
   onSendMessage,
+  onSendVoice,
   onKeyPress,
 }) => {
   const [isSending, setIsSending] = useState(false);
+  const [showVoiceRecorder, setShowVoiceRecorder] = useState(false);
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     onInputChange(e.target.value);
@@ -53,9 +57,39 @@ export const MessageInput: React.FC<MessageInputProps> = ({
     }
   };
 
+  const handleSendVoice = (audioBlob: Blob, duration: number, effect?: VoiceEffect) => {
+    if (onSendVoice) {
+      onSendVoice(audioBlob, duration, effect);
+      setShowVoiceRecorder(false);
+    }
+  };
+
   return (
     <div className="p-3 md:p-4 halftone-bg" style={{ backgroundColor: 'var(--color-bg-primary)', borderTop: '4px solid var(--color-border)', boxShadow: '0 -4px 0 var(--color-accent)' }}>
+      {showVoiceRecorder && (
+        <VoiceRecorder 
+          onSendVoice={handleSendVoice}
+          onClose={() => setShowVoiceRecorder(false)}
+        />
+      )}
       <div className="flex gap-2 md:gap-3">
+        <button
+          onClick={() => {
+            setShowVoiceRecorder(!showVoiceRecorder);
+            soundManager.playClick();
+          }}
+          className="px-3 py-2 md:py-3 transition-all hover:scale-110"
+          style={{
+            backgroundColor: showVoiceRecorder ? 'var(--color-primary)' : 'var(--color-accent)',
+            color: showVoiceRecorder ? 'white' : 'var(--color-text-primary)',
+            border: '3px solid var(--color-border)',
+            boxShadow: '3px 3px 0 var(--color-border)',
+            borderRadius: '12px'
+          }}
+          title="Voice Message"
+        >
+          <Mic className="w-5 h-5" />
+        </button>
         <input
           type="text"
           value={input}

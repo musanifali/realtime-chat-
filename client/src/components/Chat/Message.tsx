@@ -4,6 +4,7 @@ import React, { useEffect, useState } from 'react';
 import { ChatMessage } from '../../types';
 import { formatTime } from '../../utils/messageUtils';
 import { soundManager } from '../../services/SoundManager';
+import { VoiceMessage } from '../VoiceMessage/VoiceMessage';
 
 interface MessageProps {
   message: ChatMessage;
@@ -40,31 +41,43 @@ export const Message: React.FC<MessageProps> = ({ message, isOwn }) => {
   }
 
   const isPrivate = message.type === 'private_sent' || message.type === 'private_received';
+  
+  // Check if message is a voice message
+  const isVoiceMessage = (message as any).voiceData;
 
   return (
     <div className={`flex ${isOwn ? 'justify-end' : 'justify-start'} ${justReceived ? 'animate-bounce' : 'animate-comic-pop'}`}>
       <div 
-        className="speech-bubble-tail px-4 py-3 max-w-[75%] md:max-w-[60%] lg:max-w-[50%] relative"
+        className={`${!isVoiceMessage ? 'speech-bubble-tail px-4 py-3' : 'px-2 py-2'} max-w-[75%] md:max-w-[60%] lg:max-w-[50%] relative`}
         style={{
-          background: isOwn
+          background: isVoiceMessage ? 'transparent' : (isOwn
             ? isPrivate
               ? 'var(--color-tertiary)'
               : 'var(--color-accent)'
-            : 'white',
+            : 'white'),
           color: 'var(--color-text-primary)',
-          border: '3px solid var(--color-border)',
+          border: isVoiceMessage ? 'none' : '3px solid var(--color-border)',
           borderRadius: '20px',
-          boxShadow: isOwn ? '4px 4px 0 var(--color-border)' : '-4px 4px 0 var(--color-border)',
+          boxShadow: isVoiceMessage ? 'none' : (isOwn ? '4px 4px 0 var(--color-border)' : '-4px 4px 0 var(--color-border)'),
           transform: isOwn ? 'rotate(1deg)' : 'rotate(-1deg)',
           fontWeight: '700'
         }}
       >
-        {!isOwn && message.username && (
+        {!isOwn && message.username && !isVoiceMessage && (
           <div className="text-xs font-black mb-1 uppercase" style={{ color: 'var(--color-primary)', textShadow: '1px 1px 0 var(--color-border)' }}>
             {message.username}
           </div>
         )}
-        <div className="break-words text-base">{message.text}</div>
+        {isVoiceMessage ? (
+          <VoiceMessage 
+            audioURL={(message as any).voiceData.audioURL}
+            duration={(message as any).voiceData.duration}
+            effect={(message as any).voiceData.effect}
+            isOwn={isOwn}
+          />
+        ) : (
+          <div className="break-words text-base">{message.text}</div>
+        )}
         <div 
           className="text-xs mt-1.5 text-right font-bold"
           style={{ 

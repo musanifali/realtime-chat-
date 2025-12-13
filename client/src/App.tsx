@@ -39,6 +39,21 @@ function App() {
     setInput('');
   };
 
+  // Send voice message
+  const sendVoiceMessage = (audioBlob: Blob, duration: number, effect?: 'normal' | 'robot' | 'echo' | 'chipmunk'): void => {
+    if (!chatTarget) return;
+    
+    // For now, send as text message - in production, you'd upload the audio to server
+    // and send the URL/metadata
+    const voiceText = `🎤 Voice Message (${duration}s) ${effect === 'robot' ? '🤖' : effect === 'echo' ? '🔊' : effect === 'chipmunk' ? '🐿️' : '🎵'}`;
+    chatService.sendPrivateMessage(chatTarget.username, voiceText);
+    
+    // Note: Voice data is not persisted - in production implementation:
+    // 1. Upload audioBlob to server/storage
+    // 2. Send message with audio URL and metadata
+    // 3. Receiver downloads and plays the audio with effects
+  };
+
   // Handle key press
   const handleKeyPress = (e: React.KeyboardEvent<HTMLInputElement>): void => {
     if (e.key === 'Enter') {
@@ -180,6 +195,7 @@ function App() {
           input={input}
           onInputChange={setInput}
           onSendMessage={sendMessage}
+          onSendVoice={sendVoiceMessage}
           onKeyPress={handleKeyPress}
           socketService={socketService}
         />
