@@ -10,7 +10,7 @@ interface ComicImageFrameProps {
 export const ComicImageFrame: React.FC<ComicImageFrameProps> = ({ src, alt = 'Image', isOwn = false }) => {
   return (
     <div 
-      className="relative inline-block animate-comic-pop"
+      className="relative w-full animate-comic-pop"
       style={{
         transform: isOwn ? 'rotate(1deg)' : 'rotate(-1deg)'
       }}
@@ -22,6 +22,7 @@ export const ComicImageFrame: React.FC<ComicImageFrameProps> = ({ src, alt = 'Im
           border: '4px solid var(--color-border)',
           borderRadius: '12px',
           boxShadow: isOwn ? '5px 5px 0 var(--color-border)' : '-5px 5px 0 var(--color-border)',
+          width: '100%',
           maxWidth: '300px',
           backgroundColor: 'white'
         }}

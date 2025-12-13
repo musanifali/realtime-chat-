@@ -109,21 +109,22 @@ export const Message: React.FC<MessageProps> = ({ message, isOwn }) => {
 
   return (
     <div className={`flex ${isOwn ? 'justify-end' : 'justify-start'} ${justReceived ? 'animate-bounce' : 'animate-comic-pop'}`}>
-      <div className="relative">
+      <div className="relative max-w-[75%] md:max-w-[60%] lg:max-w-[50%]">
         <div 
-          className={`${!isVoiceMessage ? 'speech-bubble-tail px-4 py-3' : 'px-2 py-2'} max-w-[75%] md:max-w-[60%] lg:max-w-[50%] relative`}
+          className={`${!isVoiceMessage && !isGif ? 'speech-bubble-tail px-4 py-3' : ''} relative`}
           style={{
-            background: isVoiceMessage ? 'transparent' : (isOwn
+            background: (isVoiceMessage || isGif) ? 'transparent' : (isOwn
               ? isPrivate
                 ? 'var(--color-tertiary)'
                 : 'var(--color-accent)'
               : 'white'),
             color: 'var(--color-text-primary)',
-            border: isVoiceMessage ? 'none' : '3px solid var(--color-border)',
-            borderRadius: '20px',
-            boxShadow: isVoiceMessage ? 'none' : (isOwn ? '4px 4px 0 var(--color-border)' : '-4px 4px 0 var(--color-border)'),
-            transform: isOwn ? 'rotate(1deg)' : 'rotate(-1deg)',
-            fontWeight: '700'
+            border: (isVoiceMessage || isGif) ? 'none' : '3px solid var(--color-border)',
+            borderRadius: (isVoiceMessage || isGif) ? '0' : '20px',
+            boxShadow: (isVoiceMessage || isGif) ? 'none' : (isOwn ? '4px 4px 0 var(--color-border)' : '-4px 4px 0 var(--color-border)'),
+            transform: (isVoiceMessage || isGif) ? 'none' : (isOwn ? 'rotate(1deg)' : 'rotate(-1deg)'),
+            fontWeight: '700',
+            padding: (isVoiceMessage || isGif) ? '0' : undefined
           }}
         >
           {!isOwn && message.username && !isVoiceMessage && (
@@ -143,8 +144,33 @@ export const Message: React.FC<MessageProps> = ({ message, isOwn }) => {
           ) : (
             <div className="break-words text-base">{message.text}</div>
           )}
+          {!isVoiceMessage && !isGif && (
+            <div 
+              className="text-xs mt-1.5 flex items-center justify-between gap-2"
+              style={{ 
+                color: 'var(--color-text-secondary)',
+                opacity: 0.8
+              }}
+            >
+              <button
+                onClick={() => {
+                  setShowReactionPicker(!showReactionPicker);
+                  soundManager.playClick();
+                }}
+                className="font-bold hover:scale-110 transition-transform"
+                title="Add Reaction"
+              >
+                <Smile className="w-4 h-4" />
+              </button>
+              <span className="font-bold">{formatTime(message.timestamp)}</span>
+            </div>
+          )}
+        </div>
+        
+        {/* Timestamp and reaction button for voice/GIF messages */}
+        {(isVoiceMessage || isGif) && (
           <div 
-            className="text-xs mt-1.5 flex items-center justify-between gap-2"
+            className="text-xs mt-1 flex items-center justify-between gap-2"
             style={{ 
               color: 'var(--color-text-secondary)',
               opacity: 0.8
@@ -162,7 +188,7 @@ export const Message: React.FC<MessageProps> = ({ message, isOwn }) => {
             </button>
             <span className="font-bold">{formatTime(message.timestamp)}</span>
           </div>
-        </div>
+        )}
 
         {/* Reaction Picker */}
         {showReactionPicker && (

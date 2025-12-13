@@ -100,19 +100,6 @@ export const GifSearch: React.FC<GifSearchProps> = ({ onSelect, onClose }) => {
         </button>
       </div>
 
-      {/* Demo Message */}
-      {GIPHY_API_KEY === 'YOUR_GIPHY_API_KEY' && (
-        <div 
-          className="p-3 mb-3 text-xs font-bold rounded-lg"
-          style={{
-            backgroundColor: 'var(--color-accent)',
-            border: '2px solid var(--color-border)'
-          }}
-        >
-          ⚠️ Demo Mode: Get a free API key from developers.giphy.com to enable GIF search!
-        </div>
-      )}
-
       {/* Loading */}
       {isLoading && (
         <div className="text-center py-8 font-bold">
