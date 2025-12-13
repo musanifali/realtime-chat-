@@ -38,7 +38,12 @@ export const VoiceRecorder: React.FC<VoiceRecorderProps> = ({ onSendVoice, onClo
     try {
       // Check if browser supports getUserMedia
       if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
-        alert('❌ Your browser does not support audio recording. Please use Chrome, Firefox, or Edge.');
+        // Check if it's an HTTP issue
+        if (window.location.protocol === 'http:' && window.location.hostname !== 'localhost') {
+          alert('🔒 HTTPS Required!\n\nMicrophone access requires HTTPS.\n\nPlease access the site using:\nhttps://' + window.location.host);
+          return;
+        }
+        alert('❌ Your browser does not support audio recording.\n\nPlease update to the latest version of Chrome, Firefox, or Edge.');
         return;
       }
 
