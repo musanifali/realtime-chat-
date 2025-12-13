@@ -1,32 +1,20 @@
 // client/src/hooks/useChatApp.ts
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useCallback } from 'react';
 import { useSocketConnection } from './useSocketConnection';
 import { useChatMessages } from './useChatMessages';
-import { useRoomManagement } from './useRoomManagement';
 import { useUserManagement } from './useUserManagement';
 import { ChatTarget } from '../types';
-import { DEFAULT_ROOM } from '../config/constants';
 
 export const useChatApp = () => {
   const [isConnected, setIsConnected] = useState(false);
   const [isConnecting, setIsConnecting] = useState(false);
   const [connectionError, setConnectionError] = useState('');
   const [username, setUsername] = useState('');
-  const [chatTarget, setChatTarget] = useState<ChatTarget>({ type: 'room', room: DEFAULT_ROOM });
+  const [chatTarget, setChatTarget] = useState<ChatTarget | null>(null);
 
   const { socketService, chatService, connect: connectSocket, disconnect: disconnectSocket } = useSocketConnection();
   const { messages, addMessage } = useChatMessages();
-  const { 
-    allRooms, 
-    myRooms, 
-    updateRoomList, 
-    addToMyRooms, 
-    removeFromMyRooms, 
-    updateRoomUsers,
-    getRoomUsers,
-    clearRooms 
-  } = useRoomManagement();
   const { allUsers, updateUserList, clearUsers } = useUserManagement();
 
   // Setup socket event handlers
@@ -40,49 +28,13 @@ export const useChatApp = () => {
       chatService.register(username.trim());
     });
 
-    // Room list
-    socket.on('room_list', (rooms) => {
-      updateRoomList(rooms);
+    // User list
+    socket.on('user_list', (users) => {
+      updateUserList(users, username);
       if (!isConnected) {
         setIsConnected(true);
         setIsConnecting(false);
       }
-    });
-
-    // Joined room
-    socket.on('joined_room', (room) => {
-      addToMyRooms(room);
-      addMessage('system', `You joined #${room}`, room);
-    });
-
-    // Left room
-    socket.on('left_room', (room) => {
-      removeFromMyRooms(room);
-      addMessage('system', `You left #${room}`);
-      
-      if (chatTarget.type === 'room' && chatTarget.room === room) {
-        setChatTarget({ type: 'room', room: DEFAULT_ROOM });
-      }
-    });
-
-    // Room users
-    socket.on('room_users', ({ room, users }) => {
-      updateRoomUsers(room, users);
-    });
-
-    // User list
-    socket.on('user_list', (users) => {
-      updateUserList(users, username);
-    });
-
-    // Room message
-    socket.on('room_message', (data) => {
-      addMessage('message', data.message, data.room, data.username);
-    });
-
-    // Room system message
-    socket.on('room_system', ({ room, message }) => {
-      addMessage('system', message, room);
     });
 
     // Private message
@@ -91,7 +43,6 @@ export const useChatApp = () => {
       addMessage(
         isMine ? 'private_sent' : 'private_received',
         data.message,
-        undefined,
         isMine ? `To ${data.to}` : `From ${data.from}`
       );
     });
@@ -119,7 +70,6 @@ export const useChatApp = () => {
       }
       setIsConnected(false);
       setIsConnecting(false);
-      clearRooms();
       clearUsers();
     });
 
@@ -133,14 +83,8 @@ export const useChatApp = () => {
     chatService,
     username,
     isConnected,
-    chatTarget,
     addMessage,
-    updateRoomList,
-    addToMyRooms,
-    removeFromMyRooms,
-    updateRoomUsers,
     updateUserList,
-    clearRooms,
     clearUsers,
   ]);
 
@@ -166,12 +110,7 @@ export const useChatApp = () => {
     disconnectSocket();
   }, [disconnectSocket]);
 
-  // Request room users when changing rooms
-  useEffect(() => {
-    if (chatTarget.type === 'room' && isConnected) {
-      chatService.getRoomUsers(chatTarget.room);
-    }
-  }, [chatTarget, isConnected, chatService]);
+
 
   return {
     // Connection state
@@ -187,11 +126,6 @@ export const useChatApp = () => {
     messages,
     chatTarget,
     setChatTarget,
-    
-    // Room state
-    allRooms,
-    myRooms,
-    getRoomUsers,
     
     // User state
     allUsers,

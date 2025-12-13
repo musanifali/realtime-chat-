@@ -11,10 +11,9 @@ export const useChatMessages = () => {
     (
       type: ChatMessage['type'],
       text: string,
-      room?: string,
       username?: string
     ): void => {
-      const newMessage = createMessage(type, text, room, username);
+      const newMessage = createMessage(type, text, username);
       setMessages(prev => [...prev, newMessage]);
     },
     []

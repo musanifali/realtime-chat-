@@ -9,14 +9,12 @@ export const generateMessageId = (): string => {
 export const createMessage = (
   type: ChatMessage['type'],
   text: string,
-  room?: string,
   username?: string
 ): ChatMessage => {
   return {
     id: generateMessageId(),
     type,
     text,
-    room,
     username,
     timestamp: new Date(),
   };

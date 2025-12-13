@@ -27,11 +27,7 @@ export const MessageInput: React.FC<MessageInputProps> = ({
           value={input}
           onChange={(e) => onInputChange(e.target.value)}
           onKeyPress={onKeyPress}
-          placeholder={
-            chatTarget.type === 'room'
-              ? `💬 Message #${chatTarget.room}...`
-              : `🔒 Message ${chatTarget.username}...`
-          }
+          placeholder={`💬 Message @${chatTarget.username}...`}
           className="flex-1 px-4 py-3 focus:outline-none comic-outline font-bold text-base"
           style={{ 
             backgroundColor: 'white', 

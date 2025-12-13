@@ -10,18 +10,8 @@ export class BroadcastService {
     private io: Server<ClientToServerEvents, ServerToClientEvents, InterServerEvents, SocketData>
   ) {}
 
-  async broadcastRoomList(): Promise<void> {
-    const rooms = await this.redisService.getAllRooms();
-    this.io.emit('room_list', rooms);
-  }
-
   async broadcastUserList(): Promise<void> {
     const users = await this.redisService.getAllUsers();
     this.io.emit('user_list', users);
-  }
-
-  async broadcastRoomUsers(room: string): Promise<void> {
-    const users = await this.redisService.getRoomMembers(room);
-    this.io.to(room).emit('room_users', { room, users });
   }
 }

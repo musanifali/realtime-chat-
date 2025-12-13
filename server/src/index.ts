@@ -6,7 +6,7 @@ import { Server, Socket } from 'socket.io';
 import { RedisService } from './services/RedisService.js';
 import { PubSubService } from './services/PubSubService.js';
 import { BroadcastService } from './services/BroadcastService.js';
-import { initializeRooms } from './utils/roomInitializer.js';
+
 import { SocketHandlers } from './handlers/SocketHandlers.js';
 import { PORT, REDIS_URL, SERVER_ID, CHANNEL } from './config/constants.js';
 import type { ClientToServerEvents, ServerToClientEvents, InterServerEvents, SocketData } from './types/index.js';
@@ -48,9 +48,6 @@ const socketHandlers = new SocketHandlers(redisService, pubSubService, broadcast
     // Cleanup stale data from previous sessions
     await redisService.cleanupOnStartup();
     
-    // Initialize default rooms
-    await initializeRooms(redisService);
-    
     // Subscribe to Redis channel
     await pubSubService.setupSubscription();
   } catch (error) {
@@ -65,44 +62,21 @@ const socketHandlers = new SocketHandlers(redisService, pubSubService, broadcast
 io.on('connection', (socket: Socket<ClientToServerEvents, ServerToClientEvents, InterServerEvents, SocketData>) => {
   console.log(`${SERVER_ID}: New client connected: ${socket.id}`);
   
-  // Initialize socket data
-  socket.data.rooms = new Set<string>();
-
   // Register event handlers
   socket.on('register', (username) => 
     socketHandlers.handleRegister(socket, username)
-  );
-
-  socket.on('create_room', (room) => 
-    socketHandlers.handleCreateRoom(socket, room)
-  );
-
-  socket.on('join_room', (room) => 
-    socketHandlers.handleJoinRoom(socket, room)
-  );
-
-  socket.on('leave_room', (room) => 
-    socketHandlers.handleLeaveRoom(socket, room)
-  );
-
-  socket.on('room_message', (data) => 
-    socketHandlers.handleRoomMessage(socket, data)
   );
 
   socket.on('private_message', (data) => 
     socketHandlers.handlePrivateMessage(socket, data)
   );
 
-  socket.on('get_room_users', (room) => 
-    socketHandlers.handleGetRoomUsers(socket, room)
+  socket.on('typing_start', (data) => 
+    socketHandlers.handleTypingStart(socket, data)
   );
 
-  socket.on('typing_start', (room) => 
-    socketHandlers.handleTypingStart(socket, room)
-  );
-
-  socket.on('typing_stop', (room) => 
-    socketHandlers.handleTypingStop(socket, room)
+  socket.on('typing_stop', (data) => 
+    socketHandlers.handleTypingStop(socket, data)
   );
 
   socket.on('disconnect', () => 

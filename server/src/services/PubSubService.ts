@@ -31,11 +31,14 @@ export class PubSubService {
       console.log(`${SERVER_ID}: Received from Redis:`, data.type);
 
       switch (data.type) {
-        case 'room_message':
-          this.handleRoomMessage(data);
-          break;
         case 'private_message':
           this.handlePrivateMessage(data);
+          break;
+        case 'typing_start':
+          this.handleTypingStart(data);
+          break;
+        case 'typing_stop':
+          this.handleTypingStop(data);
           break;
         case 'user_joined':
           this.handleUserJoined(data);
@@ -43,27 +46,10 @@ export class PubSubService {
         case 'user_left':
           this.handleUserLeft(data);
           break;
-        case 'room_created':
-          this.handleRoomCreated(data);
-          break;
-        case 'user_joined_room':
-          this.handleUserJoinedRoom(data);
-          break;
-        case 'user_left_room':
-          this.handleUserLeftRoom(data);
-          break;
       }
     } catch (error) {
       console.error(`${SERVER_ID}: Error handling Redis message:`, error);
     }
-  }
-
-  private handleRoomMessage(data: Extract<RedisMessage, { type: 'room_message' }>): void {
-    this.io.to(data.room).emit('room_message', {
-      room: data.room,
-      username: data.username,
-      message: data.message
-    });
   }
 
   private handlePrivateMessage(data: Extract<RedisMessage, { type: 'private_message' }>): void {
@@ -79,6 +65,24 @@ export class PubSubService {
     });
   }
 
+  private handleTypingStart(data: Extract<RedisMessage, { type: 'typing_start' }>): void {
+    const sockets = this.io.sockets.sockets;
+    sockets.forEach((socket) => {
+      if (socket.data.username === data.to) {
+        socket.emit('typing_start', { username: data.from });
+      }
+    });
+  }
+
+  private handleTypingStop(data: Extract<RedisMessage, { type: 'typing_stop' }>): void {
+    const sockets = this.io.sockets.sockets;
+    sockets.forEach((socket) => {
+      if (socket.data.username === data.to) {
+        socket.emit('typing_stop', { username: data.from });
+      }
+    });
+  }
+
   private handleUserJoined(data: Extract<RedisMessage, { type: 'user_joined' }>): void {
     this.io.emit('system', `${data.username} joined the chat`);
     this.broadcastService.broadcastUserList();
@@ -87,26 +91,5 @@ export class PubSubService {
   private handleUserLeft(data: Extract<RedisMessage, { type: 'user_left' }>): void {
     this.io.emit('system', `${data.username} left the chat`);
     this.broadcastService.broadcastUserList();
-  }
-
-  private handleRoomCreated(data: Extract<RedisMessage, { type: 'room_created' }>): void {
-    this.io.emit('system', `Room #${data.room} created by ${data.creator}`);
-    this.broadcastService.broadcastRoomList();
-  }
-
-  private handleUserJoinedRoom(data: Extract<RedisMessage, { type: 'user_joined_room' }>): void {
-    this.io.to(data.room).emit('room_system', {
-      room: data.room,
-      message: `${data.username} joined #${data.room}`
-    });
-    this.broadcastService.broadcastRoomUsers(data.room);
-  }
-
-  private handleUserLeftRoom(data: Extract<RedisMessage, { type: 'user_left_room' }>): void {
-    this.io.to(data.room).emit('room_system', {
-      room: data.room,
-      message: `${data.username} left #${data.room}`
-    });
-    this.broadcastService.broadcastRoomUsers(data.room);
   }
 }

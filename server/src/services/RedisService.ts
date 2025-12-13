@@ -1,7 +1,7 @@
 // server/src/services/RedisService.ts
 
 import { createClient, RedisClientType } from 'redis';
-import { USERS_KEY, ROOMS_KEY } from '../config/constants.js';
+import { USERS_KEY } from '../config/constants.js';
 
 export class RedisService {
   private publisher: RedisClientType;
@@ -47,35 +47,7 @@ export class RedisService {
     return (await this.publisher.sIsMember(USERS_KEY, username)) === 1;
   }
 
-  // Room methods
-  async addRoom(room: string): Promise<void> {
-    await this.publisher.sAdd(ROOMS_KEY, room);
-  }
 
-  async getAllRooms(): Promise<string[]> {
-    return await this.publisher.sMembers(ROOMS_KEY);
-  }
-
-  async roomExists(room: string): Promise<boolean> {
-    return (await this.publisher.sIsMember(ROOMS_KEY, room)) === 1;
-  }
-
-  // Room members methods
-  private getRoomMembersKey(room: string): string {
-    return `room:${room}:members`;
-  }
-
-  async addUserToRoom(room: string, username: string): Promise<void> {
-    await this.publisher.sAdd(this.getRoomMembersKey(room), username);
-  }
-
-  async removeUserFromRoom(room: string, username: string): Promise<void> {
-    await this.publisher.sRem(this.getRoomMembersKey(room), username);
-  }
-
-  async getRoomMembers(room: string): Promise<string[]> {
-    return await this.publisher.sMembers(this.getRoomMembersKey(room));
-  }
 
   // Pub/Sub methods
   async publish(channel: string, message: string): Promise<void> {
@@ -87,22 +59,9 @@ export class RedisService {
   }
 
   // Cleanup methods
-  async clearAllUsers(): Promise<void> {
-    await this.publisher.del(USERS_KEY);
-  }
-
-  async clearAllRoomMembers(): Promise<void> {
-    const rooms = await this.getAllRooms();
-    for (const room of rooms) {
-      await this.publisher.del(this.getRoomMembersKey(room));
-    }
-  }
-
   async cleanupOnStartup(): Promise<void> {
     // Clear all active users (they should reconnect)
-    await this.clearAllUsers();
-    // Clear all room members (they should rejoin)
-    await this.clearAllRoomMembers();
-    console.log('Redis cleanup completed: Cleared all users and room members');
+    await this.publisher.del(USERS_KEY);
+    console.log('Redis cleanup completed: Cleared all users');
   }
 }

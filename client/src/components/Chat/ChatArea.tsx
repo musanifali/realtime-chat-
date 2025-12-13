@@ -12,10 +12,9 @@ import { ChatMessage, ChatTarget } from '../../types';
 import { SocketService } from '../../services/SocketService';
 
 interface ChatAreaProps {
-  chatTarget: ChatTarget;
+  chatTarget: ChatTarget | null;
   messages: ChatMessage[];
   username: string;
-  roomUsers: string[];
   input: string;
   onInputChange: (value: string) => void;
   onSendMessage: () => void;
@@ -29,7 +28,6 @@ export const ChatArea: React.FC<ChatAreaProps> = ({
   chatTarget,
   messages,
   username,
-  roomUsers,
   input,
   onInputChange,
   onSendMessage,
@@ -37,12 +35,12 @@ export const ChatArea: React.FC<ChatAreaProps> = ({
   socketService,
 }) => {
   const { explosions, triggerExplosion } = useComicExplosion();
-  const currentRoom = chatTarget.type === 'room' ? chatTarget.room : null;
-  const { typingUsers, notifyTyping } = useTypingIndicator(socketService, currentRoom);
+  const currentUser = chatTarget?.username || null;
+  const { isTyping, notifyTyping } = useTypingIndicator(socketService, currentUser);
 
   const handleInputChange = (value: string) => {
     onInputChange(value);
-    if (value.trim() && chatTarget.type === 'room') {
+    if (value.trim() && chatTarget) {
       notifyTyping();
     }
   };
@@ -63,14 +61,25 @@ export const ChatArea: React.FC<ChatAreaProps> = ({
     onKeyPress(e);
   };
 
-  // Filter out current user from typing users
-  const displayTypingUsers = typingUsers.filter(user => user !== username);
+  if (!chatTarget) {
+    return (
+      <div className="flex flex-col h-full items-center justify-center halftone-bg" style={{ backgroundColor: 'var(--color-bg-primary)' }}>
+        <div className="text-center p-8">
+          <h2 className="text-4xl font-black uppercase mb-4" style={{ color: 'var(--color-primary)', textShadow: '4px 4px 0 var(--color-border)' }}>
+            💬 SELECT A HERO!
+          </h2>
+          <p className="text-lg font-bold" style={{ color: 'var(--color-text-secondary)' }}>
+            Choose someone from the list to start chatting! 💥
+          </p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="flex flex-col h-full relative" style={{ backgroundColor: 'var(--color-bg-primary)' }}>
       <ChatHeader 
         chatTarget={chatTarget}
-        roomUsers={roomUsers}
       />
       
       <MessageList 
@@ -78,8 +87,8 @@ export const ChatArea: React.FC<ChatAreaProps> = ({
         username={username}
       />
       
-      {chatTarget.type === 'room' && displayTypingUsers.length > 0 && (
-        <TypingIndicator usernames={displayTypingUsers} />
+      {isTyping && (
+        <TypingIndicator username={chatTarget.username} />
       )}
       
       <MessageInput

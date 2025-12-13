@@ -3,16 +3,10 @@
 import React from 'react';
 
 interface TypingIndicatorProps {
-  usernames: string[];
+  username: string;
 }
 
-export const TypingIndicator: React.FC<TypingIndicatorProps> = ({ usernames }) => {
-  if (usernames.length === 0) return null;
-
-  const displayText = usernames.length === 1 
-    ? `${usernames[0]}`
-    : `${usernames.length} heroes`;
-
+export const TypingIndicator: React.FC<TypingIndicatorProps> = ({ username }) => {
   return (
     <div className="px-4 py-2 animate-comic-pop">
       <div 
@@ -30,7 +24,7 @@ export const TypingIndicator: React.FC<TypingIndicatorProps> = ({ usernames }) =
           <span className="w-2 h-2 rounded-full animate-bounce" style={{ backgroundColor: 'var(--color-border)', animationDelay: '300ms' }} />
         </div>
         <span className="text-xs font-black uppercase" style={{ color: 'var(--color-border)' }}>
-          ⌨️ TAP TAP TAP... {displayText}
+          ⌨️ {username} IS TYPING...
         </span>
       </div>
     </div>

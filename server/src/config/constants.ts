@@ -9,8 +9,4 @@ export const CLIENT_URL = process.env.CLIENT_URL || '*';
 
 // Redis keys
 export const USERS_KEY = 'online_users';
-export const ROOMS_KEY = 'chat_rooms';
 export const CHANNEL = 'chat_messages';
-
-// Default rooms
-export const DEFAULT_ROOMS = ['general', 'random', 'gaming'];

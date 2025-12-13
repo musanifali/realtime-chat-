@@ -51,19 +51,19 @@ export class SocketService {
   }
 
   // Typing indicator methods
-  sendTypingStart(room: string): void {
-    this.emit('typing_start', room);
+  sendTypingStart(to: string): void {
+    this.emit('typing_start', { to });
   }
 
-  sendTypingStop(room: string): void {
-    this.emit('typing_stop', room);
+  sendTypingStop(to: string): void {
+    this.emit('typing_stop', { to });
   }
 
-  onTypingStart(handler: (data: { username: string; room: string }) => void): void {
+  onTypingStart(handler: (data: { username: string }) => void): void {
     this.on('typing_start', handler);
   }
 
-  onTypingStop(handler: (data: { username: string; room: string }) => void): void {
+  onTypingStop(handler: (data: { username: string }) => void): void {
     this.on('typing_stop', handler);
   }
 }
