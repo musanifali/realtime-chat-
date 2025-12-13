@@ -123,21 +123,19 @@ class SoundManagerClass {
     filter.connect(gainNode);
     gainNode.connect(ctx.destination);
 
-    // Swoosh sound with pitch variation based on message length
-    const basePitch = 200 * pitch;
-    oscillator.frequency.setValueAtTime(basePitch * 2, ctx.currentTime);
-    oscillator.frequency.exponentialRampToValueAtTime(basePitch * 0.5, ctx.currentTime + 0.15);
+    // Gentle chime sound for sending messages
+    oscillator.frequency.setValueAtTime(800, ctx.currentTime);
+    oscillator.frequency.exponentialRampToValueAtTime(600, ctx.currentTime + 0.1);
     
     filter.type = 'lowpass';
-    filter.frequency.setValueAtTime(2000, ctx.currentTime);
-    filter.frequency.exponentialRampToValueAtTime(500, ctx.currentTime + 0.15);
+    filter.frequency.setValueAtTime(1200, ctx.currentTime);
 
-    gainNode.gain.setValueAtTime(this.volume * 0.5, ctx.currentTime);
-    gainNode.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 0.15);
+    gainNode.gain.setValueAtTime(this.volume * 0.15, ctx.currentTime);
+    gainNode.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 0.1);
 
-    oscillator.type = 'sawtooth';
+    oscillator.type = 'sine';
     oscillator.start(ctx.currentTime);
-    oscillator.stop(ctx.currentTime + 0.15);
+    oscillator.stop(ctx.currentTime + 0.1);
   }
 
   private playPop(ctx: AudioContext) {
@@ -147,16 +145,16 @@ class SoundManagerClass {
     oscillator.connect(gainNode);
     gainNode.connect(ctx.destination);
 
-    // Quick pop sound
-    oscillator.frequency.setValueAtTime(400, ctx.currentTime);
-    oscillator.frequency.exponentialRampToValueAtTime(100, ctx.currentTime + 0.08);
+    // Soft notification tone
+    oscillator.frequency.setValueAtTime(600, ctx.currentTime);
+    oscillator.frequency.exponentialRampToValueAtTime(500, ctx.currentTime + 0.06);
 
-    gainNode.gain.setValueAtTime(this.volume * 0.6, ctx.currentTime);
-    gainNode.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 0.08);
+    gainNode.gain.setValueAtTime(this.volume * 0.12, ctx.currentTime);
+    gainNode.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 0.06);
 
     oscillator.type = 'sine';
     oscillator.start(ctx.currentTime);
-    oscillator.stop(ctx.currentTime + 0.08);
+    oscillator.stop(ctx.currentTime + 0.06);
   }
 
   private playClick(ctx: AudioContext) {
@@ -166,16 +164,16 @@ class SoundManagerClass {
     oscillator.connect(gainNode);
     gainNode.connect(ctx.destination);
 
-    // Sharp click
-    oscillator.frequency.setValueAtTime(800, ctx.currentTime);
-    oscillator.frequency.exponentialRampToValueAtTime(400, ctx.currentTime + 0.03);
+    // Gentle click
+    oscillator.frequency.setValueAtTime(700, ctx.currentTime);
+    oscillator.frequency.exponentialRampToValueAtTime(650, ctx.currentTime + 0.02);
 
-    gainNode.gain.setValueAtTime(this.volume * 0.3, ctx.currentTime);
-    gainNode.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 0.03);
+    gainNode.gain.setValueAtTime(this.volume * 0.1, ctx.currentTime);
+    gainNode.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 0.02);
 
-    oscillator.type = 'square';
+    oscillator.type = 'sine';
     oscillator.start(ctx.currentTime);
-    oscillator.stop(ctx.currentTime + 0.03);
+    oscillator.stop(ctx.currentTime + 0.02);
   }
 
   private playTick(ctx: AudioContext) {
@@ -185,15 +183,15 @@ class SoundManagerClass {
     oscillator.connect(gainNode);
     gainNode.connect(ctx.destination);
 
-    // Light keyboard tick
-    oscillator.frequency.setValueAtTime(1200, ctx.currentTime);
+    // Very subtle typing sound
+    oscillator.frequency.setValueAtTime(900, ctx.currentTime);
     
-    gainNode.gain.setValueAtTime(this.volume * 0.15, ctx.currentTime);
-    gainNode.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 0.02);
+    gainNode.gain.setValueAtTime(this.volume * 0.05, ctx.currentTime);
+    gainNode.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 0.015);
 
-    oscillator.type = 'square';
+    oscillator.type = 'sine';
     oscillator.start(ctx.currentTime);
-    oscillator.stop(ctx.currentTime + 0.02);
+    oscillator.stop(ctx.currentTime + 0.015);
   }
 
   private playTap(ctx: AudioContext) {
@@ -203,15 +201,15 @@ class SoundManagerClass {
     oscillator.connect(gainNode);
     gainNode.connect(ctx.destination);
 
-    // Occasional tap while typing
-    oscillator.frequency.setValueAtTime(1000, ctx.currentTime);
+    // Subtle variation while typing
+    oscillator.frequency.setValueAtTime(850, ctx.currentTime);
     
-    gainNode.gain.setValueAtTime(this.volume * 0.2, ctx.currentTime);
-    gainNode.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 0.04);
+    gainNode.gain.setValueAtTime(this.volume * 0.06, ctx.currentTime);
+    gainNode.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 0.02);
 
-    oscillator.type = 'triangle';
+    oscillator.type = 'sine';
     oscillator.start(ctx.currentTime);
-    oscillator.stop(ctx.currentTime + 0.04);
+    oscillator.stop(ctx.currentTime + 0.02);
   }
 
   private playSwooshIn(ctx: AudioContext) {
@@ -223,21 +221,20 @@ class SoundManagerClass {
     filter.connect(gainNode);
     gainNode.connect(ctx.destination);
 
-    // Rising tone entrance
-    oscillator.frequency.setValueAtTime(200, ctx.currentTime);
-    oscillator.frequency.exponentialRampToValueAtTime(800, ctx.currentTime + 0.3);
+    // Gentle rising chime for user join
+    oscillator.frequency.setValueAtTime(400, ctx.currentTime);
+    oscillator.frequency.exponentialRampToValueAtTime(600, ctx.currentTime + 0.15);
     
     filter.type = 'lowpass';
-    filter.frequency.setValueAtTime(500, ctx.currentTime);
-    filter.frequency.exponentialRampToValueAtTime(2000, ctx.currentTime + 0.3);
+    filter.frequency.setValueAtTime(800, ctx.currentTime);
 
     gainNode.gain.setValueAtTime(0.01, ctx.currentTime);
-    gainNode.gain.exponentialRampToValueAtTime(this.volume * 0.4, ctx.currentTime + 0.1);
-    gainNode.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 0.3);
+    gainNode.gain.exponentialRampToValueAtTime(this.volume * 0.12, ctx.currentTime + 0.05);
+    gainNode.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 0.15);
 
-    oscillator.type = 'sawtooth';
+    oscillator.type = 'sine';
     oscillator.start(ctx.currentTime);
-    oscillator.stop(ctx.currentTime + 0.3);
+    oscillator.stop(ctx.currentTime + 0.15);
   }
 
   private playSwooshOut(ctx: AudioContext) {
@@ -249,20 +246,19 @@ class SoundManagerClass {
     filter.connect(gainNode);
     gainNode.connect(ctx.destination);
 
-    // Falling tone exit
-    oscillator.frequency.setValueAtTime(800, ctx.currentTime);
-    oscillator.frequency.exponentialRampToValueAtTime(200, ctx.currentTime + 0.3);
+    // Gentle falling chime for user leave
+    oscillator.frequency.setValueAtTime(600, ctx.currentTime);
+    oscillator.frequency.exponentialRampToValueAtTime(400, ctx.currentTime + 0.15);
     
     filter.type = 'lowpass';
-    filter.frequency.setValueAtTime(2000, ctx.currentTime);
-    filter.frequency.exponentialRampToValueAtTime(500, ctx.currentTime + 0.3);
+    filter.frequency.setValueAtTime(800, ctx.currentTime);
 
-    gainNode.gain.setValueAtTime(this.volume * 0.4, ctx.currentTime);
-    gainNode.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 0.3);
+    gainNode.gain.setValueAtTime(this.volume * 0.12, ctx.currentTime);
+    gainNode.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 0.15);
 
-    oscillator.type = 'sawtooth';
+    oscillator.type = 'sine';
     oscillator.start(ctx.currentTime);
-    oscillator.stop(ctx.currentTime + 0.3);
+    oscillator.stop(ctx.currentTime + 0.15);
   }
 
   private playKapow(ctx: AudioContext) {
