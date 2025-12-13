@@ -20,8 +20,8 @@ export const MessageInput: React.FC<MessageInputProps> = ({
   onKeyPress,
 }) => {
   return (
-    <div className="p-4 backdrop-blur-md" style={{ backgroundColor: 'var(--color-surface)', borderTop: '1px solid var(--color-border)' }}>
-      <div className="flex gap-2 md:gap-3">
+    <div className="p-4 halftone-bg" style={{ backgroundColor: 'var(--color-bg-primary)', borderTop: '4px solid var(--color-border)', boxShadow: '0 -4px 0 var(--color-accent)' }}>
+      <div className="flex gap-3">
         <input
           type="text"
           value={input}
@@ -29,34 +29,54 @@ export const MessageInput: React.FC<MessageInputProps> = ({
           onKeyPress={onKeyPress}
           placeholder={
             chatTarget.type === 'room'
-              ? `Message #${chatTarget.room}...`
-              : `Message ${chatTarget.username}...`
+              ? `💬 Message #${chatTarget.room}...`
+              : `🔒 Message ${chatTarget.username}...`
           }
-          className="flex-1 px-4 py-3 rounded-lg focus:outline-none focus:ring-2 focus:border-transparent"
+          className="flex-1 px-4 py-3 focus:outline-none comic-outline font-bold text-base"
           style={{ 
-            backgroundColor: 'var(--color-surface)', 
-            border: '1px solid var(--color-border)', 
+            backgroundColor: 'white', 
+            border: '3px solid var(--color-border)', 
             color: 'var(--color-text-primary)',
-            boxShadow: 'var(--shadow-sm)',
-            borderRadius: 'var(--radius-md)'
+            boxShadow: '3px 3px 0 var(--color-border)',
+            borderRadius: '15px',
+            transform: 'rotate(-0.5deg)'
           }}
-          onFocus={(e) => { e.currentTarget.style.borderColor = 'var(--color-primary)'; }}
+          onFocus={(e) => { 
+            e.currentTarget.style.borderColor = 'var(--color-primary)'; 
+            e.currentTarget.style.transform = 'rotate(0deg) scale(1.02)';
+          }}
+          onBlur={(e) => {
+            e.currentTarget.style.borderColor = 'var(--color-border)';
+            e.currentTarget.style.transform = 'rotate(-0.5deg) scale(1)';
+          }}
         />
         <button
           onClick={onSendMessage}
           disabled={!input.trim()}
-          className="px-4 md:px-6 py-3 disabled:cursor-not-allowed rounded-lg transition-all flex items-center gap-2 font-medium"
+          className="px-4 md:px-6 py-3 disabled:cursor-not-allowed disabled:opacity-50 transition-all flex items-center gap-2 font-black uppercase text-sm md:text-base"
           style={{ 
-            background: input.trim() ? 'linear-gradient(135deg, var(--color-primary) 0%, var(--color-secondary) 100%)' : '#d1d5db',
-            color: 'var(--color-text-on-primary)',
-            boxShadow: 'var(--shadow-md)',
-            borderRadius: 'var(--radius-md)'
+            background: input.trim() ? 'var(--color-primary)' : '#9ca3af',
+            color: 'white',
+            border: '4px solid var(--color-border)',
+            boxShadow: '4px 4px 0 var(--color-border)',
+            borderRadius: '15px',
+            transform: 'rotate(1deg)',
+            textShadow: '2px 2px 0 var(--color-border)'
           }}
-          onMouseEnter={(e) => { if (input.trim()) e.currentTarget.style.boxShadow = 'var(--shadow-lg)'; }}
-          onMouseLeave={(e) => { e.currentTarget.style.boxShadow = 'var(--shadow-md)'; }}
+          onMouseEnter={(e) => { 
+            if (input.trim()) {
+              e.currentTarget.style.animation = 'kapow 0.3s ease-in-out';
+              e.currentTarget.style.transform = 'rotate(1deg) scale(1.05)';
+            }
+          }}
+          onMouseLeave={(e) => { 
+            e.currentTarget.style.animation = '';
+            e.currentTarget.style.transform = 'rotate(1deg) scale(1)';
+          }}
         >
           <Send className="w-5 h-5" />
-          <span className="hidden sm:inline">Send</span>
+          <span className="hidden sm:inline">⚡ ZAP!</span>
+          <span className="sm:hidden">⚡</span>
         </button>
       </div>
     </div>

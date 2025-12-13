@@ -37,7 +37,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
   onDisconnect,
 }) => {
   return (
-    <div className="h-full flex flex-col" style={{ backgroundColor: 'var(--color-surface)', borderRight: '1px solid var(--color-border)', boxShadow: 'var(--shadow-sm)' }}>
+    <div className="h-full flex flex-col bendots-bg" style={{ backgroundColor: 'var(--color-bg-secondary)', borderRight: '4px solid var(--color-border)', boxShadow: '4px 0 0 var(--color-border)' }}>
       <UserInfo username={username} />
       
       <ScrollArea.Root className="flex-1 overflow-hidden">
@@ -61,29 +61,38 @@ export const Sidebar: React.FC<SidebarProps> = ({
           </div>
         </ScrollArea.Viewport>
         <ScrollArea.Scrollbar
-          className="flex select-none touch-none p-0.5 transition-colors duration-150 ease-out data-[orientation=vertical]:w-2.5 data-[orientation=horizontal]:flex-col data-[orientation=horizontal]:h-2.5"
-          style={{ backgroundColor: 'var(--color-bg-secondary)' }}
+          className="flex select-none touch-none p-1 transition-colors duration-150 ease-out data-[orientation=vertical]:w-4 data-[orientation=horizontal]:flex-col data-[orientation=horizontal]:h-4"
+          style={{ backgroundColor: 'var(--color-accent)', border: '2px solid var(--color-border)' }}
           orientation="vertical"
         >
-          <ScrollArea.Thumb className="flex-1 rounded-full relative before:content-[''] before:absolute before:top-1/2 before:left-1/2 before:-translate-x-1/2 before:-translate-y-1/2 before:w-full before:h-full before:min-w-[44px] before:min-h-[44px]" style={{ backgroundColor: 'var(--color-border-dark)' }} />
+          <ScrollArea.Thumb className="flex-1 relative before:content-[''] before:absolute before:top-1/2 before:left-1/2 before:-translate-x-1/2 before:-translate-y-1/2 before:w-full before:h-full before:min-w-[44px] before:min-h-[44px]" style={{ backgroundColor: 'var(--color-primary)', border: '2px solid var(--color-border)', borderRadius: '8px' }} />
         </ScrollArea.Scrollbar>
       </ScrollArea.Root>
       
-      <div className="p-4" style={{ borderTop: '1px solid var(--color-border)' }}>
+      <div className="p-4" style={{ borderTop: '4px solid var(--color-border)', boxShadow: '0 -4px 0 var(--color-primary)' }}>
         <button
           onClick={onDisconnect}
-          className="w-full flex items-center justify-center gap-2 px-4 py-2.5 rounded-lg transition-all duration-200 font-medium"
+          className="w-full flex items-center justify-center gap-2 px-4 py-3 transition-all duration-200 font-black uppercase text-sm"
           style={{ 
-            background: 'linear-gradient(135deg, var(--color-error) 0%, var(--color-accent) 100%)', 
-            color: 'var(--color-text-on-primary)',
-            boxShadow: 'var(--shadow-md)',
-            borderRadius: 'var(--radius-md)'
+            background: 'var(--color-primary)', 
+            color: 'white',
+            border: '3px solid var(--color-border)',
+            boxShadow: '4px 4px 0 var(--color-border)',
+            borderRadius: '12px',
+            transform: 'rotate(-1deg)',
+            textShadow: '2px 2px 0 var(--color-border)'
           }}
-          onMouseEnter={(e) => { e.currentTarget.style.boxShadow = 'var(--shadow-lg)'; }}
-          onMouseLeave={(e) => { e.currentTarget.style.boxShadow = 'var(--shadow-md)'; }}
+          onMouseEnter={(e) => { 
+            e.currentTarget.style.transform = 'rotate(-1deg) scale(1.05)'; 
+            e.currentTarget.style.animation = 'comic-shake 0.3s ease-in-out';
+          }}
+          onMouseLeave={(e) => { 
+            e.currentTarget.style.transform = 'rotate(-1deg) scale(1)'; 
+            e.currentTarget.style.animation = '';
+          }}
         >
           <LogOut className="w-4 h-4" />
-          <span>Disconnect</span>
+          <span>💥 EXIT!</span>
         </button>
       </div>
     </div>
