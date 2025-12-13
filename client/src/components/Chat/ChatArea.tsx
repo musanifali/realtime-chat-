@@ -4,9 +4,12 @@ import React from 'react';
 import { ChatHeader } from './ChatHeader';
 import { MessageList } from './MessageList';
 import { MessageInput } from './MessageInput';
+import { TypingIndicator } from './TypingIndicator';
 import { ComicExplosion } from '../ComicEffects/ComicExplosion';
 import { useComicExplosion } from '../../hooks/useComicExplosion';
+import { useTypingIndicator } from '../../hooks/useTypingIndicator';
 import { ChatMessage, ChatTarget } from '../../types';
+import { SocketService } from '../../services/SocketService';
 
 interface ChatAreaProps {
   chatTarget: ChatTarget;
@@ -17,6 +20,7 @@ interface ChatAreaProps {
   onInputChange: (value: string) => void;
   onSendMessage: () => void;
   onKeyPress: (e: React.KeyboardEvent<HTMLInputElement>) => void;
+  socketService: SocketService | null;
 }
 
 const explosionTexts = ['KAPOW!', 'BAM!', 'ZAP!', 'BOOM!', 'POW!', 'WHAM!'];
@@ -30,8 +34,18 @@ export const ChatArea: React.FC<ChatAreaProps> = ({
   onInputChange,
   onSendMessage,
   onKeyPress,
+  socketService,
 }) => {
   const { explosions, triggerExplosion } = useComicExplosion();
+  const currentRoom = chatTarget.type === 'room' ? chatTarget.room : null;
+  const { typingUsers, notifyTyping } = useTypingIndicator(socketService, currentRoom);
+
+  const handleInputChange = (value: string) => {
+    onInputChange(value);
+    if (value.trim() && chatTarget.type === 'room') {
+      notifyTyping();
+    }
+  };
 
   const handleSendMessage = () => {
     if (input.trim()) {
@@ -49,6 +63,9 @@ export const ChatArea: React.FC<ChatAreaProps> = ({
     onKeyPress(e);
   };
 
+  // Filter out current user from typing users
+  const displayTypingUsers = typingUsers.filter(user => user !== username);
+
   return (
     <div className="flex flex-col h-full relative" style={{ backgroundColor: 'var(--color-bg-primary)' }}>
       <ChatHeader 
@@ -61,10 +78,14 @@ export const ChatArea: React.FC<ChatAreaProps> = ({
         username={username}
       />
       
+      {chatTarget.type === 'room' && displayTypingUsers.length > 0 && (
+        <TypingIndicator usernames={displayTypingUsers} />
+      )}
+      
       <MessageInput
         chatTarget={chatTarget}
         input={input}
-        onInputChange={onInputChange}
+        onInputChange={handleInputChange}
         onSendMessage={handleSendMessage}
         onKeyPress={handleKeyPress}
       />

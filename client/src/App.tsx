@@ -29,6 +29,7 @@ function App() {
     getRoomUsers,
     allUsers,
     chatService,
+    socketService,
   } = useChatApp();
 
   // Send message
@@ -189,6 +190,7 @@ function App() {
           onInputChange={setInput}
           onSendMessage={sendMessage}
           onKeyPress={handleKeyPress}
+          socketService={socketService}
         />
       </div>
 

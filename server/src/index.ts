@@ -97,6 +97,14 @@ io.on('connection', (socket: Socket<ClientToServerEvents, ServerToClientEvents, 
     socketHandlers.handleGetRoomUsers(socket, room)
   );
 
+  socket.on('typing_start', (room) => 
+    socketHandlers.handleTypingStart(socket, room)
+  );
+
+  socket.on('typing_stop', (room) => 
+    socketHandlers.handleTypingStop(socket, room)
+  );
+
   socket.on('disconnect', () => 
     socketHandlers.handleDisconnect(socket)
   );

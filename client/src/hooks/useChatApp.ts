@@ -198,5 +198,6 @@ export const useChatApp = () => {
     
     // Actions
     chatService,
+    socketService,
   };
 };

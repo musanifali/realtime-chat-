@@ -49,4 +49,21 @@ export class SocketService {
       this.socket.off(event, handler as any);
     }
   }
+
+  // Typing indicator methods
+  sendTypingStart(room: string): void {
+    this.emit('typing_start', room);
+  }
+
+  sendTypingStop(room: string): void {
+    this.emit('typing_stop', room);
+  }
+
+  onTypingStart(handler: (data: { username: string; room: string }) => void): void {
+    this.on('typing_start', handler);
+  }
+
+  onTypingStop(handler: (data: { username: string; room: string }) => void): void {
+    this.on('typing_stop', handler);
+  }
 }

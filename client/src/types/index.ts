@@ -11,6 +11,8 @@ export interface ServerToClientEvents {
   error: (message: string) => void;
   joined_room: (room: string) => void;
   left_room: (room: string) => void;
+  typing_start: (data: { username: string; room: string }) => void;
+  typing_stop: (data: { username: string; room: string }) => void;
 }
 
 export interface ClientToServerEvents {
@@ -21,6 +23,8 @@ export interface ClientToServerEvents {
   room_message: (data: { room: string; message: string }) => void;
   private_message: (data: { to: string; message: string }) => void;
   get_room_users: (room: string) => void;
+  typing_start: (room: string) => void;
+  typing_stop: (room: string) => void;
 }
 
 export interface ChatMessage {

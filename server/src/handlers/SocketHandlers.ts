@@ -157,6 +157,22 @@ export class SocketHandlers {
     socket.emit('room_users', { room, users });
   }
 
+  async handleTypingStart(socket: SocketType, room: string): Promise<void> {
+    const username = socket.data.username;
+    if (!username || !socket.data.rooms.has(room)) return;
+
+    // Broadcast to room members except sender
+    socket.to(room).emit('typing_start', { username, room });
+  }
+
+  async handleTypingStop(socket: SocketType, room: string): Promise<void> {
+    const username = socket.data.username;
+    if (!username || !socket.data.rooms.has(room)) return;
+
+    // Broadcast to room members except sender
+    socket.to(room).emit('typing_stop', { username, room });
+  }
+
   async handleDisconnect(socket: SocketType): Promise<void> {
     const username = socket.data.username;
     console.log(`${SERVER_ID}: Disconnect - ${username || socket.id}`);
