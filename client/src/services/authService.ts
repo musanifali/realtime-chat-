@@ -2,7 +2,9 @@
 
 import axios from 'axios';
 
-const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3001/api';
+// Use relative path for production (nginx proxy), localhost for dev
+const API_URL = import.meta.env.VITE_API_URL || 
+  (import.meta.env.DEV ? 'http://localhost:3001/api' : '/api');
 
 axios.defaults.withCredentials = true; // Enable cookies
 
