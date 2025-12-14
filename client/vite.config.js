@@ -10,8 +10,8 @@ export default defineConfig({
       registerType: 'autoUpdate',
       includeAssets: ['favicon.ico', 'robots.txt', 'apple-touch-icon.png'],
       manifest: {
-        name: 'Comic Chat - Realtime Messaging',
-        short_name: 'ComicChat',
+        name: 'BubuChat - Realtime Messaging',
+        short_name: 'BubuChat',
         description: 'A comic-themed realtime chat application with explosive messaging!',
         theme_color: '#FF6B35',
         background_color: '#FFF8DC',
