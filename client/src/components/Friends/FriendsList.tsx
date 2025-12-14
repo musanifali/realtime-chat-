@@ -33,7 +33,7 @@ export function FriendsList({ onSelectFriend, selectedFriendId, socket }: Friend
     loadFriends();
   }, []);
 
-  // Listen for friend request accepted
+  // Listen for friend request accepted, removed, and status changes
   useEffect(() => {
     if (!socket) return;
 
@@ -46,12 +46,25 @@ export function FriendsList({ onSelectFriend, selectedFriendId, socket }: Friend
       setFriends(prev => prev.filter(f => f.id !== data.userId));
     };
 
+    const handleFriendStatusChanged = (data: { username: string; status: string }) => {
+      console.log('Friend status changed:', data);
+      setFriends(prev =>
+        prev.map(f =>
+          f.username === data.username
+            ? { ...f, status: data.status, lastSeen: data.status === 'offline' ? new Date() : f.lastSeen }
+            : f
+        )
+      );
+    };
+
     socket.on('friend_request_accepted', handleFriendAdded);
     socket.on('friend_removed', handleFriendRemoved);
+    socket.on('friend_status_changed', handleFriendStatusChanged);
 
     return () => {
       socket.off('friend_request_accepted', handleFriendAdded);
       socket.off('friend_removed', handleFriendRemoved);
+      socket.off('friend_status_changed', handleFriendStatusChanged);
     };
   }, [socket]);
 

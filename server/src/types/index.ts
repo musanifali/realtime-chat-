@@ -20,6 +20,7 @@ export interface ServerToClientEvents {
   friend_request_received: (data: { requestId: string; recipientId: string; requester: any }) => void;
   friend_request_accepted: (data: { friendshipId: string; requesterId: string; friend: any }) => void;
   friend_removed: (data: { friendId: string; userId: string }) => void;
+  friend_status_changed: (data: { username: string; status: string }) => void;
 }
 
 export interface InterServerEvents {}
@@ -35,4 +36,5 @@ export type RedisMessage =
   | { type: 'user_joined'; username: string }
   | { type: 'user_left'; username: string }
   | { type: 'typing_start'; from: string; to: string }
-  | { type: 'typing_stop'; from: string; to: string };
+  | { type: 'typing_stop'; from: string; to: string }
+  | { type: 'friend_status_changed'; username: string; status: string; to: string };

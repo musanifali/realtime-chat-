@@ -28,6 +28,38 @@ export class SocketHandlers {
     socket.data.username = username;
     await this.redisService.addUser(username);
 
+    // Update MongoDB status to online
+    const { User } = await import('../models/User.js');
+    const { Friendship } = await import('../models/Friendship.js');
+    const user = await User.findOne({ username });
+    if (user) {
+      user.status = 'online';
+      user.lastSeen = new Date();
+      await user.save();
+
+      // Get user's friends and notify them of status change
+      const friendships = await Friendship.find({
+        status: 'accepted',
+        $or: [{ requester: user._id }, { recipient: user._id }],
+      }).populate('requester recipient', '_id username');
+
+      // Extract friend usernames
+      const friendUsernames = friendships.map((f) => {
+        const friendDoc = f.requester._id.toString() === user._id.toString() ? f.recipient : f.requester;
+        return (friendDoc as any).username;
+      });
+
+      // Broadcast status to friends
+      for (const friendUsername of friendUsernames) {
+        await this.pubSubService.publishMessage({
+          type: 'friend_status_changed',
+          username,
+          status: 'online',
+          to: friendUsername,
+        });
+      }
+    }
+
     await this.pubSubService.publishMessage({ type: 'user_joined', username });
 
     console.log(`${SERVER_ID}: ${username} registered`);
@@ -107,6 +139,39 @@ export class SocketHandlers {
 
     if (username) {
       await this.redisService.removeUser(username);
+
+      // Update MongoDB status to offline
+      const { User } = await import('../models/User.js');
+      const { Friendship } = await import('../models/Friendship.js');
+      const user = await User.findOne({ username });
+      if (user) {
+        user.status = 'offline';
+        user.lastSeen = new Date();
+        await user.save();
+
+        // Get user's friends and notify them of status change
+        const friendships = await Friendship.find({
+          status: 'accepted',
+          $or: [{ requester: user._id }, { recipient: user._id }],
+        }).populate('requester recipient', '_id username');
+
+        // Extract friend usernames
+        const friendUsernames = friendships.map((f) => {
+          const friendDoc = f.requester._id.toString() === user._id.toString() ? f.recipient : f.requester;
+          return (friendDoc as any).username;
+        });
+
+        // Broadcast status to friends
+        for (const friendUsername of friendUsernames) {
+          await this.pubSubService.publishMessage({
+            type: 'friend_status_changed',
+            username,
+            status: 'offline',
+            to: friendUsername,
+          });
+        }
+      }
+
       await this.pubSubService.publishMessage({ type: 'user_left', username });
     }
   }

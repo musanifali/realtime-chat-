@@ -10,6 +10,7 @@ export interface ServerToClientEvents {
   friend_request_received: (data: { requestId: string; recipientId: string; requester: any }) => void;
   friend_request_accepted: (data: { friendshipId: string; requesterId: string; friend: any }) => void;
   friend_removed: (data: { friendId: string; userId: string }) => void;
+  friend_status_changed: (data: { username: string; status: string }) => void;
 }
 
 export interface ClientToServerEvents {

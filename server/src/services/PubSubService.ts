@@ -46,6 +46,9 @@ export class PubSubService {
         case 'user_left':
           this.handleUserLeft(data);
           break;
+        case 'friend_status_changed':
+          this.handleFriendStatusChanged(data);
+          break;
       }
     } catch (error) {
       console.error(`${SERVER_ID}: Error handling Redis message:`, error);
@@ -91,5 +94,18 @@ export class PubSubService {
   private handleUserLeft(data: Extract<RedisMessage, { type: 'user_left' }>): void {
     this.io.emit('system', `${data.username} left the chat`);
     this.broadcastService.broadcastUserList();
+  }
+
+  private handleFriendStatusChanged(data: Extract<RedisMessage, { type: 'friend_status_changed' }>): void {
+    // Send status update to specific friend
+    const sockets = this.io.sockets.sockets;
+    sockets.forEach((socket) => {
+      if (socket.data.username === data.to) {
+        socket.emit('friend_status_changed', {
+          username: data.username,
+          status: data.status
+        });
+      }
+    });
   }
 }
