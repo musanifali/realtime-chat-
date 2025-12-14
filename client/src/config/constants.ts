@@ -8,6 +8,9 @@ export const SERVER_URL = import.meta.env.VITE_SERVER_URL ||
 export const SOCKET_CONFIG = {
   reconnection: true,
   reconnectionAttempts: 5,
+  reconnectionDelay: 1000,
+  transports: ['websocket', 'polling'],
+  withCredentials: true,
 };
 
 export const DEFAULT_ROOM = 'general';

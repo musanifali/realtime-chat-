@@ -3,12 +3,24 @@
 import { io, Socket } from 'socket.io-client';
 import { ServerToClientEvents, ClientToServerEvents } from '../types';
 import { SERVER_URL, SOCKET_CONFIG } from '../config/constants';
+import { authService } from './authService';
 
 export class SocketService {
   private socket: Socket<ServerToClientEvents, ClientToServerEvents> | null = null;
 
   connect(): Socket<ServerToClientEvents, ClientToServerEvents> {
-    this.socket = io(SERVER_URL, SOCKET_CONFIG);
+    // Get JWT token for authentication
+    const token = authService.getAccessToken();
+    
+    // Add auth token to socket connection
+    const config = {
+      ...SOCKET_CONFIG,
+      auth: {
+        token: token || '',
+      },
+    };
+    
+    this.socket = io(SERVER_URL, config);
     return this.socket;
   }
 

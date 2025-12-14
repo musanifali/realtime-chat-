@@ -1,6 +1,6 @@
 // client/src/App.tsx
-import { useState } from 'react';
-import { Login } from './components/Login/Login';
+import { useState, useEffect } from 'react';
+import { AuthContainer } from './components/Auth/AuthContainer';
 import { DirectMessages } from './components/Sidebar/DirectMessages';
 import { UserInfo } from './components/Sidebar/UserInfo';
 import { ChatArea } from './components/Chat/ChatArea';
@@ -9,12 +9,16 @@ import { useChatApp } from './hooks/useChatApp';
 import { filterMessagesForTarget } from './utils/messageFilter';
 import { LogOut, Menu, X } from 'lucide-react';
 import { soundManager } from './services/SoundManager';
+import { authService } from './services/authService';
 
 function App() {
   const [input, setInput] = useState('');
   const [showMobileSidebar, setShowMobileSidebar] = useState(false);
   const [isExiting, setIsExiting] = useState(false);
   const [menuClicked, setMenuClicked] = useState(false);
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [isCheckingAuth, setIsCheckingAuth] = useState(true);
+  const [currentUser, setCurrentUser] = useState<any>(null);
   
   const {
     isConnected,
@@ -31,6 +35,40 @@ function App() {
     chatService,
     socketService,
   } = useChatApp();
+
+  // Check if user is already authenticated
+  useEffect(() => {
+    const checkAuth = async () => {
+      try {
+        const user = await authService.getMe();
+        setCurrentUser(user);
+        setIsAuthenticated(true);
+        setUsername(user.username);
+        // Auto-connect to socket with JWT
+        connect();
+      } catch (error) {
+        setIsAuthenticated(false);
+      } finally {
+        setIsCheckingAuth(false);
+      }
+    };
+
+    checkAuth();
+  }, []);
+
+  // Handle auth success
+  const handleAuthSuccess = async () => {
+    try {
+      const user = await authService.getMe();
+      setCurrentUser(user);
+      setIsAuthenticated(true);
+      setUsername(user.username);
+      // Connect to socket with JWT
+      connect();
+    } catch (error) {
+      console.error('Failed to get user info:', error);
+    }
+  };
 
   // Send message
   const sendMessage = (): void => {
@@ -62,23 +100,45 @@ function App() {
     }
   };
 
+  // Handle logout
+  const handleLogout = async () => {
+    setIsExiting(true);
+    soundManager.playClick();
+    
+    try {
+      await authService.logout();
+      disconnect();
+      setIsAuthenticated(false);
+      setCurrentUser(null);
+      setUsername('');
+      setTimeout(() => setIsExiting(false), 300);
+    } catch (error) {
+      console.error('Logout error:', error);
+      setIsExiting(false);
+    }
+  };
+
   // Filter messages for current view
   const filteredMessages = chatTarget 
     ? filterMessagesForTarget(messages, chatTarget, username)
     : [];
 
-  // Login Screen
-  if (!isConnected) {
+  // Show loading spinner while checking auth
+  if (isCheckingAuth) {
     return (
-      <Login
-        username={username}
-        isConnecting={isConnecting}
-        connectionError={connectionError}
-        onUsernameChange={setUsername}
-        onConnect={connect}
-        onKeyPress={handleKeyPress}
-      />
+      <div className="flex items-center justify-center min-h-screen" style={{ backgroundColor: 'var(--color-bg-primary)' }}>
+        <div className="text-center">
+          <div className="text-4xl font-black animate-pulse" style={{ color: 'var(--color-primary)' }}>
+            💥 LOADING... 💥
+          </div>
+        </div>
+      </div>
     );
+  }
+
+  // Auth Screen (Login/Register)
+  if (!isAuthenticated) {
+    return <AuthContainer onAuthSuccess={handleAuthSuccess} />;
   }
 
   // Chat Screen
@@ -117,14 +177,7 @@ function App() {
         
         <div className="p-3 md:p-4" style={{ borderTop: '4px solid var(--color-border)', boxShadow: '0 -4px 0 var(--color-primary)' }}>
           <button
-            onClick={() => {
-              setIsExiting(true);
-              soundManager.playClick();
-              setTimeout(() => {
-                disconnect();
-                setIsExiting(false);
-              }, 300);
-            }}
+            onClick={handleLogout}
             className={`w-full flex items-center justify-center gap-2 px-3 md:px-4 py-2 md:py-3 transition-all duration-200 font-black uppercase text-xs md:text-sm ${isExiting ? 'animate-pulse' : ''}`}
             style={{ 
               background: 'var(--color-primary)', 
@@ -149,7 +202,7 @@ function App() {
             }}
           >
             <LogOut className="w-4 h-4" />
-            <span>💥 EXIT!</span>
+            <span>💥 LOGOUT!</span>
           </button>
         </div>
       </div>

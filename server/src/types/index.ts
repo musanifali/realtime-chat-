@@ -19,7 +19,9 @@ export interface ServerToClientEvents {
 export interface InterServerEvents {}
 
 export interface SocketData {
+  userId?: string;
   username: string;
+  email?: string;
 }
 
 export type RedisMessage =
