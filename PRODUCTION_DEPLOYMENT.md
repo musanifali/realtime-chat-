@@ -3,38 +3,41 @@
 ## Prerequisites on Production Server (13.49.78.104)
 
 1. **MongoDB Installation**
+
    ```bash
    # Install MongoDB
    sudo apt update
    sudo apt install -y mongodb-org
-   
+
    # Start MongoDB service
    sudo systemctl start mongod
    sudo systemctl enable mongod
-   
+
    # Verify MongoDB is running
    sudo systemctl status mongod
    ```
 
 2. **Redis Installation**
+
    ```bash
    # Install Redis
    sudo apt install -y redis-server
-   
+
    # Start Redis service
    sudo systemctl start redis-server
    sudo systemctl enable redis-server
-   
+
    # Verify Redis is running
    redis-cli ping  # Should respond with PONG
    ```
 
 3. **Node.js & PM2**
+
    ```bash
    # Install Node.js (if not already installed)
    curl -fsSL https://deb.nodesource.com/setup_20.x | sudo -E bash -
    sudo apt install -y nodejs
-   
+
    # Install PM2 globally
    sudo npm install -g pm2
    ```
@@ -69,6 +72,7 @@ CORS_ORIGIN=http://13.49.78.104
 ```
 
 **🔒 Security Note**: Generate strong random secrets:
+
 ```bash
 # Generate secure JWT secrets
 node -e "console.log(require('crypto').randomBytes(64).toString('hex'))"
@@ -103,11 +107,13 @@ exit
 ```
 
 Update MongoDB URI in `.env`:
+
 ```env
 MONGODB_URI=mongodb://chatapp:your-app-password@localhost:27017/realtime-chat
 ```
 
 Enable MongoDB authentication:
+
 ```bash
 # Edit MongoDB config
 sudo nano /etc/mongod.conf
@@ -137,6 +143,7 @@ sudo systemctl restart redis-server
 ```
 
 Update Redis URL in `.env`:
+
 ```env
 REDIS_URL=redis://:your-strong-redis-password@localhost:6379
 ```
@@ -193,6 +200,7 @@ rsync -avz dist/ root@13.49.78.104:/var/www/chat/
 The nginx config file at `/etc/nginx/sites-available/chat` should already be configured.
 
 Verify and reload:
+
 ```bash
 # Test nginx config
 sudo nginx -t
@@ -251,6 +259,7 @@ sudo ufw status
 ```
 
 **Important Notes:**
+
 - MongoDB and Redis run **locally** on the same server as Node.js
 - They are **NOT** exposed to the internet (bind to 127.0.0.1)
 - Only Node.js connects to them via localhost
@@ -260,6 +269,7 @@ sudo ufw status
 ## Verification
 
 ### 1. Check Services
+
 ```bash
 # MongoDB
 sudo systemctl status mongod
@@ -275,16 +285,19 @@ sudo systemctl status nginx
 ```
 
 ### 2. Test MongoDB Connection
+
 ```bash
 mongosh "mongodb://chatapp:your-app-password@localhost:27017/realtime-chat"
 ```
 
 ### 3. Test Redis Connection
+
 ```bash
 redis-cli -a your-strong-redis-password ping
 ```
 
 ### 4. Test API Endpoints
+
 ```bash
 # Health check
 curl http://localhost:3001/health
@@ -301,6 +314,7 @@ curl http://13.49.78.104/api/auth/register \
 ```
 
 ### 5. Test WebSocket
+
 ```bash
 # Check Socket.IO is responding
 curl http://localhost:3001/socket.io/?EIO=4&transport=polling
@@ -332,6 +346,7 @@ sudo tail -f /var/log/nginx/error.log
 ## Troubleshooting
 
 ### MongoDB Connection Issues
+
 ```bash
 # Check if MongoDB is running
 sudo systemctl status mongod
@@ -344,6 +359,7 @@ mongosh "mongodb://localhost:27017"
 ```
 
 ### Redis Connection Issues
+
 ```bash
 # Check if Redis is running
 sudo systemctl status redis-server
@@ -356,6 +372,7 @@ sudo tail -f /var/log/redis/redis-server.log
 ```
 
 ### PM2 Issues
+
 ```bash
 # Restart application
 pm2 restart chat-server
@@ -369,6 +386,7 @@ pm2 start src/index.ts --name chat-server --interpreter tsx
 ```
 
 ### Port Already in Use
+
 ```bash
 # Find process using port 3001
 sudo lsof -i :3001
@@ -384,6 +402,7 @@ pm2 start src/index.ts --name chat-server --interpreter tsx
 ## Backup Strategy
 
 ### MongoDB Backup
+
 ```bash
 # Create backup directory
 sudo mkdir -p /var/backups/mongodb
@@ -398,6 +417,7 @@ mongorestore --uri="mongodb://chatapp:your-app-password@localhost:27017/realtime
 ```
 
 ### Automated Backups
+
 ```bash
 # Create backup script
 sudo nano /usr/local/bin/backup-mongodb.sh
@@ -435,6 +455,7 @@ sudo certbot renew --dry-run
 ## Performance Optimization
 
 ### PM2 Cluster Mode
+
 ```bash
 # Run multiple instances
 pm2 start src/index.ts --name chat-server --interpreter tsx -i max
@@ -444,6 +465,7 @@ pm2 start src/index.ts --name chat-server --interpreter tsx -i 4
 ```
 
 ### MongoDB Indexes
+
 ```bash
 mongosh "mongodb://chatapp:password@localhost:27017/realtime-chat"
 
