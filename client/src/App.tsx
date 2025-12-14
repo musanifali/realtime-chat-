@@ -1,7 +1,7 @@
 // client/src/App.tsx
 import { useState, useEffect } from 'react';
 import { AuthContainer } from './components/Auth/AuthContainer';
-import { DirectMessages } from './components/Sidebar/DirectMessages';
+import { FriendsContainer } from './components/Friends/FriendsContainer';
 import { UserInfo } from './components/Sidebar/UserInfo';
 import { ChatArea } from './components/Chat/ChatArea';
 import { SoundToggle } from './components/SoundToggle/SoundToggle';
@@ -165,13 +165,13 @@ function App() {
         <UserInfo username={username} />
         
         <div className="flex-1 overflow-y-auto p-4">
-          <DirectMessages
-            allUsers={allUsers}
-            currentUser={chatTarget?.username || null}
-            onUserSelect={(user) => {
-              setChatTarget({ type: 'user', username: user });
+          <FriendsContainer
+            onSelectFriend={(friend) => {
+              setChatTarget({ type: 'user', username: friend.username });
               setShowMobileSidebar(false);
             }}
+            selectedFriendId={chatTarget?.username}
+            socket={socketService.getSocket()}
           />
         </div>
         

@@ -7,6 +7,9 @@ export interface ServerToClientEvents {
   error: (message: string) => void;
   typing_start: (data: { username: string }) => void;
   typing_stop: (data: { username: string }) => void;
+  friend_request_received: (data: { requestId: string; recipientId: string; requester: any }) => void;
+  friend_request_accepted: (data: { friendshipId: string; requesterId: string; friend: any }) => void;
+  friend_removed: (data: { friendId: string; userId: string }) => void;
 }
 
 export interface ClientToServerEvents {
@@ -14,6 +17,9 @@ export interface ClientToServerEvents {
   private_message: (data: { to: string; message: string }) => void;
   typing_start: (data: { to: string }) => void;
   typing_stop: (data: { to: string }) => void;
+  friend_request_sent: (data: { requestId: string; recipientId: string; requester: any }) => void;
+  friend_request_accepted: (data: { friendshipId: string; requesterId: string; friend: any }) => void;
+  friend_removed: (data: { friendId: string; userId: string }) => void;
 }
 
 export interface ChatMessage {

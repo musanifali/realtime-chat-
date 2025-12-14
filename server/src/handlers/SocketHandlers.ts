@@ -37,10 +37,31 @@ export class SocketHandlers {
 
   async handlePrivateMessage(socket: SocketType, data: { to: string; message: string }): Promise<void> {
     const username = socket.data.username;
-    if (!username) return;
+    const userId = socket.data.userId;
+    if (!username || !userId) return;
 
     if (!(await this.redisService.isUsernameTaken(data.to))) {
       socket.emit('error', `User "${data.to}" is not online`);
+      return;
+    }
+
+    // Check if users are friends before allowing message
+    const { Friendship } = await import('../models/Friendship.js');
+    
+    // Get recipient's userId from Redis or database
+    const recipientUsername = data.to;
+    const { User } = await import('../models/User.js');
+    const recipient = await User.findOne({ username: recipientUsername });
+    
+    if (!recipient) {
+      socket.emit('error', `User "${data.to}" not found`);
+      return;
+    }
+
+    const areFriends = await Friendship.areFriends(userId, recipient._id.toString());
+    
+    if (!areFriends) {
+      socket.emit('error', `You can only message friends. Send a friend request to "${data.to}" first!`);
       return;
     }
 

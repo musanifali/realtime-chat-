@@ -15,6 +15,7 @@ import type { ClientToServerEvents, ServerToClientEvents, InterServerEvents, Soc
 
 // Import routes
 import authRoutes from './routes/auth.js';
+import friendRoutes from './routes/friends.js';
 
 console.log(`${SERVER_ID}: Starting...`);
 
@@ -44,6 +45,7 @@ app.use((req, res, next) => {
 
 // API Routes
 app.use('/api/auth', authRoutes);
+app.use('/api/friends', friendRoutes);
 
 // Health check
 app.get('/health', (req, res) => {
@@ -144,6 +146,33 @@ io.on('connection', (socket: Socket<ClientToServerEvents, ServerToClientEvents, 
   socket.on('typing_stop', (data) => 
     socketHandlers.handleTypingStop(socket, data)
   );
+
+  // Friend request events
+  socket.on('friend_request_sent', async (data) => {
+    // Notify recipient about new friend request via broadcast
+    io.emit('friend_request_received', {
+      requestId: data.requestId,
+      recipientId: data.recipientId,
+      requester: data.requester,
+    });
+  });
+
+  socket.on('friend_request_accepted', async (data) => {
+    // Notify requester that request was accepted via broadcast
+    io.emit('friend_request_accepted', {
+      friendshipId: data.friendshipId,
+      requesterId: data.requesterId,
+      friend: data.friend,
+    });
+  });
+
+  socket.on('friend_removed', async (data) => {
+    // Notify the friend that they were removed via broadcast
+    io.emit('friend_removed', {
+      friendId: data.friendId,
+      userId: data.userId,
+    });
+  });
 
   socket.on('disconnect', () => 
     socketHandlers.handleDisconnect(socket)
