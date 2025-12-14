@@ -48,10 +48,11 @@ export function FriendsList({ onSelectFriend, selectedFriendId, socket }: Friend
 
     const handleFriendStatusChanged = (data: { username: string; status: string }) => {
       console.log('Friend status changed:', data);
+      const validStatus = data.status as 'online' | 'offline' | 'away';
       setFriends(prev =>
         prev.map(f =>
           f.username === data.username
-            ? { ...f, status: data.status, lastSeen: data.status === 'offline' ? new Date() : f.lastSeen }
+            ? { ...f, status: validStatus, lastSeen: validStatus === 'offline' ? new Date() : f.lastSeen }
             : f
         )
       );

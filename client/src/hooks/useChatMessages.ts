@@ -20,6 +20,7 @@ export const useChatMessages = () => {
   );
 
   const loadHistory = useCallback((historyMessages: ChatMessage[]) => {
+    // Replace messages with history (for when switching friends)
     setMessages(historyMessages);
   }, []);
 

@@ -69,13 +69,15 @@ export const ChatArea: React.FC<ChatAreaProps> = ({
         await messageService.markAsRead(chatTarget.username);
       } catch (error) {
         console.error('Failed to load message history:', error);
+        // Don't break the app if history fails - just continue without history
+        onLoadHistory([]);
       } finally {
         setIsLoadingHistory(false);
       }
     };
 
     loadHistory();
-  }, [chatTarget?.username]);
+  }, [chatTarget?.username, username, onLoadHistory]);
 
   const handleInputChange = (value: string) => {
     onInputChange(value);
