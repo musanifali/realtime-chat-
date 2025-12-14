@@ -57,8 +57,20 @@ export class PubSubService {
 
   private handlePrivateMessage(data: Extract<RedisMessage, { type: 'private_message' }>): void {
     const sockets = this.io.sockets.sockets;
+    let recipientOnline = false;
+    let senderOnline = false;
+    
     sockets.forEach((socket) => {
-      if (socket.data.username === data.to || socket.data.username === data.from) {
+      if (socket.data.username === data.to) {
+        recipientOnline = true;
+        socket.emit('private_message', {
+          from: data.from,
+          to: data.to,
+          message: data.message
+        });
+      }
+      if (socket.data.username === data.from) {
+        senderOnline = true;
         socket.emit('private_message', {
           from: data.from,
           to: data.to,
@@ -66,6 +78,11 @@ export class PubSubService {
         });
       }
     });
+    
+    // Log if recipient is offline (message is still saved to DB)
+    if (!recipientOnline) {
+      console.log(`${SERVER_ID}: Recipient "${data.to}" is offline - message saved to DB for later`);
+    }
   }
 
   private handleTypingStart(data: Extract<RedisMessage, { type: 'typing_start' }>): void {

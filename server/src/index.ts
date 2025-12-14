@@ -109,14 +109,20 @@ io.use((socket, next) => {
   import('./utils/jwt.js').then(({ verifyAccessToken }) => {
     const token = socket.handshake.auth.token;
     
+    console.log(`${SERVER_ID}: 🔐 JWT Middleware - Token:`, token ? `${token.substring(0, 20)}...` : 'NONE');
+    
     if (!token) {
+      console.log(`${SERVER_ID}: ❌ JWT Middleware - No token provided`);
       return next(new Error('Authentication token missing'));
     }
 
     const payload = verifyAccessToken(token);
     if (!payload) {
+      console.log(`${SERVER_ID}: ❌ JWT Middleware - Invalid/expired token`);
       return next(new Error('Invalid or expired token'));
     }
+
+    console.log(`${SERVER_ID}: ✅ JWT Middleware - Valid token for user:`, payload.username);
 
     // Attach user data to socket
     socket.data.userId = payload.userId;
@@ -125,16 +131,25 @@ io.use((socket, next) => {
     
     next();
   }).catch((error) => {
+    console.log(`${SERVER_ID}: ❌ JWT Middleware - Error:`, error.message);
     next(new Error('Authentication failed'));
   });
 });
 
 io.on('connection', async (socket: Socket<ClientToServerEvents, ServerToClientEvents, InterServerEvents, SocketData>) => {
-  console.log(`${SERVER_ID}: Client connected: ${socket.id} (User: ${socket.data.username})`);
+  console.log(`${SERVER_ID}: ✅ Client connected: ${socket.id}`);
+  console.log(`${SERVER_ID}: Socket data:`, {
+    userId: socket.data.userId,
+    username: socket.data.username,
+    email: socket.data.email
+  });
   
   // Auto-register user with JWT auth
   if (socket.data.username) {
+    console.log(`${SERVER_ID}: 🔄 Auto-registering user: ${socket.data.username}`);
     await socketHandlers.handleRegister(socket, socket.data.username);
+  } else {
+    console.log(`${SERVER_ID}: ⚠️ No username in socket data - user not auto-registered`);
   }
   
   // Register event handlers (keep for backward compatibility)

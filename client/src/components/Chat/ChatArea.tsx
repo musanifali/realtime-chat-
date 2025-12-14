@@ -23,7 +23,7 @@ interface ChatAreaProps {
   onSendVoice?: (audioBlob: Blob, duration: number, effect?: VoiceEffect) => void;
   onKeyPress: (e: React.KeyboardEvent<HTMLInputElement>) => void;
   socketService: SocketService | null;
-  onLoadHistory?: (messages: ChatMessage[]) => void;
+  onLoadHistory?: (messages: ChatMessage[], friendUsername: string) => void;
 }
 
 const explosionTexts = ['KAPOW!', 'BAM!', 'ZAP!', 'BOOM!', 'POW!', 'WHAM!'];
@@ -42,7 +42,7 @@ export const ChatArea: React.FC<ChatAreaProps> = ({
 }) => {
   const { explosions, triggerExplosion } = useComicExplosion();
   const currentUser = chatTarget?.username || null;
-  const { isTyping, notifyTyping } = useTypingIndicator(socketService, currentUser);
+  const { isTyping, notifyTyping, stopTyping } = useTypingIndicator(socketService, currentUser);
   const [isLoadingHistory, setIsLoadingHistory] = useState(false);
 
   // Load message history when chat target changes
@@ -52,25 +52,39 @@ export const ChatArea: React.FC<ChatAreaProps> = ({
     const loadHistory = async () => {
       try {
         setIsLoadingHistory(true);
+        console.log('📚 Loading history for:', chatTarget.username);
         const data = await messageService.getHistory(chatTarget.username);
         
-        // Convert DB messages to ChatMessage format
+        // Check if data and messages exist before mapping
+        if (!data || !data.messages || !Array.isArray(data.messages)) {
+          console.warn('No message history available');
+          onLoadHistory([], chatTarget.username);
+          return;
+        }
+        
+        // Convert DB messages to ChatMessage format with proper IDs
         const historyMessages: ChatMessage[] = data.messages.map((msg) => ({
-          id: msg.id,
+          id: msg.id.toString(),  // Ensure ID is string
           type: msg.sender.username === username ? 'private_sent' : 'private_received',
           username: msg.sender.username === username ? `To ${msg.recipient.username}` : `From ${msg.sender.username}`,
           text: msg.message,
           timestamp: new Date(msg.createdAt),
         }));
 
-        onLoadHistory(historyMessages);
+        console.log(`📚 Loaded ${historyMessages.length} messages from history for ${chatTarget.username}`);
+        onLoadHistory(historyMessages, chatTarget.username);
 
         // Mark messages as read
-        await messageService.markAsRead(chatTarget.username);
+        try {
+          await messageService.markAsRead(chatTarget.username);
+          console.log(`✅ Marked messages from ${chatTarget.username} as read`);
+        } catch (error) {
+          console.error('Failed to mark messages as read:', error);
+        }
       } catch (error) {
         console.error('Failed to load message history:', error);
         // Don't break the app if history fails - just continue without history
-        onLoadHistory([]);
+        onLoadHistory([], chatTarget.username);
       } finally {
         setIsLoadingHistory(false);
       }
@@ -90,6 +104,7 @@ export const ChatArea: React.FC<ChatAreaProps> = ({
     if (input.trim()) {
       const randomText = explosionTexts[Math.floor(Math.random() * explosionTexts.length)];
       triggerExplosion(randomText);
+      stopTyping(); // Stop typing indicator when sending message
       onSendMessage();
     }
   };
@@ -106,6 +121,7 @@ export const ChatArea: React.FC<ChatAreaProps> = ({
     if (e.key === 'Enter' && input.trim()) {
       const randomText = explosionTexts[Math.floor(Math.random() * explosionTexts.length)];
       triggerExplosion(randomText);
+      stopTyping(); // Stop typing indicator when sending message
     }
     onKeyPress(e);
   };

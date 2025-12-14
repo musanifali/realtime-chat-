@@ -81,9 +81,9 @@ export function FriendRequests({ onRequestHandled, socket }: FriendRequestsProps
   }
 
   return (
-    <div className="bg-white border-4 border-black shadow-[8px_8px_0px_0px_rgba(0,0,0,1)] h-full flex flex-col">
+    <div className="bg-white border-4 border-black shadow-[8px_8px_0px_0px_rgba(0,0,0,1)] h-full flex flex-col overflow-hidden">
       {/* Header */}
-      <div className="flex items-center justify-between p-3 border-b-4 border-black">
+      <div className="flex items-center justify-between p-3 border-b-4 border-black flex-shrink-0">
         <h2 className="text-xl md:text-2xl font-black uppercase transform -rotate-1" style={{ fontFamily: 'Bangers' }}>
           📬 REQUESTS
         </h2>
@@ -104,7 +104,7 @@ export function FriendRequests({ onRequestHandled, socket }: FriendRequestsProps
       )}
 
       {/* Requests List */}
-      <div className="flex-1 overflow-y-auto p-3 space-y-2">
+      <div className="flex-1 min-h-0 overflow-y-auto p-3 space-y-2">
         {requests.length === 0 ? (
           <div className="text-center py-8 text-gray-600 font-bold uppercase text-sm">
             NO PENDING REQUESTS! 😊

@@ -26,35 +26,40 @@ class SoundManagerClass {
     this.sounds.set('send', new Howl({
       src: ['https://assets.mixkit.co/active_storage/sfx/2568/2568-preview.mp3'],
       volume: this.volume * 0.3,
-      html5: true
+      html5: true,
+      pool: 3 // Increase audio pool size
     }));
 
     // Receive message - notification pop
     this.sounds.set('receive', new Howl({
       src: ['https://assets.mixkit.co/active_storage/sfx/2354/2354-preview.mp3'],
       volume: this.volume * 0.4,
-      html5: true
+      html5: true,
+      pool: 3
     }));
 
     // Click - button click
     this.sounds.set('click', new Howl({
       src: ['https://assets.mixkit.co/active_storage/sfx/2571/2571-preview.mp3'],
       volume: this.volume * 0.3,
-      html5: true
+      html5: true,
+      pool: 3
     }));
 
     // User join - positive notification
     this.sounds.set('user-join', new Howl({
       src: ['https://assets.mixkit.co/active_storage/sfx/2869/2869-preview.mp3'],
       volume: this.volume * 0.4,
-      html5: true
+      html5: true,
+      pool: 3
     }));
 
     // User leave - subtle notification
     this.sounds.set('user-leave', new Howl({
       src: ['https://assets.mixkit.co/active_storage/sfx/2357/2357-preview.mp3'],
       volume: this.volume * 0.3,
-      html5: true
+      html5: true,
+      pool: 3
     }));
   }
 

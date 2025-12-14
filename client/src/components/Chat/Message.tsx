@@ -109,7 +109,7 @@ export const Message: React.FC<MessageProps> = ({ message, isOwn }) => {
 
   return (
     <div className={`flex ${isOwn ? 'justify-end' : 'justify-start'} ${justReceived ? 'animate-bounce' : 'animate-comic-pop'}`}>
-      <div className="relative max-w-[75%] md:max-w-[60%] lg:max-w-[50%]">
+      <div className="relative max-w-[85%] sm:max-w-[75%] md:max-w-[65%] lg:max-w-[55%]">
         <div 
           className={`${!isVoiceMessage && !isGif ? 'speech-bubble-tail px-4 py-3' : ''} relative`}
           style={{

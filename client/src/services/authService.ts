@@ -39,12 +39,18 @@ export interface AuthResponse {
 class AuthService {
   private accessToken: string | null = null;
 
+  constructor() {
+    // Load token from localStorage on init
+    this.accessToken = localStorage.getItem('accessToken');
+  }
+
   /**
    * Register new user
    */
   async register(data: RegisterData): Promise<AuthResponse> {
     const response = await axios.post<AuthResponse>(`${API_URL}/auth/register`, data);
     this.accessToken = response.data.accessToken;
+    localStorage.setItem('accessToken', response.data.accessToken);
     return response.data;
   }
 
@@ -54,6 +60,7 @@ class AuthService {
   async login(data: LoginData): Promise<AuthResponse> {
     const response = await axios.post<AuthResponse>(`${API_URL}/auth/login`, data);
     this.accessToken = response.data.accessToken;
+    localStorage.setItem('accessToken', response.data.accessToken);
     return response.data;
   }
 
@@ -63,6 +70,7 @@ class AuthService {
   async logout(): Promise<void> {
     await axios.post(`${API_URL}/auth/logout`);
     this.accessToken = null;
+    localStorage.removeItem('accessToken');
   }
 
   /**

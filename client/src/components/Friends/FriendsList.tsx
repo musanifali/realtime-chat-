@@ -9,9 +9,10 @@ interface FriendsListProps {
   onSelectFriend: (friend: Friend) => void;
   selectedFriendId?: string;
   socket: any;
+  getUnreadCount?: (friendUsername: string) => number;
 }
 
-export function FriendsList({ onSelectFriend, selectedFriendId, socket }: FriendsListProps) {
+export function FriendsList({ onSelectFriend, selectedFriendId, socket, getUnreadCount }: FriendsListProps) {
   const [friends, setFriends] = useState<Friend[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
@@ -105,9 +106,9 @@ export function FriendsList({ onSelectFriend, selectedFriendId, socket }: Friend
   }
 
   return (
-    <div className="bg-white border-4 border-black shadow-[8px_8px_0px_0px_rgba(0,0,0,1)] h-full flex flex-col">
+    <div className="bg-white border-4 border-black shadow-[8px_8px_0px_0px_rgba(0,0,0,1)] h-full flex flex-col overflow-hidden">
       {/* Header */}
-      <div className="p-3 border-b-4 border-black">
+      <div className="p-3 border-b-4 border-black flex-shrink-0">
         <h2 className="text-xl md:text-2xl font-black uppercase transform -rotate-1" style={{ fontFamily: 'Bangers' }}>
           👥 FRIENDS ({friends.length})
         </h2>
@@ -122,7 +123,7 @@ export function FriendsList({ onSelectFriend, selectedFriendId, socket }: Friend
       )}
 
       {/* Friends List */}
-      <div className="flex-1 overflow-y-auto p-3 space-y-2">
+      <div className="flex-1 min-h-0 overflow-y-auto p-3 space-y-2">
         {friends.length === 0 ? (
           <div className="text-center py-8 text-gray-600 font-bold uppercase text-sm">
             NO FRIENDS YET! 😢
@@ -132,10 +133,10 @@ export function FriendsList({ onSelectFriend, selectedFriendId, socket }: Friend
           friends.map((friend) => (
             <div
               key={friend.id}
-              className={`flex items-center gap-2 p-2 border-3 border-black rounded-md 
+              className={`flex items-center gap-2 p-2 sm:p-3 border-3 border-black rounded-md 
                        shadow-[3px_3px_0px_0px_rgba(0,0,0,1)] hover:translate-x-[1px] hover:translate-y-[1px]
                        hover:shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] transition-all
-                       cursor-pointer ${
+                       cursor-pointer active:scale-95 ${
                          selectedFriendId === friend.username
                            ? 'bg-gradient-to-r from-yellow-300 to-pink-300'
                            : 'bg-gradient-to-r from-blue-200 to-purple-200'
@@ -159,7 +160,16 @@ export function FriendsList({ onSelectFriend, selectedFriendId, socket }: Friend
 
               {/* Friend Info */}
               <div className="flex-1 min-w-0">
-                <div className="font-black uppercase text-sm truncate">{friend.displayName}</div>
+                <div className="flex items-center gap-2">
+                  <div className="font-black uppercase text-sm truncate">{friend.displayName}</div>
+                  {getUnreadCount && getUnreadCount(friend.username) > 0 && (
+                    <div className="flex-shrink-0 min-w-[20px] h-5 bg-red-500 text-white rounded-full border-2 border-black
+                                  flex items-center justify-center font-black text-xs px-1.5
+                                  shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] animate-pulse">
+                      {getUnreadCount(friend.username)}
+                    </div>
+                  )}
+                </div>
                 <div className="text-xs text-gray-700 truncate">@{friend.username}</div>
                 {friend.status === 'offline' && friend.lastSeen && (
                   <div className="text-xs text-gray-600 truncate">

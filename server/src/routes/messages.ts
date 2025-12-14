@@ -21,4 +21,7 @@ router.get('/unread/count', MessageController.getUnreadCount);
 // Get unread counts grouped by friend
 router.get('/unread/by-friend', MessageController.getUnreadCountsByFriend);
 
+// Get all pending/unread messages
+router.get('/pending', MessageController.getPendingMessages);
+
 export default router;

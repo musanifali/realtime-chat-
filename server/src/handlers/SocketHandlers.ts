@@ -80,29 +80,34 @@ export class SocketHandlers {
   async handlePrivateMessage(socket: SocketType, data: { to: string; message: string }): Promise<void> {
     const username = socket.data.username;
     const userId = socket.data.userId;
-    if (!username || !userId) return;
+    
+    console.log(`${SERVER_ID}: Private message from ${username} to ${data.to}: "${data.message}"`);
+    
+    if (!username || !userId) {
+      console.log(`${SERVER_ID}: ERROR - No username or userId in socket data`);
+      return;
+    }
 
-    if (!(await this.redisService.isUsernameTaken(data.to))) {
-      socket.emit('error', `User "${data.to}" is not online`);
+    // Check if recipient exists in database (don't require them to be online)
+    const recipientUsername = data.to;
+    const { User } = await import('../models/User.js');
+    const recipient = await User.findOne({ username: recipientUsername });
+    
+    if (!recipient) {
+      console.log(`${SERVER_ID}: ERROR - User "${data.to}" not found`);
+      socket.emit('error', `User "${data.to}" not found`);
       return;
     }
 
     // Check if users are friends before allowing message
     const { Friendship } = await import('../models/Friendship.js');
     
-    // Get recipient's userId from Redis or database
-    const recipientUsername = data.to;
-    const { User } = await import('../models/User.js');
-    const recipient = await User.findOne({ username: recipientUsername });
-    
-    if (!recipient) {
-      socket.emit('error', `User "${data.to}" not found`);
-      return;
-    }
-
     const areFriends = await Friendship.areFriends(userId, recipient._id.toString());
     
+    console.log(`${SERVER_ID}: Friendship check: ${username} <-> ${data.to} = ${areFriends}`);
+    
     if (!areFriends) {
+      console.log(`${SERVER_ID}: ERROR - Users are not friends`);
       socket.emit('error', `You can only message friends. Send a friend request to "${data.to}" first!`);
       return;
     }

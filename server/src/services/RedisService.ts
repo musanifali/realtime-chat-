@@ -8,8 +8,35 @@ export class RedisService {
   private subscriber: RedisClientType;
 
   constructor(redisUrl: string) {
-    this.publisher = createClient({ url: redisUrl });
-    this.subscriber = createClient({ url: redisUrl });
+    // Parse URL to extract username/password (Redis v5 client needs explicit config)
+    let username: string | undefined;
+    let password: string | undefined;
+    let cleanUrl = redisUrl;
+
+    try {
+      const url = new URL(redisUrl);
+      if (url.username) username = url.username;
+      if (url.password) password = url.password;
+      // Reconstruct URL without credentials
+      cleanUrl = `redis://${url.host}${url.pathname}`;
+    } catch (e) {
+      // URL parsing failed, use as-is
+      console.warn('Failed to parse Redis URL, using as-is:', redisUrl);
+    }
+
+    console.log('Redis config:', { url: cleanUrl, username, hasPassword: !!password });
+
+    const config = { 
+      url: cleanUrl,
+      username,
+      password,
+      socket: { 
+        reconnectStrategy: () => 1000 
+      }
+    };
+    this.publisher = createClient(config);
+    // Create subscriber separately instead of duplicating (fixes NOAUTH issue)
+    this.subscriber = createClient(config);
   }
 
   async connect(): Promise<void> {
@@ -32,18 +59,34 @@ export class RedisService {
 
   // User methods
   async addUser(username: string): Promise<void> {
+    if (!this.publisher.isOpen) {
+      console.log('⚠️ Redis publisher closed, skipping addUser');
+      return;
+    }
     await this.publisher.sAdd(USERS_KEY, username);
   }
 
   async removeUser(username: string): Promise<void> {
+    if (!this.publisher.isOpen) {
+      console.log('⚠️ Redis publisher closed, skipping removeUser');
+      return;
+    }
     await this.publisher.sRem(USERS_KEY, username);
   }
 
   async getAllUsers(): Promise<string[]> {
+    if (!this.publisher.isOpen) {
+      console.log('⚠️ Redis publisher closed, returning empty users list');
+      return [];
+    }
     return await this.publisher.sMembers(USERS_KEY);
   }
 
   async isUsernameTaken(username: string): Promise<boolean> {
+    if (!this.publisher.isOpen) {
+      console.log('⚠️ Redis publisher closed, returning false for isUsernameTaken');
+      return false;
+    }
     return (await this.publisher.sIsMember(USERS_KEY, username)) === 1;
   }
 

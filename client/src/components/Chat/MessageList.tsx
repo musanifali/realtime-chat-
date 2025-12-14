@@ -23,7 +23,7 @@ export const MessageList: React.FC<MessageListProps> = ({
   return (
     <ScrollArea.Root className="flex-1 overflow-hidden">
       <ScrollArea.Viewport className="h-full w-full">
-        <div className="p-4 space-y-4">
+        <div className="p-2 sm:p-4 space-y-3 sm:space-y-4">
           {messages.map((msg) => (
             <Message 
               key={msg.id}

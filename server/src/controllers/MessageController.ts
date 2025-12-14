@@ -14,9 +14,12 @@ export class MessageController {
       const { friendUsername } = req.params;
       const { limit = 50, before } = req.query;
 
+      console.log(`📚 Getting message history: user=${userId}, friend=${friendUsername}, limit=${limit}`);
+
       // Find friend user
       const friend = await User.findOne({ username: friendUsername });
       if (!friend) {
+        console.log(`❌ Friend not found: ${friendUsername}`);
         res.status(404).json({ error: 'User not found' });
         return;
       }
@@ -24,11 +27,12 @@ export class MessageController {
       // Verify friendship
       const areFriends = await Friendship.areFriends(userId, friend._id.toString());
       if (!areFriends) {
+        console.log(`❌ Not friends: ${userId} <-> ${friend._id}`);
         res.status(403).json({ error: 'You can only view messages with friends' });
         return;
       }
 
-      // Build query
+      // Build query - get ALL messages between these two users (both sent and received)
       const query: any = {
         $or: [
           { sender: userId, recipient: friend._id },
@@ -41,12 +45,14 @@ export class MessageController {
         query.createdAt = { $lt: new Date(before as string) };
       }
 
-      // Get messages
+      // Get messages - sorted by newest first for pagination, then reverse
       const messages = await Message.find(query)
         .sort({ createdAt: -1 })
         .limit(Number(limit))
         .populate('sender', 'username displayName avatar')
         .populate('recipient', 'username displayName avatar');
+
+      console.log(`📚 Found ${messages.length} messages between ${userId} and ${friend.username}`);
 
       // Reverse to get chronological order (oldest first)
       messages.reverse();
@@ -56,16 +62,16 @@ export class MessageController {
         const sender = m.sender as any;
         const recipient = m.recipient as any;
         return {
-          id: m._id,
+          id: m._id.toString(),
           message: m.message,
           sender: {
-            id: sender._id,
+            id: sender._id.toString(),
             username: sender.username,
             displayName: sender.displayName,
             avatar: sender.avatar,
           },
           recipient: {
-            id: recipient._id,
+            id: recipient._id.toString(),
             username: recipient.username,
             displayName: recipient.displayName,
             avatar: recipient.avatar,
@@ -75,6 +81,8 @@ export class MessageController {
           createdAt: m.createdAt,
         };
       });
+
+      console.log(`✅ Returning ${formattedMessages.length} formatted messages`);
 
       res.status(200).json({ messages: formattedMessages });
     } catch (error: any) {
@@ -88,6 +96,8 @@ export class MessageController {
     try {
       const userId = req.user!.userId;
       const { friendUsername } = req.params;
+
+      console.log(`📖 Marking messages as read: user=${userId}, friend=${friendUsername}`);
 
       // Find friend user
       const friend = await User.findOne({ username: friendUsername });
@@ -110,6 +120,8 @@ export class MessageController {
           }
         }
       );
+
+      console.log(`✅ Marked ${result.modifiedCount} messages as read from ${friendUsername}`);
 
       res.status(200).json({ 
         message: 'Messages marked as read',
@@ -179,6 +191,58 @@ export class MessageController {
     } catch (error: any) {
       console.error('Get unread counts by friend error:', error);
       res.status(500).json({ error: 'Failed to get unread counts' });
+    }
+  }
+
+  // Get all pending/unread messages
+  static async getPendingMessages(req: Request, res: Response): Promise<void> {
+    try {
+      const userId = req.user!.userId;
+
+      console.log(`📥 Getting pending messages for user: ${userId}`);
+
+      // Get all unread messages sent to this user
+      const messages = await Message.find({
+        recipient: userId,
+        isRead: false,
+      })
+        .sort({ createdAt: 1 }) // Oldest first
+        .populate('sender', 'username displayName avatar')
+        .populate('recipient', 'username displayName avatar');
+
+      console.log(`📥 Found ${messages.length} pending messages for user ${userId}`);
+
+      // Format messages
+      const formattedMessages = messages.map((m) => {
+        const sender = m.sender as any;
+        const recipient = m.recipient as any;
+        return {
+          id: m._id.toString(),
+          message: m.message,
+          sender: {
+            id: sender._id.toString(),
+            username: sender.username,
+            displayName: sender.displayName,
+            avatar: sender.avatar,
+          },
+          recipient: {
+            id: recipient._id.toString(),
+            username: recipient.username,
+            displayName: recipient.displayName,
+            avatar: recipient.avatar,
+          },
+          isRead: m.isRead,
+          readAt: m.readAt,
+          createdAt: m.createdAt,
+        };
+      });
+
+      console.log(`✅ Returning ${formattedMessages.length} formatted pending messages`);
+
+      res.status(200).json({ messages: formattedMessages });
+    } catch (error: any) {
+      console.error('Get pending messages error:', error);
+      res.status(500).json({ error: 'Failed to get pending messages' });
     }
   }
 }

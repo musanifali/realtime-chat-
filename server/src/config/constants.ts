@@ -1,5 +1,10 @@
 // server/src/config/constants.ts
 
+import dotenv from 'dotenv';
+
+// Load environment variables from .env file
+dotenv.config();
+
 // Use PORT environment variable, default to 3001 for production
 export const PORT = parseInt(process.env.PORT || '3001');
 export const SERVER_ID = `Server-${PORT}`;

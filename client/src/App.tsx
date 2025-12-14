@@ -29,25 +29,59 @@ function App() {
     connect,
     disconnect,
     messages,
+    addMessage,
     chatTarget,
     setChatTarget,
     loadHistory,
     allUsers,
     chatService,
     socketService,
+    getUnreadCount,
+    unreadCounts,
   } = useChatApp();
+
+  // Setup global socket listeners when authenticated
+  useEffect(() => {
+    if (!isAuthenticated || !username) return;
+
+    const socket = socketService.getSocket();
+    if (!socket) return;
+
+    console.log('🔗 Setting up global socket listeners for:', username);
+
+    // This keeps socket active and listening even when not in DM view
+    const handleConnect = () => {
+      console.log('🟢 Socket connected globally');
+    };
+
+    socket.on('connect', handleConnect);
+
+    return () => {
+      socket.off('connect', handleConnect);
+    };
+  }, [isAuthenticated, username, socketService]);
 
   // Check if user is already authenticated
   useEffect(() => {
     const checkAuth = async () => {
       try {
+        // Only check auth if we have a token in localStorage
+        const token = authService.getAccessToken();
+        if (!token) {
+          setIsAuthenticated(false);
+          setIsCheckingAuth(false);
+          return;
+        }
+
         const user = await authService.getMe();
         setCurrentUser(user);
         setIsAuthenticated(true);
         setUsername(user.username);
-        // Auto-connect to socket with JWT
-        connect();
+        // Auto-connect to socket with JWT immediately
+        setTimeout(() => connect(), 100);
       } catch (error) {
+        // Clear invalid token and set to unauthenticated
+        authService.logout();
         setIsAuthenticated(false);
       } finally {
         setIsCheckingAuth(false);
@@ -64,8 +98,11 @@ function App() {
       setCurrentUser(user);
       setIsAuthenticated(true);
       setUsername(user.username);
-      // Connect to socket with JWT
-      connect();
+      // Connect to socket with JWT after state updates
+      setTimeout(() => {
+        console.log('🔗 Connecting socket after login for user:', user.username);
+        connect();
+      }, 100);
     } catch (error) {
       console.error('Failed to get user info:', error);
     }
@@ -74,7 +111,14 @@ function App() {
   // Send message
   const sendMessage = (): void => {
     if (!input.trim() || !chatTarget) return;
-    chatService.sendPrivateMessage(chatTarget.username, input.trim());
+    
+    const messageText = input.trim();
+    
+    // Optimistically add sent message to UI immediately with friend username
+    addMessage('private_sent', messageText, `To ${chatTarget.username}`, chatTarget.username);
+    
+    // Send via socket
+    chatService.sendPrivateMessage(chatTarget.username, messageText);
     setInput('');
   };
 
@@ -156,7 +200,7 @@ function App() {
       {/* Sidebar with user list */}
       <div 
         className={`
-          w-64 lg:w-80 flex flex-col bendots-bg z-50
+          w-full sm:w-80 md:w-64 lg:w-80 flex flex-col bendots-bg z-50
           fixed md:relative inset-y-0 left-0
           transform transition-transform duration-300 ease-in-out
           ${showMobileSidebar ? 'translate-x-0' : '-translate-x-full md:translate-x-0'}
@@ -165,7 +209,7 @@ function App() {
       >
         <UserInfo username={username} />
         
-        <div className="flex-1 overflow-y-auto p-2 md:p-4">
+        <div className="flex-1 min-h-0 overflow-hidden p-2 md:p-4">
           <FriendsContainer
             onSelectFriend={(friend) => {
               setChatTarget({ type: 'user', username: friend.username });
@@ -173,6 +217,7 @@ function App() {
             }}
             selectedFriendId={chatTarget?.username}
             socket={socketService.getSocket()}
+            getUnreadCount={getUnreadCount}
           />
         </div>
         

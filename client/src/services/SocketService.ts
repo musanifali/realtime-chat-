@@ -7,10 +7,16 @@ import { authService } from './authService';
 
 export class SocketService {
   private socket: Socket<ServerToClientEvents, ClientToServerEvents> | null = null;
+  private messageQueue: Array<{ event: string; args: any[] }> = [];
+  private isReady: boolean = false;
 
   connect(): Socket<ServerToClientEvents, ClientToServerEvents> {
     // Get JWT token for authentication
     const token = authService.getAccessToken();
+    
+    console.log('🔌 SocketService.connect() called');
+    console.log('📝 Token:', token ? `${token.substring(0, 20)}...` : 'NO TOKEN');
+    console.log('🌐 Server URL:', SERVER_URL);
     
     // Add auth token to socket connection
     const config = {
@@ -21,26 +27,70 @@ export class SocketService {
     };
     
     this.socket = io(SERVER_URL, config);
+    
+    // Add connection event listeners for debugging
+    this.socket.on('connect', () => {
+      console.log('✅ Socket connected! ID:', this.socket?.id);
+      // Give a small delay for auth to complete before marking ready
+      setTimeout(() => {
+        this.isReady = true;
+        this.flushMessageQueue();
+      }, 100);
+    });
+    
+    this.socket.on('connect_error', (error) => {
+      console.error('❌ Socket connection error:', error.message);
+      this.isReady = false;
+    });
+    
+    this.socket.on('disconnect', (reason) => {
+      console.log('🔌 Socket disconnected:', reason);
+      this.isReady = false;
+    });
+    
     return this.socket;
   }
 
   disconnect(): void {
     if (this.socket) {
+      console.log('🔌 Disconnecting socket...');
+      // Remove all listeners to ensure clean reconnection
+      this.socket.removeAllListeners();
       this.socket.disconnect();
       this.socket = null;
     }
+    this.isReady = false;
+    this.messageQueue = [];
   }
 
   getSocket(): Socket<ServerToClientEvents, ClientToServerEvents> | null {
     return this.socket;
   }
 
+  private flushMessageQueue(): void {
+    if (!this.socket || !this.isReady) return;
+    
+    console.log('📦 Flushing message queue:', this.messageQueue.length, 'messages');
+    while (this.messageQueue.length > 0) {
+      const { event, args } = this.messageQueue.shift()!;
+      console.log('📤 Sending queued event:', event, args);
+      this.socket.emit(event as any, ...args);
+    }
+  }
+
   emit<K extends keyof ClientToServerEvents>(
     event: K,
     ...args: Parameters<ClientToServerEvents[K]>
   ): void {
-    if (this.socket) {
+    if (this.socket && this.isReady) {
+      console.log('📤 Emitting event:', event, 'with args:', JSON.stringify(args));
       this.socket.emit(event, ...args);
+    } else if (this.socket) {
+      // Queue message until socket is ready
+      console.log('⏳ Queueing event (socket not ready):', event, 'with args:', JSON.stringify(args));
+      this.messageQueue.push({ event: event as string, args });
+    } else {
+      console.error('❌ Cannot emit - socket not connected! Event:', event);
     }
   }
 

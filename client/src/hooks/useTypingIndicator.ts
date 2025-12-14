@@ -52,6 +52,19 @@ export const useTypingIndicator = (socketService: SocketService | null, currentU
       setIsTyping(false);
     }, 3000);
   }, [socketService, currentUser]);
+  
+  const stopTyping = useCallback(() => {
+    if (!socketService || !currentUser) return;
+    
+    if (typingTimeoutRef.current) {
+      clearTimeout(typingTimeoutRef.current);
+      typingTimeoutRef.current = null;
+    }
+    
+    console.log('Sending typing stop to user:', currentUser);
+    socketService.sendTypingStop(currentUser);
+    setIsTyping(false);
+  }, [socketService, currentUser]);
 
-  return { isTyping, notifyTyping };
+  return { isTyping, notifyTyping, stopTyping };
 };

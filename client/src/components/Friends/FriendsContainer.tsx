@@ -11,11 +11,12 @@ interface FriendsContainerProps {
   onSelectFriend: (friend: any) => void;
   selectedFriendId?: string;
   socket: any;
+  getUnreadCount?: (friendUsername: string) => number;
 }
 
 type Tab = 'friends' | 'requests' | 'search';
 
-export function FriendsContainer({ onSelectFriend, selectedFriendId, socket }: FriendsContainerProps) {
+export function FriendsContainer({ onSelectFriend, selectedFriendId, socket, getUnreadCount }: FriendsContainerProps) {
   const [activeTab, setActiveTab] = useState<Tab>('friends');
 
   const handleTabChange = (tab: Tab) => {
@@ -82,12 +83,13 @@ export function FriendsContainer({ onSelectFriend, selectedFriendId, socket }: F
       </div>
 
       {/* Tab Content */}
-      <div className="flex-1 overflow-hidden">
+      <div className="flex-1 min-h-0 overflow-hidden flex flex-col">
         {activeTab === 'friends' && (
           <FriendsList
             onSelectFriend={onSelectFriend}
             selectedFriendId={selectedFriendId}
             socket={socket}
+            getUnreadCount={getUnreadCount}
           />
         )}
 

@@ -65,4 +65,12 @@ export const messageService = {
     );
     return response.data;
   },
+
+  // Get all pending/unread messages from all friends
+  async getPendingMessages() {
+    const response = await axios.get<{ messages: MessageData[] }>(
+      `${API_URL}/messages/pending`
+    );
+    return response.data.messages;
+  },
 };
