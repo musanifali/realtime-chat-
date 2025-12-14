@@ -5,6 +5,8 @@ import { FriendsContainer } from './components/Friends/FriendsContainer';
 import { UserInfo } from './components/Sidebar/UserInfo';
 import { ChatArea } from './components/Chat/ChatArea';
 import { SoundToggle } from './components/SoundToggle/SoundToggle';
+import { InstallPrompt } from './components/PWA/InstallPrompt';
+import { UpdatePrompt } from './components/PWA/UpdatePrompt';
 import { useChatApp } from './hooks/useChatApp';
 import { filterMessagesForTarget } from './utils/messageFilter';
 import { LogOut, Menu, X } from 'lucide-react';
@@ -294,6 +296,10 @@ function App() {
           onLoadHistory={loadHistory}
         />
       </div>
+
+      {/* PWA Components */}
+      <InstallPrompt />
+      <UpdatePrompt />
     </div>
   );
 }

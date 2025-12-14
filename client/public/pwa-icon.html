@@ -1,0 +1,141 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>PWA Icon Generator</title>
+</head>
+<body>
+    <canvas id="canvas"></canvas>
+    <script>
+        // Generate comic-themed PWA icons
+        const sizes = [192, 512];
+        
+        sizes.forEach(size => {
+            const canvas = document.createElement('canvas');
+            canvas.width = size;
+            canvas.height = size;
+            const ctx = canvas.getContext('2d');
+            
+            // Background with halftone pattern
+            ctx.fillStyle = '#FF6B35';
+            ctx.fillRect(0, 0, size, size);
+            
+            // Add dots pattern
+            ctx.fillStyle = '#FF4500';
+            const dotSize = size / 40;
+            const spacing = size / 20;
+            for (let x = 0; x < size; x += spacing) {
+                for (let y = 0; y < size; y += spacing) {
+                    ctx.beginPath();
+                    ctx.arc(x, y, dotSize, 0, Math.PI * 2);
+                    ctx.fill();
+                }
+            }
+            
+            // Comic burst shape
+            ctx.fillStyle = '#FFD700';
+            ctx.strokeStyle = '#000';
+            ctx.lineWidth = size / 40;
+            
+            const centerX = size / 2;
+            const centerY = size / 2;
+            const radius = size / 3;
+            
+            ctx.beginPath();
+            for (let i = 0; i < 8; i++) {
+                const angle = (i * Math.PI * 2) / 8;
+                const r = i % 2 === 0 ? radius * 1.2 : radius * 0.8;
+                const x = centerX + Math.cos(angle) * r;
+                const y = centerY + Math.sin(angle) * r;
+                if (i === 0) ctx.moveTo(x, y);
+                else ctx.lineTo(x, y);
+            }
+            ctx.closePath();
+            ctx.fill();
+            ctx.stroke();
+            
+            // Chat bubble
+            ctx.fillStyle = '#FFF';
+            ctx.beginPath();
+            ctx.arc(centerX, centerY - size / 12, size / 6, 0, Math.PI * 2);
+            ctx.fill();
+            ctx.stroke();
+            
+            // Eyes
+            ctx.fillStyle = '#000';
+            ctx.beginPath();
+            ctx.arc(centerX - size / 18, centerY - size / 10, size / 40, 0, Math.PI * 2);
+            ctx.fill();
+            ctx.beginPath();
+            ctx.arc(centerX + size / 18, centerY - size / 10, size / 40, 0, Math.PI * 2);
+            ctx.fill();
+            
+            // Smile
+            ctx.beginPath();
+            ctx.arc(centerX, centerY - size / 20, size / 15, 0, Math.PI);
+            ctx.stroke();
+            
+            // Text "CHAT"
+            ctx.fillStyle = '#000';
+            ctx.font = `bold ${size / 8}px Arial`;
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'middle';
+            ctx.fillText('💬', centerX, centerY + size / 6);
+            
+            // Download
+            const link = document.createElement('a');
+            link.download = `pwa-${size}x${size}.png`;
+            link.href = canvas.toDataURL();
+            link.click();
+        });
+        
+        // Generate maskable icons (with safe zone)
+        sizes.forEach(size => {
+            const canvas = document.createElement('canvas');
+            canvas.width = size;
+            canvas.height = size;
+            const ctx = canvas.getContext('2d');
+            
+            // Background
+            ctx.fillStyle = '#FF6B35';
+            ctx.fillRect(0, 0, size, size);
+            
+            // Safe zone circle (80% of size)
+            const safeRadius = (size * 0.4);
+            const centerX = size / 2;
+            const centerY = size / 2;
+            
+            // Comic burst
+            ctx.fillStyle = '#FFD700';
+            ctx.strokeStyle = '#000';
+            ctx.lineWidth = size / 50;
+            
+            ctx.beginPath();
+            for (let i = 0; i < 8; i++) {
+                const angle = (i * Math.PI * 2) / 8;
+                const r = i % 2 === 0 ? safeRadius * 0.8 : safeRadius * 0.6;
+                const x = centerX + Math.cos(angle) * r;
+                const y = centerY + Math.sin(angle) * r;
+                if (i === 0) ctx.moveTo(x, y);
+                else ctx.lineTo(x, y);
+            }
+            ctx.closePath();
+            ctx.fill();
+            ctx.stroke();
+            
+            // Chat emoji
+            ctx.font = `${size / 3}px Arial`;
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'middle';
+            ctx.fillText('💬', centerX, centerY);
+            
+            // Download
+            const link = document.createElement('a');
+            link.download = `pwa-maskable-${size}x${size}.png`;
+            link.href = canvas.toDataURL();
+            link.click();
+        });
+        
+        document.body.innerHTML = '<h1 style="font-family: Arial; color: #FF6B35;">✅ PWA Icons Generated! Check your downloads.</h1>';
+    </script>
+</body>
+</html>
