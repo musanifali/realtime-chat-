@@ -1,6 +1,6 @@
 // client/src/components/Chat/MessageInput.tsx
 
-import React, { useState } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { ChatTarget } from '../../types';
 import { Send, Mic, Sticker } from 'lucide-react';
 import { soundManager } from '../../services/SoundManager';
@@ -29,6 +29,19 @@ export const MessageInput: React.FC<MessageInputProps> = ({
   const [showVoiceRecorder, setShowVoiceRecorder] = useState(false);
   const [showStickerPicker, setShowStickerPicker] = useState(false);
   const [showGifPicker, setShowGifPicker] = useState(false);
+  const autoSendRef = useRef(false);
+
+  useEffect(() => {
+    if (autoSendRef.current && input.trim() && !isSending) {
+      autoSendRef.current = false;
+      setIsSending(true);
+      soundManager.playSend();
+      setTimeout(() => {
+        onSendMessage();
+        setIsSending(false);
+      }, 100);
+    }
+  }, [input, isSending, onSendMessage]);
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     onInputChange(e.target.value);
@@ -69,35 +82,15 @@ export const MessageInput: React.FC<MessageInputProps> = ({
   };
 
   const handleStickerSelect = (text: string) => {
+    autoSendRef.current = true;
     onInputChange(text);
     setShowStickerPicker(false);
-    // Auto-send sticker
-    setTimeout(() => {
-      if (!isSending) {
-        setIsSending(true);
-        soundManager.playSend();
-        setTimeout(() => {
-          onSendMessage();
-          setIsSending(false);
-        }, 150);
-      }
-    }, 100);
   };
 
   const handleGifSelect = (gifUrl: string) => {
+    autoSendRef.current = true;
     onInputChange(`[GIF] ${gifUrl}`);
     setShowGifPicker(false);
-    // Auto-send GIF
-    setTimeout(() => {
-      if (!isSending) {
-        setIsSending(true);
-        soundManager.playSend();
-        setTimeout(() => {
-          onSendMessage();
-          setIsSending(false);
-        }, 150);
-      }
-    }, 100);
   };
 
   return (
@@ -111,15 +104,15 @@ export const MessageInput: React.FC<MessageInputProps> = ({
       
       {/* Sticker/GIF Picker Modal */}
       {(showStickerPicker || showGifPicker) && (
-        <div className="absolute bottom-full left-0 right-0 mb-2 mx-3 md:mx-4 rounded-lg overflow-hidden animate-comic-pop"
+        <div className="absolute bottom-full left-0 right-0 mb-2 mx-3 md:mx-4 rounded-lg overflow-hidden animate-comic-pop flex flex-col"
           style={{
             backgroundColor: 'white',
             border: '3px solid var(--color-border)',
             boxShadow: '4px 4px 0 var(--color-border)',
-            maxHeight: '400px'
+            height: '450px'
           }}>
           {/* Tab Buttons */}
-          <div className="flex border-b-3 border-border">
+          <div className="flex border-b-3 border-border flex-shrink-0">
             <button
               onClick={() => {
                 setShowStickerPicker(true);
@@ -149,18 +142,20 @@ export const MessageInput: React.FC<MessageInputProps> = ({
             </button>
           </div>
           
-          {showStickerPicker && (
-            <ComicStickers
-              onSelect={handleStickerSelect}
-              onClose={() => setShowStickerPicker(false)}
-            />
-          )}
-          {showGifPicker && (
-            <GifSearch
-              onSelect={handleGifSelect}
-              onClose={() => setShowGifPicker(false)}
-            />
-          )}
+          <div className="flex-1 min-h-0 overflow-hidden">
+            {showStickerPicker && (
+              <ComicStickers
+                onSelect={handleStickerSelect}
+                onClose={() => setShowStickerPicker(false)}
+              />
+            )}
+            {showGifPicker && (
+              <GifSearch
+                onSelect={handleGifSelect}
+                onClose={() => setShowGifPicker(false)}
+              />
+            )}
+          </div>
         </div>
       )}
 

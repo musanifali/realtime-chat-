@@ -233,6 +233,74 @@ export class SocketHandlers {
     });
   }
 
+  async handleMessageReaction(socket: SocketType, data: { messageId: string; emoji: string; to: string }): Promise<void> {
+    const username = socket.data.username;
+    const userId = socket.data.userId;
+    
+    console.log(`${SERVER_ID}: Reaction from ${username} on message ${data.messageId}: ${data.emoji}`);
+    
+    if (!username || !userId) {
+      console.log(`${SERVER_ID}: ERROR - No username or userId in socket data`);
+      return;
+    }
+
+    try {
+      const { Message } = await import('../models/Message.js');
+      const message = await Message.findById(data.messageId);
+      
+      if (!message) {
+        console.log(`${SERVER_ID}: ERROR - Message ${data.messageId} not found`);
+        socket.emit('error', 'Message not found');
+        return;
+      }
+
+      // Initialize reactions array if it doesn't exist
+      if (!message.reactions) {
+        message.reactions = [];
+      }
+
+      // Find existing reaction from this user with this emoji
+      const existingReactionIndex = message.reactions.findIndex(
+        (r: any) => r.userId.toString() === userId && r.emoji === data.emoji
+      );
+
+      let action: 'add' | 'remove' = 'add';
+
+      if (existingReactionIndex !== -1) {
+        // Remove reaction (toggle off)
+        message.reactions.splice(existingReactionIndex, 1);
+        action = 'remove';
+        console.log(`${SERVER_ID}: Removed reaction ${data.emoji} from ${username}`);
+      } else {
+        // Add reaction
+        const mongoose = await import('mongoose');
+        message.reactions.push({
+          userId: new mongoose.Types.ObjectId(userId),
+          emoji: data.emoji,
+          createdAt: new Date()
+        });
+        console.log(`${SERVER_ID}: Added reaction ${data.emoji} from ${username}`);
+      }
+
+      await message.save();
+
+      // Broadcast reaction to both users
+      await this.pubSubService.publishMessage({
+        type: 'message_reaction',
+        messageId: data.messageId,
+        emoji: data.emoji,
+        username,
+        to: data.to,
+        action
+      });
+
+      console.log(`${SERVER_ID}: Reaction broadcast completed for message ${data.messageId}`);
+    } catch (error) {
+      console.error(`${SERVER_ID}: ❌ Error handling reaction:`, error);
+      socket.emit('error', 'Failed to add reaction');
+    }
+  }
+
   async handleDisconnect(socket: SocketType): Promise<void> {
     const username = socket.data.username;
     console.log(`${SERVER_ID}: Disconnect - ${username || socket.id}`);

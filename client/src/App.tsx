@@ -182,7 +182,7 @@ function App() {
 
   // Chat Screen
   return (
-    <div className="flex h-screen text-gray-900 relative overflow-hidden" style={{ backgroundColor: 'var(--color-bg-primary)' }}>
+    <div className="flex h-screen max-h-screen text-gray-900 relative overflow-hidden" style={{ backgroundColor: 'var(--color-bg-primary)' }}>
       {/* Mobile Sidebar Overlay */}
       {showMobileSidebar && (
         <div 

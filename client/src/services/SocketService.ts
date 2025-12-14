@@ -145,4 +145,15 @@ export class SocketService {
   onTypingStop(handler: (data: { username: string }) => void): void {
     this.on('typing_stop', handler);
   }
+
+  // Message reaction methods
+  sendReaction(messageId: string, emoji: string, to: string): void {
+    this.emit('message_reaction', { messageId, emoji, to });
+  }
+
+  onReaction(handler: (data: { messageId: string; emoji: string; username: string; action: 'add' | 'remove' }) => void): void {
+    this.on('message_reaction', handler);
+  }
 }
+
+export const socketService = new SocketService();

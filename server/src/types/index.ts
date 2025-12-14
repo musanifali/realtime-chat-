@@ -5,6 +5,7 @@ export interface ClientToServerEvents {
   private_message: (data: { to: string; message: string; tempId?: string }) => void;
   typing_start: (data: { to: string }) => void;
   typing_stop: (data: { to: string }) => void;
+  message_reaction: (data: { messageId: string; emoji: string; to: string }) => void;
   friend_request_sent: (data: { requestId: string; recipientId: string; requester: any }) => void;
   friend_request_accepted: (data: { friendshipId: string; requesterId: string; friend: any }) => void;
   friend_removed: (data: { friendId: string; userId: string }) => void;
@@ -13,6 +14,7 @@ export interface ClientToServerEvents {
 export interface ServerToClientEvents {
   private_message: (data: { from: string; to: string; message: string; messageId?: string }) => void;
   message_sent: (data: { tempId: string; messageId: string; to: string; timestamp: Date }) => void;
+  message_reaction: (data: { messageId: string; emoji: string; username: string; action: 'add' | 'remove' }) => void;
   user_list: (users: string[]) => void;
   system: (message: string) => void;
   error: (message: string) => void;
@@ -31,11 +33,11 @@ export interface SocketData {
   username: string;
   email?: string;
 }
-
 export type RedisMessage =
   | { type: 'private_message'; from: string; to: string; message: string; messageId?: string }
   | { type: 'user_joined'; username: string }
   | { type: 'user_left'; username: string }
   | { type: 'typing_start'; from: string; to: string }
   | { type: 'typing_stop'; from: string; to: string }
+  | { type: 'message_reaction'; messageId: string; emoji: string; username: string; to: string; action: 'add' | 'remove' }
   | { type: 'friend_status_changed'; username: string; status: string; to: string };

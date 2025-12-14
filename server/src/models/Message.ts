@@ -8,6 +8,11 @@ export interface IMessage extends Document {
   recipient: mongoose.Types.ObjectId;
   message: string;
   friendship: mongoose.Types.ObjectId;
+  reactions?: Array<{
+    userId: mongoose.Types.ObjectId;
+    emoji: string;
+    createdAt: Date;
+  }>;
   isDelivered: boolean;
   deliveredAt?: Date;
   isRead: boolean;
@@ -41,6 +46,21 @@ const MessageSchema = new Schema<IMessage>(
       required: true,
       index: true,
     },
+    reactions: [{
+      userId: {
+        type: Schema.Types.ObjectId,
+        ref: 'User',
+        required: true,
+      },
+      emoji: {
+        type: String,
+        required: true,
+      },
+      createdAt: {
+        type: Date,
+        default: Date.now,
+      }
+    }],
     isDelivered: {
       type: Boolean,
       default: false,

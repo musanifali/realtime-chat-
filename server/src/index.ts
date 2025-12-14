@@ -176,6 +176,10 @@ io.on('connection', async (socket: Socket<ClientToServerEvents, ServerToClientEv
     socketHandlers.handleTypingStop(socket, data)
   );
 
+  socket.on('message_reaction', (data) =>
+    socketHandlers.handleMessageReaction(socket, data)
+  );
+
   // Friend request events
   socket.on('friend_request_sent', async (data) => {
     // Notify recipient about new friend request via broadcast

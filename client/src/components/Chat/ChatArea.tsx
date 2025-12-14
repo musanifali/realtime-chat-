@@ -164,6 +164,8 @@ export const ChatArea: React.FC<ChatAreaProps> = ({
       <MessageList 
         messages={messages}
         username={username}
+        chatTargetUsername={chatTarget.username}
+        socketService={socketService}
       />
       
       {isTyping && (

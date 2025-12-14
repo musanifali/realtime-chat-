@@ -40,6 +40,9 @@ export class PubSubService {
         case 'typing_stop':
           this.handleTypingStop(data);
           break;
+        case 'message_reaction':
+          this.handleMessageReaction(data);
+          break;
         case 'user_joined':
           this.handleUserJoined(data);
           break;
@@ -108,6 +111,22 @@ export class PubSubService {
     sockets.forEach((socket) => {
       if (socket.data.username === data.to) {
         socket.emit('typing_stop', { username: data.from });
+      }
+    });
+  }
+
+  private handleMessageReaction(data: Extract<RedisMessage, { type: 'message_reaction' }>): void {
+    const sockets = this.io.sockets.sockets;
+    // Send to both the sender and the recipient
+    sockets.forEach((socket) => {
+      if (socket.data.username === data.to || socket.data.username === data.username) {
+        socket.emit('message_reaction', {
+          messageId: data.messageId,
+          emoji: data.emoji,
+          username: data.username,
+          action: data.action
+        });
+        console.log(`${SERVER_ID}: ✅ Sent reaction to ${socket.data.username}`);
       }
     });
   }

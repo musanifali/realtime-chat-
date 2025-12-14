@@ -10,10 +10,14 @@ import { FloatingReaction } from '../MessageReactions/FloatingReaction';
 import { ReactionBadge } from '../MessageReactions/ReactionBadge';
 import { ComicImageFrame } from '../GifSticker/ComicImageFrame';
 import { Smile } from 'lucide-react';
+import { SocketService } from '../../services/SocketService';
 
 interface MessageProps {
   message: ChatMessage;
   isOwn: boolean;
+  currentUsername: string;
+  chatTargetUsername: string;
+  socketService: SocketService | null;
 }
 
 interface Reaction {
@@ -22,7 +26,7 @@ interface Reaction {
   users: string[];
 }
 
-export const Message: React.FC<MessageProps> = ({ message, isOwn }) => {
+export const Message: React.FC<MessageProps> = ({ message, isOwn, currentUsername, chatTargetUsername, socketService }) => {
   const [justReceived, setJustReceived] = useState(!isOwn && message.type !== 'system');
   const [showReactionPicker, setShowReactionPicker] = useState(false);
   const [reactions, setReactions] = useState<Reaction[]>([]);
@@ -37,34 +41,76 @@ export const Message: React.FC<MessageProps> = ({ message, isOwn }) => {
     }
   }, [isOwn, message.type]);
 
-  const handleAddReaction = (emoji: string) => {
-    // For demo purposes, storing reactions locally
-    // In production, this would emit a socket event to sync across users
-    const existingReaction = reactions.find(r => r.emoji === emoji);
-    const currentUser = 'You'; // Replace with actual username
-    
-    if (existingReaction) {
-      const hasReacted = existingReaction.users.includes(currentUser);
-      if (hasReacted) {
+  useEffect(() => {
+    if (!socketService) return;
+
+    // Listen for reaction updates from socket
+    const handleReactionUpdate = (data: { messageId: string; emoji: string; username: string; action: 'add' | 'remove' }) => {
+      if (data.messageId !== message.id) return;
+
+      const existingReaction = reactions.find(r => r.emoji === data.emoji);
+
+      if (data.action === 'add') {
+        if (existingReaction) {
+          // Update existing reaction
+          setReactions(reactions.map(r =>
+            r.emoji === data.emoji && !r.users.includes(data.username)
+              ? { ...r, count: r.count + 1, users: [...r.users, data.username] }
+              : r
+          ));
+        } else {
+          // Add new reaction
+          setReactions([...reactions, { emoji: data.emoji, count: 1, users: [data.username] }]);
+        }
+        addFloatingEmoji(data.emoji);
+      } else {
         // Remove reaction
         setReactions(reactions.map(r =>
-          r.emoji === emoji
-            ? { ...r, count: r.count - 1, users: r.users.filter(u => u !== currentUser) }
+          r.emoji === data.emoji
+            ? { ...r, count: r.count - 1, users: r.users.filter(u => u !== data.username) }
             : r
         ).filter(r => r.count > 0));
-      } else {
-        // Add reaction
+      }
+    };
+
+    socketService.onReaction(handleReactionUpdate);
+
+    return () => {
+      if (socketService) {
+        socketService.off('message_reaction', handleReactionUpdate as any);
+      }
+    };
+  }, [message.id, reactions, socketService]);
+
+  const handleAddReaction = (emoji: string) => {
+    if (!message.id || !chatTargetUsername || !socketService) return;
+
+    const existingReaction = reactions.find(r => r.emoji === emoji);
+    const hasReacted = existingReaction?.users.includes(currentUsername);
+
+    // Emit socket event to sync reactions
+    socketService.sendReaction(message.id, emoji, chatTargetUsername);
+
+    // Optimistic UI update
+    if (hasReacted) {
+      // Remove reaction
+      setReactions(reactions.map(r =>
+        r.emoji === emoji
+          ? { ...r, count: r.count - 1, users: r.users.filter(u => u !== currentUsername) }
+          : r
+      ).filter(r => r.count > 0));
+    } else {
+      if (existingReaction) {
+        // Add to existing reaction
         setReactions(reactions.map(r =>
           r.emoji === emoji
-            ? { ...r, count: r.count + 1, users: [...r.users, currentUser] }
+            ? { ...r, count: r.count + 1, users: [...r.users, currentUsername] }
             : r
         ));
-        // Trigger floating animation
-        addFloatingEmoji(emoji);
+      } else {
+        // New reaction
+        setReactions([...reactions, { emoji, count: 1, users: [currentUsername] }]);
       }
-    } else {
-      // New reaction
-      setReactions([...reactions, { emoji, count: 1, users: [currentUser] }]);
       addFloatingEmoji(emoji);
     }
     
@@ -195,18 +241,19 @@ export const Message: React.FC<MessageProps> = ({ message, isOwn }) => {
           <ReactionPicker
             onReact={handleAddReaction}
             onClose={() => setShowReactionPicker(false)}
+            isOwn={isOwn}
           />
         )}
 
         {/* Reaction Badges */}
         {reactions.length > 0 && (
-          <div className="flex flex-wrap gap-1 mt-2">
+          <div className={`flex flex-wrap gap-1 mt-2 ${isOwn ? 'justify-end' : 'justify-start'}`}>
             {reactions.map((reaction) => (
               <ReactionBadge
                 key={reaction.emoji}
                 emoji={reaction.emoji}
                 count={reaction.count}
-                hasReacted={reaction.users.includes('You')}
+                hasReacted={reaction.users.includes(currentUsername)}
                 onClick={() => handleAddReaction(reaction.emoji)}
               />
             ))}
