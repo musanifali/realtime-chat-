@@ -28,7 +28,7 @@ export const MessageList: React.FC<MessageListProps> = ({
   return (
     <ScrollArea.Root className="flex-1 overflow-hidden">
       <ScrollArea.Viewport className="h-full w-full">
-        <div className="p-2 sm:p-4 pr-4 sm:pr-6 space-y-3 sm:space-y-4">
+        <div className="p-2 sm:p-4 space-y-3 sm:space-y-4">
           {messages.map((msg) => (
             <Message 
               key={msg.id}
@@ -42,12 +42,12 @@ export const MessageList: React.FC<MessageListProps> = ({
           <div ref={messagesEndRef} />
         </div>
       </ScrollArea.Viewport>
+      {/* Scrollbar hidden but functionality preserved */}
       <ScrollArea.Scrollbar
-        className="flex select-none touch-none p-1 transition-colors duration-150 ease-out data-[orientation=vertical]:w-5 data-[orientation=horizontal]:flex-col data-[orientation=horizontal]:h-4"
-        style={{ backgroundColor: 'var(--color-accent)', border: '2px solid var(--color-border)' }}
+        className="hidden"
         orientation="vertical"
       >
-          <ScrollArea.Thumb className="flex-1 relative before:content-[''] before:absolute before:top-1/2 before:left-1/2 before:-translate-x-1/2 before:-translate-y-1/2 before:w-full before:h-full before:min-w-[44px] before:min-h-[44px]" style={{ backgroundColor: 'var(--color-primary)', border: '2px solid var(--color-border)', borderRadius: '8px' }} />
+        <ScrollArea.Thumb />
       </ScrollArea.Scrollbar>
     </ScrollArea.Root>
   );
