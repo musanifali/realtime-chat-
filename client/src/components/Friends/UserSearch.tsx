@@ -60,10 +60,10 @@ export function UserSearch({ onRequestSent }: UserSearchProps) {
       return (
         <button
           disabled
-          className="px-3 py-1 bg-green-500 text-white rounded-md flex items-center gap-2 opacity-50 cursor-not-allowed"
+          className="px-2 py-1 bg-green-500 text-white text-xs rounded-md flex items-center gap-1 opacity-50 cursor-not-allowed border-2 border-black whitespace-nowrap flex-shrink-0"
         >
-          <Check className="w-4 h-4" />
-          FRIENDS!
+          <Check className="w-3 h-3" />
+          FRIENDS
         </button>
       );
     }
@@ -73,19 +73,19 @@ export function UserSearch({ onRequestSent }: UserSearchProps) {
         return (
           <button
             disabled
-            className="px-3 py-1 bg-yellow-400 text-black rounded-md flex items-center gap-2 opacity-50 cursor-not-allowed"
+            className="px-2 py-1 bg-yellow-400 text-black text-xs rounded-md flex items-center gap-1 opacity-50 cursor-not-allowed border-2 border-black whitespace-nowrap flex-shrink-0"
           >
-            <Clock className="w-4 h-4" />
-            SENT!
+            <Clock className="w-3 h-3" />
+            SENT
           </button>
         );
       } else {
         return (
           <button
             disabled
-            className="px-3 py-1 bg-blue-500 text-white rounded-md flex items-center gap-2 opacity-50 cursor-not-allowed"
+            className="px-2 py-1 bg-blue-500 text-white text-xs rounded-md flex items-center gap-1 opacity-50 cursor-not-allowed border-2 border-black whitespace-nowrap flex-shrink-0"
           >
-            <Clock className="w-4 h-4" />
+            <Clock className="w-3 h-3" />
             PENDING
           </button>
         );
@@ -96,10 +96,10 @@ export function UserSearch({ onRequestSent }: UserSearchProps) {
       return (
         <button
           disabled
-          className="px-3 py-1 bg-red-500 text-white rounded-md flex items-center gap-2 opacity-50 cursor-not-allowed"
+          className="px-2 py-1 bg-red-500 text-white text-xs rounded-md flex items-center gap-1 opacity-50 cursor-not-allowed border-2 border-black whitespace-nowrap flex-shrink-0"
         >
-          <Ban className="w-4 h-4" />
-          BLOCKED!
+          <Ban className="w-3 h-3" />
+          BLOCKED
         </button>
       );
     }
@@ -107,22 +107,22 @@ export function UserSearch({ onRequestSent }: UserSearchProps) {
     return (
       <button
         onClick={() => handleSendRequest(user.id)}
-        className="px-3 py-1 bg-yellow-400 text-black font-bold rounded-md border-4 border-black 
-                   shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] hover:shadow-[2px_2px_0px_0px_rgba(0,0,0,1)]
-                   hover:translate-x-[2px] hover:translate-y-[2px] transition-all flex items-center gap-2
-                   transform -rotate-1 hover:rotate-0"
+        className="px-2 py-1 bg-yellow-400 text-black font-bold text-xs rounded-md border-2 border-black 
+                   shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] hover:shadow-[1px_1px_0px_0px_rgba(0,0,0,1)]
+                   hover:translate-x-[1px] hover:translate-y-[1px] transition-all flex items-center gap-1
+                   whitespace-nowrap flex-shrink-0"
       >
-        <UserPlus className="w-4 h-4" />
+        <UserPlus className="w-3 h-3" />
         ADD!
       </button>
     );
   };
 
   return (
-    <div className="p-4 bg-white border-4 border-black shadow-[8px_8px_0px_0px_rgba(0,0,0,1)]">
+    <div className="bg-white border-4 border-black shadow-[8px_8px_0px_0px_rgba(0,0,0,1)] h-full flex flex-col">
       {/* Search Header */}
-      <div className="mb-4">
-        <h2 className="text-2xl font-black uppercase transform -rotate-1 mb-4" style={{ fontFamily: 'Bangers' }}>
+      <div className="p-3 border-b-4 border-black">
+        <h2 className="text-xl md:text-2xl font-black uppercase transform -rotate-1 mb-3" style={{ fontFamily: 'Bangers' }}>
           🔍 FIND FRIENDS!
         </h2>
 
@@ -133,36 +133,36 @@ export function UserSearch({ onRequestSent }: UserSearchProps) {
             value={query}
             onChange={(e) => setQuery(e.target.value)}
             onKeyDown={(e) => e.key === 'Enter' && handleSearch()}
-            placeholder="Search username..."
-            className="flex-1 px-4 py-2 bg-yellow-100 border-4 border-black rounded-md font-bold 
-                     uppercase placeholder:text-gray-600 focus:outline-none focus:ring-4 focus:ring-yellow-400"
+            placeholder="Search..."
+            className="flex-1 px-3 py-2 text-sm bg-yellow-100 border-3 border-black rounded-md font-bold 
+                     uppercase placeholder:text-gray-600 focus:outline-none focus:ring-2 focus:ring-yellow-400"
           />
           <button
             onClick={handleSearch}
             disabled={loading}
-            className="px-6 py-2 bg-blue-500 text-white font-black uppercase rounded-md border-4 border-black
-                     shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] hover:shadow-[2px_2px_0px_0px_rgba(0,0,0,1)]
+            className="px-3 md:px-4 py-2 bg-blue-500 text-white font-black uppercase text-sm rounded-md border-3 border-black
+                     shadow-[3px_3px_0px_0px_rgba(0,0,0,1)] hover:shadow-[1px_1px_0px_0px_rgba(0,0,0,1)]
                      hover:translate-x-[2px] hover:translate-y-[2px] transition-all
-                     disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
+                     disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-1"
           >
             <Search className="w-4 h-4" />
-            {loading ? 'SEARCHING...' : 'SEARCH!'}
+            <span className="hidden md:inline">{loading ? 'SEARCHING...' : 'SEARCH!'}</span>
           </button>
         </div>
       </div>
 
       {/* Error */}
       {error && (
-        <div className="mb-4 p-3 bg-red-500 text-white font-bold border-4 border-black rounded-md
-                       shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] transform -rotate-1">
+        <div className="p-2 mx-3 mt-2 bg-red-500 text-white font-bold text-sm border-3 border-black rounded-md
+                       shadow-[3px_3px_0px_0px_rgba(0,0,0,1)]">
           ⚠️ {error}
         </div>
       )}
 
       {/* Results */}
-      <div className="space-y-2 max-h-96 overflow-y-auto">
+      <div className="flex-1 overflow-y-auto p-3 space-y-2">
         {results.length === 0 && query && !loading && (
-          <div className="text-center py-8 text-gray-600 font-bold uppercase">
+          <div className="text-center py-8 text-gray-600 font-bold uppercase text-sm">
             NO USERS FOUND! 😢
           </div>
         )}
@@ -170,21 +170,22 @@ export function UserSearch({ onRequestSent }: UserSearchProps) {
         {results.map((user) => (
           <div
             key={user.id}
-            className="flex items-center gap-3 p-3 bg-gradient-to-r from-pink-200 to-yellow-200 
-                     border-4 border-black rounded-md shadow-[4px_4px_0px_0px_rgba(0,0,0,1)]
-                     transform hover:scale-[1.02] transition-transform"
+            className="flex items-center gap-2 p-2 bg-gradient-to-r from-pink-200 to-yellow-200 
+                     border-3 border-black rounded-md shadow-[3px_3px_0px_0px_rgba(0,0,0,1)]
+                     hover:translate-x-[1px] hover:translate-y-[1px] hover:shadow-[2px_2px_0px_0px_rgba(0,0,0,1)]
+                     transition-all"
           >
             {/* Avatar */}
-            <div className="w-12 h-12 bg-purple-500 rounded-full border-4 border-black flex items-center justify-center
-                          font-black text-white text-xl uppercase">
+            <div className="w-10 h-10 bg-purple-500 rounded-full border-3 border-black flex items-center justify-center
+                          font-black text-white text-lg uppercase flex-shrink-0">
               {user.avatar || user.username[0]}
             </div>
 
             {/* User Info */}
-            <div className="flex-1">
-              <div className="font-black uppercase">{user.displayName}</div>
-              <div className="text-sm text-gray-700">@{user.username}</div>
-              {user.bio && <div className="text-xs text-gray-600 mt-1">{user.bio}</div>}
+            <div className="flex-1 min-w-0">
+              <div className="font-black uppercase text-sm truncate">{user.displayName}</div>
+              <div className="text-xs text-gray-700 truncate">@{user.username}</div>
+              {user.bio && <div className="text-xs text-gray-600 mt-1 truncate">{user.bio}</div>}
             </div>
 
             {/* Action Button */}

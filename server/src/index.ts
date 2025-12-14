@@ -127,10 +127,15 @@ io.use((socket, next) => {
   });
 });
 
-io.on('connection', (socket: Socket<ClientToServerEvents, ServerToClientEvents, InterServerEvents, SocketData>) => {
+io.on('connection', async (socket: Socket<ClientToServerEvents, ServerToClientEvents, InterServerEvents, SocketData>) => {
   console.log(`${SERVER_ID}: Client connected: ${socket.id} (User: ${socket.data.username})`);
   
-  // Register event handlers
+  // Auto-register user with JWT auth
+  if (socket.data.username) {
+    await socketHandlers.handleRegister(socket, socket.data.username);
+  }
+  
+  // Register event handlers (keep for backward compatibility)
   socket.on('register', (username) => 
     socketHandlers.handleRegister(socket, username)
   );

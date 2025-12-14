@@ -37,47 +37,47 @@ export function FriendsContainer({ onSelectFriend, selectedFriendId, socket }: F
   return (
     <div className="flex flex-col h-full">
       {/* Tab Navigation */}
-      <div className="flex gap-2 mb-4">
+      <div className="flex gap-1 mb-2">
         <button
           onClick={() => handleTabChange('friends')}
-          className={`flex-1 px-4 py-3 font-black uppercase rounded-md border-4 border-black
-                     shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] transition-all flex items-center justify-center gap-2
+          className={`flex-1 px-2 py-2 font-black uppercase text-xs rounded-md border-3 border-black
+                     shadow-[3px_3px_0px_0px_rgba(0,0,0,1)] transition-all flex items-center justify-center gap-1
                      ${
                        activeTab === 'friends'
-                         ? 'bg-yellow-400 text-black transform -rotate-1'
+                         ? 'bg-yellow-400 text-black'
                          : 'bg-white text-gray-700 hover:bg-gray-100'
                      }`}
         >
-          <Users className="w-5 h-5" />
-          FRIENDS
+          <Users className="w-4 h-4" />
+          <span className="hidden sm:inline">FRIENDS</span>
         </button>
 
         <button
           onClick={() => handleTabChange('requests')}
-          className={`flex-1 px-4 py-3 font-black uppercase rounded-md border-4 border-black
-                     shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] transition-all flex items-center justify-center gap-2
+          className={`flex-1 px-2 py-2 font-black uppercase text-xs rounded-md border-3 border-black
+                     shadow-[3px_3px_0px_0px_rgba(0,0,0,1)] transition-all flex items-center justify-center gap-1
                      ${
                        activeTab === 'requests'
-                         ? 'bg-yellow-400 text-black transform -rotate-1'
+                         ? 'bg-yellow-400 text-black'
                          : 'bg-white text-gray-700 hover:bg-gray-100'
                      }`}
         >
-          <Inbox className="w-5 h-5" />
-          REQUESTS
+          <Inbox className="w-4 h-4" />
+          <span className="hidden sm:inline">REQUESTS</span>
         </button>
 
         <button
           onClick={() => handleTabChange('search')}
-          className={`flex-1 px-4 py-3 font-black uppercase rounded-md border-4 border-black
-                     shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] transition-all flex items-center justify-center gap-2
+          className={`flex-1 px-2 py-2 font-black uppercase text-xs rounded-md border-3 border-black
+                     shadow-[3px_3px_0px_0px_rgba(0,0,0,1)] transition-all flex items-center justify-center gap-1
                      ${
                        activeTab === 'search'
-                         ? 'bg-yellow-400 text-black transform -rotate-1'
+                         ? 'bg-yellow-400 text-black'
                          : 'bg-white text-gray-700 hover:bg-gray-100'
                      }`}
         >
-          <UserSearch className="w-5 h-5" />
-          SEARCH
+          <UserSearch className="w-4 h-4" />
+          <span className="hidden sm:inline">SEARCH</span>
         </button>
       </div>
 

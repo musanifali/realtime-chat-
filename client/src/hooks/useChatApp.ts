@@ -25,7 +25,8 @@ export const useChatApp = () => {
     // Connected
     socket.on('connect', () => {
       console.log('Connected to server!');
-      chatService.register(username.trim());
+      // With JWT auth, user is auto-registered on server
+      // No need to call register explicitly
     });
 
     // User list

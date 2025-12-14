@@ -164,7 +164,7 @@ function App() {
       >
         <UserInfo username={username} />
         
-        <div className="flex-1 overflow-y-auto p-4">
+        <div className="flex-1 overflow-y-auto p-2 md:p-4">
           <FriendsContainer
             onSelectFriend={(friend) => {
               setChatTarget({ type: 'user', username: friend.username });
