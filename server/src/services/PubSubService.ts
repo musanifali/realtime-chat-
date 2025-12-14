@@ -55,33 +55,42 @@ export class PubSubService {
     }
   }
 
-  private handlePrivateMessage(data: Extract<RedisMessage, { type: 'private_message' }>): void {
+  private async handlePrivateMessage(data: Extract<RedisMessage, { type: 'private_message' }>): Promise<void> {
     const sockets = this.io.sockets.sockets;
-    let recipientOnline = false;
-    let senderOnline = false;
+    let recipientFound = false;
     
-    sockets.forEach((socket) => {
+    // Only send to recipient - sender already has the message from optimistic update
+    for (const socket of sockets.values()) {
       if (socket.data.username === data.to) {
-        recipientOnline = true;
+        recipientFound = true;
         socket.emit('private_message', {
           from: data.from,
           to: data.to,
-          message: data.message
+          message: data.message,
+          messageId: data.messageId
         });
+        console.log(`${SERVER_ID}: ✅ Delivered message to ${data.to}`);
+        
+        // Mark as delivered in DB
+        if (data.messageId) {
+          try {
+            const { Message } = await import('../models/Message.js');
+            await Message.findByIdAndUpdate(data.messageId, {
+              isDelivered: true,
+              deliveredAt: new Date()
+            });
+            console.log(`${SERVER_ID}: 📬 Message ${data.messageId} marked as delivered`);
+          } catch (error) {
+            console.error(`${SERVER_ID}: ❌ Failed to mark message as delivered:`, error);
+          }
+        }
+        break;
       }
-      if (socket.data.username === data.from) {
-        senderOnline = true;
-        socket.emit('private_message', {
-          from: data.from,
-          to: data.to,
-          message: data.message
-        });
-      }
-    });
+    }
     
-    // Log if recipient is offline (message is still saved to DB)
-    if (!recipientOnline) {
-      console.log(`${SERVER_ID}: Recipient "${data.to}" is offline - message saved to DB for later`);
+    // Log if recipient is offline (message queued in DB for later delivery)
+    if (!recipientFound) {
+      console.log(`${SERVER_ID}: 📪 Recipient "${data.to}" offline - message saved to DB, will deliver on reconnect`);
     }
   }
 

@@ -8,6 +8,8 @@ export interface IMessage extends Document {
   recipient: mongoose.Types.ObjectId;
   message: string;
   friendship: mongoose.Types.ObjectId;
+  isDelivered: boolean;
+  deliveredAt?: Date;
   isRead: boolean;
   readAt?: Date;
   createdAt: Date;
@@ -39,6 +41,15 @@ const MessageSchema = new Schema<IMessage>(
       required: true,
       index: true,
     },
+    isDelivered: {
+      type: Boolean,
+      default: false,
+      index: true,
+    },
+    deliveredAt: {
+      type: Date,
+      default: null,
+    },
     isRead: {
       type: Boolean,
       default: false,
@@ -53,8 +64,9 @@ const MessageSchema = new Schema<IMessage>(
   }
 );
 
-// Compound index for efficient message history queries
+// Compound indexes for efficient queries
 MessageSchema.index({ friendship: 1, createdAt: -1 });
 MessageSchema.index({ recipient: 1, isRead: 1 });
+MessageSchema.index({ recipient: 1, isDelivered: 1 });
 
 export const Message = mongoose.model<IMessage>('Message', MessageSchema);

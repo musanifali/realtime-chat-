@@ -85,36 +85,71 @@ export const useChatMessages = () => {
       });
       
       // Increment unread count ONLY if message was actually added and not currently viewing that friend
-      if (messageAdded && type === 'private_received' && targetFriend !== currentFriend) {
-        setUnreadCounts(prev => {
-          const newCounts = new Map(prev);
-          const currentCount = newCounts.get(targetFriend!) || 0;
-          newCounts.set(targetFriend!, currentCount + 1);
-          console.log(`📬 Unread count for ${targetFriend}: ${currentCount + 1}`);
-          return newCounts;
-        });
+      // AND clear unread if currently viewing (message is immediately read)
+      if (messageAdded && type === 'private_received') {
+        if (currentFriend && targetFriend === currentFriend) {
+          // Currently viewing this chat - clear unread count immediately
+          setUnreadCounts(prev => {
+            const newCounts = new Map(prev);
+            newCounts.delete(targetFriend!);
+            console.log(`👁️ Currently viewing ${targetFriend}, clearing unread badge`);
+            return newCounts;
+          });
+        } else {
+          // Not viewing this chat OR not viewing any chat - increment unread
+          setUnreadCounts(prev => {
+            const newCounts = new Map(prev);
+            const currentCount = newCounts.get(targetFriend!) || 0;
+            newCounts.set(targetFriend!, currentCount + 1);
+            console.log(`📬 Unread count for ${targetFriend}: ${currentCount} -> ${currentCount + 1} (currentFriend: ${currentFriend || 'none'})`);
+            return newCounts;
+          });
+        }
       }
     },
     [currentFriend]
   );
 
   const loadHistory = useCallback((historyMessages: ChatMessage[], friendUsername: string) => {
-    console.log(`📚 Loading history for ${friendUsername}: ${historyMessages.length} messages from DB`);
+    console.log(`📚 [useChatMessages] loadHistory called for ${friendUsername}: ${historyMessages.length} messages`);
     
-    // Replace existing messages with history (history is authoritative source of truth)
+    // Set current friend FIRST so subsequent messages know we're viewing this chat
+    setCurrentFriend(friendUsername);
+    console.log(`📚 [useChatMessages] Set currentFriend to: ${friendUsername}`);
+    
+    // Only update messages if history has data, otherwise keep existing messages
     setMessageStore(prev => {
+      const existingMessages = prev.get(friendUsername) || [];
+      console.log(`📚 [useChatMessages] Existing messages in store for ${friendUsername}: ${existingMessages.length}`);
+      console.log(`📚 [useChatMessages] New history messages: ${historyMessages.length}`);
+      
       const newMap = new Map(prev);
+      
+      // If history is empty but we have existing messages, keep them (don't delete!)
+      if (historyMessages.length === 0 && existingMessages.length > 0) {
+        console.log(`⚠️ [useChatMessages] History empty, keeping ${existingMessages.length} existing messages`);
+        // Don't change the map, keep existing messages
+        return prev;
+      }
+      
+      // If we have history, replace with it (authoritative source)
       newMap.set(friendUsername, historyMessages);
-      console.log(`📚 Set ${historyMessages.length} messages for ${friendUsername}`);
+      console.log(`📚 [useChatMessages] Set ${historyMessages.length} messages for ${friendUsername}`);
+      if (historyMessages.length > 0) {
+        console.log(`📚 [useChatMessages] First message:`, historyMessages[0]);
+        console.log(`📚 [useChatMessages] Last message:`, historyMessages[historyMessages.length - 1]);
+      }
       return newMap;
     });
     
-    setCurrentFriend(friendUsername);
-    
     // Clear unread count for this friend when viewing their chat
     setUnreadCounts(prev => {
+      const currentCount = prev.get(friendUsername) || 0;
+      console.log(`🔔 [useChatMessages] Current unread count for ${friendUsername}: ${currentCount}`);
       const newCounts = new Map(prev);
       newCounts.delete(friendUsername);
+      console.log(`🔔 [useChatMessages] Cleared unread badge for ${friendUsername}`);
+      console.log(`🔔 [useChatMessages] Remaining unread counts:`, Array.from(newCounts.entries()));
       return newCounts;
     });
   }, []);
@@ -140,6 +175,22 @@ export const useChatMessages = () => {
     return unreadCounts.get(friendUsername) || 0;
   }, [unreadCounts]);
 
+  // Update message ID after server confirms (replaces temp ID with real DB ID)
+  const updateMessageId = useCallback((friendUsername: string, tempId: string, realId: string) => {
+    setMessageStore(prev => {
+      const friendMessages = prev.get(friendUsername);
+      if (!friendMessages) return prev;
+      
+      const updatedMessages = friendMessages.map(msg => 
+        msg.id === tempId ? { ...msg, id: realId } : msg
+      );
+      
+      const newMap = new Map(prev);
+      newMap.set(friendUsername, updatedMessages);
+      return newMap;
+    });
+  }, []);
+
   return {
     messages,
     addMessage,
@@ -148,5 +199,6 @@ export const useChatMessages = () => {
     switchToFriend,
     getUnreadCount,
     unreadCounts,
+    updateMessageId,
   };
 };

@@ -2,9 +2,10 @@
 
 import jwt from 'jsonwebtoken';
 import { IUser } from '../models/User.js';
+import { env } from '../config/env.js';
 
-const JWT_SECRET = process.env.JWT_SECRET || 'your-super-secret-jwt-key-change-in-production';
-const JWT_REFRESH_SECRET = process.env.JWT_REFRESH_SECRET || 'your-super-secret-refresh-key-change-in-production';
+const JWT_SECRET = env.JWT_SECRET;
+const JWT_REFRESH_SECRET = env.JWT_REFRESH_SECRET;
 
 const ACCESS_TOKEN_EXPIRY = '15m'; // 15 minutes
 const REFRESH_TOKEN_EXPIRY = '7d'; // 7 days

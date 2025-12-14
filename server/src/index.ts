@@ -9,15 +9,22 @@ import { PubSubService } from './services/PubSubService.js';
 import { BroadcastService } from './services/BroadcastService.js';
 import { connectDatabase, disconnectDatabase } from './config/database.js';
 
+import { validateEnvironment } from './config/env.js';
 import { SocketHandlers } from './handlers/SocketHandlers.js';
 import { PORT, REDIS_URL, SERVER_ID, CHANNEL } from './config/constants.js';
 import type { ClientToServerEvents, ServerToClientEvents, InterServerEvents, SocketData } from './types/index.js';
+import { verifyAccessToken } from './utils/jwt.js';
+import { logger } from './utils/logger.js';
+import { requestLogger } from './middleware/requestLogger.js';
 
 // Import routes
 import authRoutes from './routes/auth.js';
 import friendRoutes from './routes/friends.js';
 
-console.log(`${SERVER_ID}: Starting...`);
+// Validate environment configuration first
+validateEnvironment();
+
+logger.info(`${SERVER_ID}: Starting server...`);
 
 // ============================================
 // Express & HTTP Server Setup
@@ -25,6 +32,7 @@ console.log(`${SERVER_ID}: Starting...`);
 const app = express();
 
 // Middleware
+app.use(requestLogger);
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(cookieParser());
@@ -84,11 +92,11 @@ const socketHandlers = new SocketHandlers(redisService, pubSubService, broadcast
   try {
     // Connect to MongoDB
     await connectDatabase();
-    console.log(`${SERVER_ID}: Connected to MongoDB`);
+    logger.db('Connected to MongoDB');
     
     // Connect to Redis
     await redisService.connect();
-    console.log(`${SERVER_ID}: Connected to Redis`);
+    logger.redis('Connected to Redis');
     
     // Cleanup stale data from previous sessions
     await redisService.cleanupOnStartup();
@@ -96,7 +104,7 @@ const socketHandlers = new SocketHandlers(redisService, pubSubService, broadcast
     // Subscribe to Redis channel
     await pubSubService.setupSubscription();
   } catch (error) {
-    console.error(`${SERVER_ID}: Connection error:`, error);
+    logger.error('Connection error', error);
     process.exit(1);
   }
 })();
@@ -105,24 +113,23 @@ const socketHandlers = new SocketHandlers(redisService, pubSubService, broadcast
 // Socket.IO Connection Handler with JWT Auth
 // ============================================
 io.use((socket, next) => {
-  // Import JWT verification
-  import('./utils/jwt.js').then(({ verifyAccessToken }) => {
-    const token = socket.handshake.auth.token;
-    
-    console.log(`${SERVER_ID}: 🔐 JWT Middleware - Token:`, token ? `${token.substring(0, 20)}...` : 'NONE');
-    
-    if (!token) {
-      console.log(`${SERVER_ID}: ❌ JWT Middleware - No token provided`);
-      return next(new Error('Authentication token missing'));
-    }
+  const token = socket.handshake.auth.token;
+  
+  logger.auth('JWT Middleware - Token received', { hasToken: !!token });
+  
+  if (!token) {
+    logger.warn('JWT Middleware - No token provided');
+    return next(new Error('Authentication token missing'));
+  }
 
+  try {
     const payload = verifyAccessToken(token);
     if (!payload) {
-      console.log(`${SERVER_ID}: ❌ JWT Middleware - Invalid/expired token`);
+      logger.warn('JWT Middleware - Invalid/expired token');
       return next(new Error('Invalid or expired token'));
     }
 
-    console.log(`${SERVER_ID}: ✅ JWT Middleware - Valid token for user:`, payload.username);
+    logger.auth('JWT Middleware - Valid token', { username: payload.username });
 
     // Attach user data to socket
     socket.data.userId = payload.userId;
@@ -130,15 +137,15 @@ io.use((socket, next) => {
     socket.data.email = payload.email;
     
     next();
-  }).catch((error) => {
+  } catch (error: any) {
     console.log(`${SERVER_ID}: ❌ JWT Middleware - Error:`, error.message);
     next(new Error('Authentication failed'));
-  });
+  }
 });
 
 io.on('connection', async (socket: Socket<ClientToServerEvents, ServerToClientEvents, InterServerEvents, SocketData>) => {
-  console.log(`${SERVER_ID}: ✅ Client connected: ${socket.id}`);
-  console.log(`${SERVER_ID}: Socket data:`, {
+  logger.socket('Client connected', { socketId: socket.id });
+  logger.debug('Socket data', {
     userId: socket.data.userId,
     username: socket.data.username,
     email: socket.data.email
@@ -146,10 +153,10 @@ io.on('connection', async (socket: Socket<ClientToServerEvents, ServerToClientEv
   
   // Auto-register user with JWT auth
   if (socket.data.username) {
-    console.log(`${SERVER_ID}: 🔄 Auto-registering user: ${socket.data.username}`);
+    logger.socket('Auto-registering user', { username: socket.data.username });
     await socketHandlers.handleRegister(socket, socket.data.username);
   } else {
-    console.log(`${SERVER_ID}: ⚠️ No username in socket data - user not auto-registered`);
+    logger.warn('No username in socket data - user not auto-registered');
   }
   
   // Register event handlers (keep for backward compatibility)
@@ -205,18 +212,19 @@ io.on('connection', async (socket: Socket<ClientToServerEvents, ServerToClientEv
 // Start Server
 // ============================================
 httpServer.listen(PORT, () => {
-  console.log(`${SERVER_ID}: HTTP server listening on port ${PORT}`);
+  logger.info(`🚀 HTTP server listening on port ${PORT}`);
+  logger.info(`📡 Ready to accept connections`);
 });
 
 // ============================================
 // Graceful Shutdown
 // ============================================
 process.on('SIGINT', async () => {
-  console.log(`\n${SERVER_ID}: Shutting down gracefully...`);
+  logger.info('\n🛑 Shutting down gracefully...');
   await redisService.disconnect();
   await disconnectDatabase();
   httpServer.close(() => {
-    console.log(`${SERVER_ID}: Server closed`);
+    logger.info('✅ Server closed successfully');
     process.exit(0);
   });
 });

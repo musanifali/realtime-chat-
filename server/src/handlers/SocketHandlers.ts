@@ -73,11 +73,59 @@ export class SocketHandlers {
     await this.pubSubService.publishMessage({ type: 'user_joined', username });
 
     console.log(`${SERVER_ID}: ${username} registered`);
+    
+    // Deliver any undelivered messages to this user
+    if (user) {
+      await this.deliverPendingMessages(socket, user._id.toString());
+    }
+  }
+  
+  private async deliverPendingMessages(socket: SocketType, userId: string): Promise<void> {
+    try {
+      const { Message } = await import('../models/Message.js');
+      const { User } = await import('../models/User.js');
+      
+      // Get all undelivered messages for this user
+      const undeliveredMessages = await Message.find({
+        recipient: userId,
+        isDelivered: false
+      })
+      .sort({ createdAt: 1 })
+      .populate('sender', 'username')
+      .limit(100); // Limit to prevent overwhelming on first connect
+      
+      if (undeliveredMessages.length === 0) {
+        console.log(`${SERVER_ID}: No undelivered messages for user ${userId}`);
+        return;
+      }
+      
+      console.log(`${SERVER_ID}: 📨 Delivering ${undeliveredMessages.length} undelivered messages to ${socket.data.username}`);
+      
+      // Emit each message and mark as delivered
+      for (const msg of undeliveredMessages) {
+        const sender = msg.sender as any;
+        socket.emit('private_message', {
+          from: sender.username,
+          to: socket.data.username!,
+          message: msg.message,
+          messageId: msg._id.toString()
+        });
+        
+        // Mark as delivered
+        msg.isDelivered = true;
+        msg.deliveredAt = new Date();
+        await msg.save();
+      }
+      
+      console.log(`${SERVER_ID}: ✅ Delivered ${undeliveredMessages.length} messages to ${socket.data.username}`);
+    } catch (error) {
+      console.error(`${SERVER_ID}: ❌ Error delivering pending messages:`, error);
+    }
   }
 
 
 
-  async handlePrivateMessage(socket: SocketType, data: { to: string; message: string }): Promise<void> {
+  async handlePrivateMessage(socket: SocketType, data: { to: string; message: string; tempId?: string }): Promise<void> {
     const username = socket.data.username;
     const userId = socket.data.userId;
     
@@ -137,11 +185,23 @@ export class SocketHandlers {
 
     console.log(`${SERVER_ID}: Message saved to DB: ${savedMessage._id}`);
 
+    // Send acknowledgment to sender with message ID
+    socket.emit('message_sent', {
+      tempId: data.tempId || data.message, // Use client's tempId for matching
+      messageId: savedMessage._id.toString(),
+      to: data.to,
+      timestamp: savedMessage.createdAt
+    });
+    
+    console.log(`${SERVER_ID}: ✅ Sent acknowledgment for tempId: ${data.tempId}`);
+
+    // Publish to recipient only (not to sender)
     await this.pubSubService.publishMessage({
       type: 'private_message',
       from: username,
       to: data.to,
-      message: data.message
+      message: data.message,
+      messageId: savedMessage._id.toString()
     });
 
     console.log(`${SERVER_ID}: ${username} → ${data.to} (private): ${data.message}`);

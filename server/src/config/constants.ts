@@ -1,17 +1,16 @@
 // server/src/config/constants.ts
 
-import dotenv from 'dotenv';
+import { env } from './env.js';
 
-// Load environment variables from .env file
-dotenv.config();
-
-// Use PORT environment variable, default to 3001 for production
-export const PORT = parseInt(process.env.PORT || '3001');
-export const SERVER_ID = `Server-${PORT}`;
-// Support both local dev Redis (6381) and production (6379)
-export const REDIS_URL = process.env.REDIS_URL || 'redis://localhost:6379';
-export const CLIENT_URL = process.env.CLIENT_URL || '*';
+// Re-export validated environment variables
+export const PORT = env.PORT;
+export const SERVER_ID = env.SERVER_ID;
+export const REDIS_URL = env.REDIS_URL;
+export const CHANNEL = env.CHANNEL;
 
 // Redis keys
 export const USERS_KEY = 'online_users';
-export const CHANNEL = 'chat_messages';
+
+// Rate limiting
+export const ENABLE_RATE_LIMITING = env.ENABLE_RATE_LIMITING;
+export const MAX_MESSAGES_PER_MINUTE = env.MAX_MESSAGES_PER_MINUTE;

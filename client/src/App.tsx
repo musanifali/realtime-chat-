@@ -18,12 +18,10 @@ function App() {
   const [menuClicked, setMenuClicked] = useState(false);
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [isCheckingAuth, setIsCheckingAuth] = useState(true);
-  const [currentUser, setCurrentUser] = useState<any>(null);
   
   const {
     isConnected,
     isConnecting,
-    connectionError,
     username,
     setUsername,
     connect,
@@ -33,11 +31,9 @@ function App() {
     chatTarget,
     setChatTarget,
     loadHistory,
-    allUsers,
     chatService,
     socketService,
     getUnreadCount,
-    unreadCounts,
   } = useChatApp();
 
   // Setup global socket listeners when authenticated
@@ -74,7 +70,6 @@ function App() {
         }
 
         const user = await authService.getMe();
-        setCurrentUser(user);
         setIsAuthenticated(true);
         setUsername(user.username);
         // Auto-connect to socket with JWT immediately
@@ -95,7 +90,6 @@ function App() {
   const handleAuthSuccess = async () => {
     try {
       const user = await authService.getMe();
-      setCurrentUser(user);
       setIsAuthenticated(true);
       setUsername(user.username);
       // Connect to socket with JWT after state updates
@@ -113,17 +107,18 @@ function App() {
     if (!input.trim() || !chatTarget) return;
     
     const messageText = input.trim();
+    const tempId = `temp_${Date.now()}_${Math.random()}`;
     
-    // Optimistically add sent message to UI immediately with friend username
-    addMessage('private_sent', messageText, `To ${chatTarget.username}`, chatTarget.username);
+    // Optimistically add sent message to UI immediately with temp ID
+    addMessage('private_sent', messageText, `To ${chatTarget.username}`, chatTarget.username, tempId);
     
-    // Send via socket
-    chatService.sendPrivateMessage(chatTarget.username, messageText);
+    // Send via socket with tempId for acknowledgment matching
+    chatService.sendPrivateMessage(chatTarget.username, messageText, tempId);
     setInput('');
   };
 
   // Send voice message
-  const sendVoiceMessage = (audioBlob: Blob, duration: number, effect?: 'normal' | 'robot' | 'echo' | 'chipmunk'): void => {
+  const sendVoiceMessage = (_audioBlob: Blob, duration: number, effect?: 'normal' | 'robot' | 'echo' | 'chipmunk'): void => {
     if (!chatTarget) return;
     
     // For now, send as text message - in production, you'd upload the audio to server
@@ -154,7 +149,6 @@ function App() {
       await authService.logout();
       disconnect();
       setIsAuthenticated(false);
-      setCurrentUser(null);
       setUsername('');
       setTimeout(() => setIsExiting(false), 300);
     } catch (error) {

@@ -5,8 +5,8 @@ import { SocketService } from './SocketService';
 export class ChatService {
   constructor(private socketService: SocketService) {}
 
-  sendPrivateMessage(to: string, message: string): void {
-    this.socketService.emit('private_message', { to, message });
+  sendPrivateMessage(to: string, message: string, tempId?: string): void {
+    this.socketService.emit('private_message', { to, message, tempId });
   }
 
   register(username: string): void {

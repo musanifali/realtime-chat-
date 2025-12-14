@@ -11,6 +11,12 @@ export class SocketService {
   private isReady: boolean = false;
 
   connect(): Socket<ServerToClientEvents, ClientToServerEvents> {
+    // If socket already exists and is connected, return it
+    if (this.socket && this.socket.connected) {
+      console.log('♻️ Socket already connected, reusing existing connection');
+      return this.socket;
+    }
+    
     // Get JWT token for authentication
     const token = authService.getAccessToken();
     
@@ -28,14 +34,15 @@ export class SocketService {
     
     this.socket = io(SERVER_URL, config);
     
-    // Add connection event listeners for debugging
+    // Add connection event listeners IMMEDIATELY
     this.socket.on('connect', () => {
       console.log('✅ Socket connected! ID:', this.socket?.id);
-      // Give a small delay for auth to complete before marking ready
+      // Set ready after delay to allow auth/registration
       setTimeout(() => {
         this.isReady = true;
+        console.log('🟢 Socket marked as ready');
         this.flushMessageQueue();
-      }, 100);
+      }, 1000);
     });
     
     this.socket.on('connect_error', (error) => {
@@ -47,6 +54,16 @@ export class SocketService {
       console.log('🔌 Socket disconnected:', reason);
       this.isReady = false;
     });
+    
+    // Check if already connected (in case connect event already fired)
+    if (this.socket.connected) {
+      console.log('✅ Socket already connected on creation, marking ready...');
+      setTimeout(() => {
+        this.isReady = true;
+        console.log('🟢 Socket marked as ready (immediate path)');
+        this.flushMessageQueue();
+      }, 1000);
+    }
     
     return this.socket;
   }

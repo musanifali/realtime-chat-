@@ -52,12 +52,17 @@ export const ChatArea: React.FC<ChatAreaProps> = ({
     const loadHistory = async () => {
       try {
         setIsLoadingHistory(true);
-        console.log('📚 Loading history for:', chatTarget.username);
+        console.log('📚 [ChatArea] Loading history for:', chatTarget.username);
         const data = await messageService.getHistory(chatTarget.username);
+        
+        console.log('📚 [ChatArea] API response:', data);
+        console.log('📚 [ChatArea] Response type:', typeof data);
+        console.log('📚 [ChatArea] Has messages property:', data && 'messages' in data);
         
         // Check if data and messages exist before mapping
         if (!data || !data.messages || !Array.isArray(data.messages)) {
-          console.warn('No message history available');
+          console.warn('⚠️ [ChatArea] No message history available or invalid response format');
+          console.warn('⚠️ [ChatArea] Data:', data);
           onLoadHistory([], chatTarget.username);
           return;
         }
@@ -71,13 +76,21 @@ export const ChatArea: React.FC<ChatAreaProps> = ({
           timestamp: new Date(msg.createdAt),
         }));
 
-        console.log(`📚 Loaded ${historyMessages.length} messages from history for ${chatTarget.username}`);
+        console.log(`📚 [ChatArea] Loaded ${historyMessages.length} messages from history for ${chatTarget.username}`);
+        console.log(`📚 [ChatArea] Calling onLoadHistory with ${historyMessages.length} messages`);
         onLoadHistory(historyMessages, chatTarget.username);
+        console.log(`📚 [ChatArea] onLoadHistory called successfully`);
 
-        // Mark messages as read
+        // Mark messages as read and update badge
         try {
           await messageService.markAsRead(chatTarget.username);
           console.log(`✅ Marked messages from ${chatTarget.username} as read`);
+          
+          // Trigger a badge update by clearing in parent
+          if (onLoadHistory) {
+            // The loadHistory callback already clears the badge
+            console.log('🔔 Badge should be cleared by loadHistory');
+          }
         } catch (error) {
           console.error('Failed to mark messages as read:', error);
         }

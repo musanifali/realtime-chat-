@@ -1,8 +1,9 @@
 // server/src/config/database.ts
 
 import mongoose from 'mongoose';
+import { env } from './env.js';
 
-const MONGODB_URI = process.env.MONGODB_URI || 'mongodb://localhost:27017/realtime-chat';
+const MONGODB_URI = env.MONGODB_URI;
 
 export const connectDatabase = async (): Promise<void> => {
   try {

@@ -5,6 +5,8 @@ import { useSocketConnection } from './useSocketConnection';
 import { useChatMessages } from './useChatMessages';
 import { useUserManagement } from './useUserManagement';
 import { ChatTarget } from '../types';
+import { messageService } from '../services/messageService';
+import { authService } from '../services/authService';
 
 export const useChatApp = () => {
   const [isConnected, setIsConnected] = useState(false);
@@ -14,7 +16,7 @@ export const useChatApp = () => {
   const [chatTarget, setChatTarget] = useState<ChatTarget | null>(null);
 
   const { socketService, chatService, connect: connectSocket, disconnect: disconnectSocket } = useSocketConnection();
-  const { messages, addMessage, loadHistory, clearMessages, getUnreadCount, unreadCounts } = useChatMessages();
+  const { messages, addMessage, loadHistory, clearMessages, getUnreadCount, unreadCounts, updateMessageId } = useChatMessages();
   const { allUsers, updateUserList, clearUsers } = useUserManagement();
 
   // Setup socket event handlers
@@ -30,8 +32,16 @@ export const useChatApp = () => {
     }
 
     console.log('📋 Setting up socket handlers...');
+    
+    // Remove only application-level listeners to prevent duplicates
+    // DON'T remove connect/disconnect/connect_error - SocketService needs these for isReady state!
+    socket.removeAllListeners('user_list');
+    socket.removeAllListeners('message_sent');
+    socket.removeAllListeners('private_message');
+    socket.removeAllListeners('system');
+    socket.removeAllListeners('error');
 
-    // Connected
+    // Connected - add our application handler
     socket.on('connect', async () => {
       console.log('✅ Connected to server!');
       setIsConnected(true);
@@ -49,20 +59,26 @@ export const useChatApp = () => {
       
       console.log('📥 Fetching pending messages...');
       try {
-        const { messageService } = await import('../services/messageService');
-        const { authService } = await import('../services/authService');
-        
-        // Get current user from auth service (not from stale closure)
+        // Use already imported services instead of dynamic import
         const currentUser = await authService.getMe();
         const currentUsername = currentUser.username;
         console.log('👤 Current user:', currentUsername);
         
-        const pendingMessages = await messageService.getPendingMessages();
-        console.log(`📥 Found ${pendingMessages.length} pending messages`);
+        const { messageService: msgService } = await import('../services/messageService');
+        const pendingMessages = await msgService.getPendingMessages();
+        console.log(`📥 Received pending messages response:`, pendingMessages);
         
         // Mark as fetched to prevent duplicate fetching
         // @ts-ignore
         socket._pendingMessagesFetched = true;
+        
+        // Handle if API returns undefined or empty
+        if (!pendingMessages || pendingMessages.length === 0) {
+          console.log('📭 No pending messages');
+          return;
+        }
+        
+        console.log(`📥 Found ${pendingMessages.length} pending messages`);
         
         // Group messages by friend and add them with message IDs
         pendingMessages.forEach((msg) => {
@@ -81,8 +97,9 @@ export const useChatApp = () => {
         });
         
         console.log('✅ Pending messages processed successfully');
-      } catch (error) {
+      } catch (error: any) {
         console.error('❌ Error fetching pending messages:', error);
+        console.error('Error details:', error.message, error.stack);
       }
     });
 
@@ -92,22 +109,41 @@ export const useChatApp = () => {
       updateUserList(users, username);
     });
 
-    // Private message - handle messages even when not viewing that friend's chat
-    // This is the KEY FIX: messages are received and stored regardless of current chat view
-    socket.on('private_message', (data) => {
+    // Message sent acknowledgment - update temp ID with real ID from DB
+    socket.on('message_sent', (data) => {
+      console.log('✅ Message acknowledged by server:', data);
+      console.log(`🔄 Updating message ID: ${data.tempId} -> ${data.messageId} for friend: ${data.to}`);
+      // Update the temp ID with the real message ID
+      updateMessageId(data.to, data.tempId, data.messageId);
+    });
+
+    // Private message - only for RECEIVED messages (not sent by us)
+    socket.on('private_message', async (data) => {
       console.log('📨 Received private message:', data);
-      const isMine = data.from === username;
-      const friendUsername = isMine ? data.to : data.from;
+      const friendUsername = data.from; // Always from the sender
       
+      // Add received message with server's messageId for deduplication
       addMessage(
-        isMine ? 'private_sent' : 'private_received',
+        'private_received',
         data.message,
-        isMine ? `To ${data.to}` : `From ${data.from}`,
-        friendUsername  // Pass friend username to store message correctly
+        `From ${data.from}`,
+        friendUsername,
+        data.messageId // Use server's message ID to prevent duplicates
       );
       
-      // Log for debugging
       console.log(`💬 Message stored for friend: ${friendUsername} (current view: ${chatTarget?.username || 'none'})`);
+      
+      // If currently viewing this friend's chat, mark as read immediately
+      // Note: The addMessage above already handles clearing unread count in useChatMessages
+      if (chatTarget?.username === friendUsername) {
+        console.log(`👁️ Currently viewing ${friendUsername}, marking as read immediately...`);
+        try {
+          await messageService.markAsRead(friendUsername);
+          console.log(`✅ Marked message from ${friendUsername} as read on server`);
+        } catch (error) {
+          console.error('Failed to mark message as read:', error);
+        }
+      }
     });
 
     // System message
@@ -155,7 +191,7 @@ export const useChatApp = () => {
     addMessage,
     updateUserList,
     clearUsers,
-    chatTarget,
+    // Note: chatTarget intentionally NOT included to avoid reconnection on chat switch
   ]);
 
   // Connect
@@ -167,8 +203,8 @@ export const useChatApp = () => {
     setIsConnecting(true);
     setConnectionError('');
     
-    // First connect to create the socket
-    const socket = connectSocket();
+    // Connect to create the socket (only if not already connected)
+    connectSocket();
     
     // Then setup handlers (will only set up once due to flag check)
     setupSocketHandlers();
@@ -209,6 +245,7 @@ export const useChatApp = () => {
     clearMessages,
     getUnreadCount,
     unreadCounts,
+    updateMessageId,
     
     // User state
     allUsers,
