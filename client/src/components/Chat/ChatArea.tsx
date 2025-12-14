@@ -1,6 +1,6 @@
 // client/src/components/Chat/ChatArea.tsx
 
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { ChatHeader } from './ChatHeader';
 import { MessageList } from './MessageList';
 import { MessageInput } from './MessageInput';
@@ -11,6 +11,7 @@ import { useTypingIndicator } from '../../hooks/useTypingIndicator';
 import { ChatMessage, ChatTarget } from '../../types';
 import { SocketService } from '../../services/SocketService';
 import { VoiceEffect } from '../VoiceRecorder/VoiceRecorder';
+import { messageService } from '../../services/messageService';
 
 interface ChatAreaProps {
   chatTarget: ChatTarget | null;
@@ -22,6 +23,7 @@ interface ChatAreaProps {
   onSendVoice?: (audioBlob: Blob, duration: number, effect?: VoiceEffect) => void;
   onKeyPress: (e: React.KeyboardEvent<HTMLInputElement>) => void;
   socketService: SocketService | null;
+  onLoadHistory?: (messages: ChatMessage[]) => void;
 }
 
 const explosionTexts = ['KAPOW!', 'BAM!', 'ZAP!', 'BOOM!', 'POW!', 'WHAM!'];
@@ -36,10 +38,44 @@ export const ChatArea: React.FC<ChatAreaProps> = ({
   onSendVoice,
   onKeyPress,
   socketService,
+  onLoadHistory,
 }) => {
   const { explosions, triggerExplosion } = useComicExplosion();
   const currentUser = chatTarget?.username || null;
   const { isTyping, notifyTyping } = useTypingIndicator(socketService, currentUser);
+  const [isLoadingHistory, setIsLoadingHistory] = useState(false);
+
+  // Load message history when chat target changes
+  useEffect(() => {
+    if (!chatTarget || !onLoadHistory) return;
+
+    const loadHistory = async () => {
+      try {
+        setIsLoadingHistory(true);
+        const data = await messageService.getHistory(chatTarget.username);
+        
+        // Convert DB messages to ChatMessage format
+        const historyMessages: ChatMessage[] = data.messages.map((msg) => ({
+          id: msg.id,
+          type: msg.sender.username === username ? 'private_sent' : 'private_received',
+          username: msg.sender.username === username ? `To ${msg.recipient.username}` : `From ${msg.sender.username}`,
+          text: msg.message,
+          timestamp: new Date(msg.createdAt),
+        }));
+
+        onLoadHistory(historyMessages);
+
+        // Mark messages as read
+        await messageService.markAsRead(chatTarget.username);
+      } catch (error) {
+        console.error('Failed to load message history:', error);
+      } finally {
+        setIsLoadingHistory(false);
+      }
+    };
+
+    loadHistory();
+  }, [chatTarget?.username]);
 
   const handleInputChange = (value: string) => {
     onInputChange(value);

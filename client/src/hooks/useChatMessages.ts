@@ -19,6 +19,10 @@ export const useChatMessages = () => {
     []
   );
 
+  const loadHistory = useCallback((historyMessages: ChatMessage[]) => {
+    setMessages(historyMessages);
+  }, []);
+
   const clearMessages = useCallback(() => {
     setMessages([]);
   }, []);
@@ -26,6 +30,7 @@ export const useChatMessages = () => {
   return {
     messages,
     addMessage,
+    loadHistory,
     clearMessages,
   };
 };

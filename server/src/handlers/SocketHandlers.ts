@@ -19,10 +19,20 @@ export class SocketHandlers {
   async handleRegister(socket: SocketType, username: string): Promise<void> {
     console.log(`${SERVER_ID}: Register - ${username}`);
 
-    if (await this.redisService.isUsernameTaken(username)) {
+    // For JWT auth, user is already authenticated, so allow re-registration
+    // Only block if it's a different socket trying to use the same username
+    const isAlreadyConnected = await this.redisService.isUsernameTaken(username);
+    if (isAlreadyConnected && !socket.data.userId) {
+      // Only reject if this is NOT a JWT-authenticated reconnection
       socket.emit('error', `Username "${username}" is already taken`);
       socket.disconnect();
       return;
+    }
+
+    // If JWT user is reconnecting, remove old Redis entry first
+    if (isAlreadyConnected && socket.data.userId) {
+      console.log(`${SERVER_ID}: JWT user ${username} reconnecting`);
+      await this.redisService.removeUser(username);
     }
 
     socket.data.username = username;
@@ -96,6 +106,31 @@ export class SocketHandlers {
       socket.emit('error', `You can only message friends. Send a friend request to "${data.to}" first!`);
       return;
     }
+
+    // Find the friendship to link message
+    const friendship = await Friendship.findOne({
+      status: 'accepted',
+      $or: [
+        { requester: userId, recipient: recipient._id },
+        { requester: recipient._id, recipient: userId }
+      ]
+    });
+
+    if (!friendship) {
+      socket.emit('error', `Friendship not found`);
+      return;
+    }
+
+    // Save message to MongoDB
+    const { Message } = await import('../models/Message.js');
+    const savedMessage = await Message.create({
+      sender: userId,
+      recipient: recipient._id,
+      message: data.message,
+      friendship: friendship._id,
+    });
+
+    console.log(`${SERVER_ID}: Message saved to DB: ${savedMessage._id}`);
 
     await this.pubSubService.publishMessage({
       type: 'private_message',

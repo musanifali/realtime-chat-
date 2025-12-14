@@ -31,6 +31,7 @@ function App() {
     messages,
     chatTarget,
     setChatTarget,
+    loadHistory,
     allUsers,
     chatService,
     socketService,
@@ -251,6 +252,7 @@ function App() {
           onSendVoice={sendVoiceMessage}
           onKeyPress={handleKeyPress}
           socketService={socketService}
+          onLoadHistory={loadHistory}
         />
       </div>
     </div>

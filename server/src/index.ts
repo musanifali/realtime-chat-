@@ -44,8 +44,10 @@ app.use((req, res, next) => {
 });
 
 // API Routes
+import messageRoutes from './routes/messages.js';
 app.use('/api/auth', authRoutes);
 app.use('/api/friends', friendRoutes);
+app.use('/api/messages', messageRoutes);
 
 // Health check
 app.get('/health', (req, res) => {

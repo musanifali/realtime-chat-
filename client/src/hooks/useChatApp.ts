@@ -14,7 +14,7 @@ export const useChatApp = () => {
   const [chatTarget, setChatTarget] = useState<ChatTarget | null>(null);
 
   const { socketService, chatService, connect: connectSocket, disconnect: disconnectSocket } = useSocketConnection();
-  const { messages, addMessage } = useChatMessages();
+  const { messages, addMessage, loadHistory, clearMessages } = useChatMessages();
   const { allUsers, updateUserList, clearUsers } = useUserManagement();
 
   // Setup socket event handlers
@@ -127,6 +127,8 @@ export const useChatApp = () => {
     messages,
     chatTarget,
     setChatTarget,
+    loadHistory,
+    clearMessages,
     
     // User state
     allUsers,
