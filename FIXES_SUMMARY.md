@@ -3,12 +3,14 @@
 ## Database Schema Improvements
 
 ### Message Model
+
 - ✅ Added `isDelivered` field to track message delivery status
-- ✅ Added `deliveredAt` timestamp for delivery tracking  
+- ✅ Added `deliveredAt` timestamp for delivery tracking
 - ✅ Added index on `(recipient, isDelivered)` for fast queries
 - ✅ Existing `isRead` and `readAt` for read receipts
 
 **Why**: This allows tracking three states:
+
 1. **Sent** - Message saved to DB
 2. **Delivered** - Recipient's client received the message
 3. **Read** - Recipient viewed the message
@@ -16,7 +18,9 @@
 ## Server-Side Fixes
 
 ### 1. Automatic Delivery on Reconnect
+
 **File**: `server/src/handlers/SocketHandlers.ts`
+
 - ✅ Added `deliverPendingMessages()` method
 - ✅ Automatically called when user registers/connects
 - ✅ Delivers all undelivered messages (isDelivered=false)
@@ -26,7 +30,9 @@
 **Impact**: Users who were offline will now receive ALL missed messages immediately on reconnect!
 
 ### 2. Real-time Delivery Tracking
+
 **File**: `server/src/services/PubSubService.ts`
+
 - ✅ Mark message as delivered in DB when recipient is online
 - ✅ Set `deliveredAt` timestamp
 - ✅ Better logging for debugging
@@ -34,25 +40,32 @@
 ## Client-Side Fixes
 
 ### 1. Unread Badge Management
+
 **File**: `client/src/hooks/useChatMessages.ts`
+
 - ✅ Clear unread badge when currently viewing that friend's chat
 - ✅ Increment unread only when NOT viewing
 - ✅ Better logging
 
 ### 2. Mark as Read on Receive
+
 **File**: `client/src/hooks/useChatApp.ts`
+
 - ✅ Automatically mark messages as read if currently viewing that chat
 - ✅ Call server API to update `isRead` status
 - ✅ Prevent unread badges from showing for messages you're actively reading
 
 ### 3. History Loading Protection
+
 **File**: `client/src/components/Chat/ChatArea.tsx`
+
 - ✅ Prevent duplicate history loads
 - ✅ Skip loading if already in progress
 
 ## How It Works Now
 
 ### Scenario 1: User Offline
+
 1. User A sends message to User B (B is offline)
 2. Message saved to DB with `isDelivered=false`
 3. Server logs: "Recipient offline - message saved to DB"
@@ -63,6 +76,7 @@
    - B sees all missed messages immediately!
 
 ### Scenario 2: User Online But Not Viewing Chat
+
 1. User A sends message to User B (B is online but chatting with User C)
 2. Message delivered via socket immediately
 3. Message marked as `isDelivered=true` in DB
@@ -73,6 +87,7 @@
    - Unread badge clears
 
 ### Scenario 3: User Viewing Chat
+
 1. User A sends message to User B (B is viewing A's chat)
 2. Message delivered via socket
 3. Message marked as `isDelivered=true`
@@ -83,6 +98,7 @@
 ## Testing Steps
 
 1. **Test Offline Delivery**:
+
    - User A: Login
    - User B: Stay logged out
    - User A: Send 5 messages to B
@@ -90,6 +106,7 @@
    - ✅ B should see all 5 messages immediately
 
 2. **Test Unread Badges**:
+
    - User A and B: Both online
    - User B: Viewing User C's chat
    - User A: Send message to B
@@ -98,6 +115,7 @@
    - ✅ Badge should clear immediately
 
 3. **Test History Persistence**:
+
    - Users exchange messages
    - Refresh page
    - Click on friend
@@ -131,15 +149,15 @@ Message {
   recipient: ObjectId (ref User)
   message: String
   friendship: ObjectId (ref Friendship)
-  
+
   // Delivery tracking
   isDelivered: Boolean (default: false)
   deliveredAt: Date
-  
-  // Read tracking  
+
+  // Read tracking
   isRead: Boolean (default: false)
   readAt: Date
-  
+
   createdAt: Date
   updatedAt: Date
 }
