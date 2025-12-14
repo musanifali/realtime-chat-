@@ -7,8 +7,8 @@ import { env } from '../config/env.js';
 const JWT_SECRET = env.JWT_SECRET;
 const JWT_REFRESH_SECRET = env.JWT_REFRESH_SECRET;
 
-const ACCESS_TOKEN_EXPIRY = '15m'; // 15 minutes
-const REFRESH_TOKEN_EXPIRY = '7d'; // 7 days
+const ACCESS_TOKEN_EXPIRY = '24h'; // 24 hours
+const REFRESH_TOKEN_EXPIRY = '30d'; // 30 days
 
 export interface JWTPayload {
   userId: string;

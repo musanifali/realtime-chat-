@@ -184,7 +184,7 @@ function App() {
 
   // Chat Screen
   return (
-    <div className="flex h-screen max-h-screen text-gray-900 relative overflow-hidden" style={{ backgroundColor: 'var(--color-bg-primary)' }}>
+    <div className="flex h-screen max-h-screen text-gray-900 relative overflow-hidden w-full" style={{ backgroundColor: 'var(--color-bg-primary)' }}>
       {/* Mobile Sidebar Overlay */}
       {showMobileSidebar && (
         <div 
@@ -251,38 +251,6 @@ function App() {
 
       {/* Main Chat Area */}
       <div className="flex-1 flex flex-col min-w-0 w-full md:w-auto">
-        {/* Mobile Header with Hamburger */}
-        <div className="md:hidden flex items-center p-4 gap-3" style={{ backgroundColor: 'var(--color-bg-secondary)', borderBottom: '4px solid var(--color-border)', boxShadow: '0 4px 0 var(--color-primary)' }}>
-          <button
-            onClick={() => {
-              setMenuClicked(true);
-              soundManager.playClick();
-              setTimeout(() => {
-                setShowMobileSidebar(!showMobileSidebar);
-                setMenuClicked(false);
-              }, 150);
-            }}
-            className={`p-2 transition-all duration-200 ${menuClicked ? 'animate-pulse' : ''}`}
-            style={{ 
-              background: 'var(--color-accent)', 
-              border: '3px solid var(--color-border)',
-              boxShadow: menuClicked ? '1px 1px 0 var(--color-border)' : '3px 3px 0 var(--color-border)',
-              borderRadius: '8px',
-              transform: menuClicked ? 'scale(0.9)' : 'scale(1)'
-            }}
-          >
-            {showMobileSidebar ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
-          </button>
-          <div className="flex-1">
-            <h1 className="text-xl font-black uppercase" style={{ color: 'var(--color-primary)', textShadow: '2px 2px 0 var(--color-border)' }}>
-              💬 CHAT!
-            </h1>
-          </div>
-          <div className="flex gap-2">
-            <SoundToggle />
-          </div>
-        </div>
-
         <ChatArea
           chatTarget={chatTarget}
           messages={filteredMessages}
@@ -294,6 +262,10 @@ function App() {
           onKeyPress={handleKeyPress}
           socketService={socketService}
           onLoadHistory={loadHistory}
+          onToggleSidebar={() => {
+            soundManager.playClick();
+            setShowMobileSidebar(!showMobileSidebar);
+          }}
         />
       </div>
 

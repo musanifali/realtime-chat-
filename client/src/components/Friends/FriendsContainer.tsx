@@ -49,8 +49,8 @@ export function FriendsContainer({ onSelectFriend, selectedFriendId, socket, get
                          : 'bg-white text-gray-700 hover:bg-gray-100'
                      }`}
         >
-          <Users className="w-4 h-4" />
-          <span className="hidden sm:inline">FRIENDS</span>
+          <Users className="w-4 h-4 flex-shrink-0" />
+          <span className="truncate">FRIENDS</span>
         </button>
 
         <button
@@ -63,8 +63,8 @@ export function FriendsContainer({ onSelectFriend, selectedFriendId, socket, get
                          : 'bg-white text-gray-700 hover:bg-gray-100'
                      }`}
         >
-          <Inbox className="w-4 h-4" />
-          <span className="hidden sm:inline">REQUESTS</span>
+          <Inbox className="w-4 h-4 flex-shrink-0" />
+          <span className="truncate">REQUESTS</span>
         </button>
 
         <button
@@ -77,8 +77,8 @@ export function FriendsContainer({ onSelectFriend, selectedFriendId, socket, get
                          : 'bg-white text-gray-700 hover:bg-gray-100'
                      }`}
         >
-          <UserSearch className="w-4 h-4" />
-          <span className="hidden sm:inline">SEARCH</span>
+          <UserSearch className="w-4 h-4 flex-shrink-0" />
+          <span className="truncate">SEARCH</span>
         </button>
       </div>
 

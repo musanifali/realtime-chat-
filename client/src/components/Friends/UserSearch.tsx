@@ -135,18 +135,18 @@ export function UserSearch({ onRequestSent }: UserSearchProps) {
             onKeyDown={(e) => e.key === 'Enter' && handleSearch()}
             placeholder="Search..."
             className="flex-1 px-3 py-2 text-sm bg-yellow-100 border-3 border-black rounded-md font-bold 
-                     uppercase placeholder:text-gray-600 focus:outline-none focus:ring-2 focus:ring-yellow-400"
+                     uppercase placeholder:text-gray-600 focus:outline-none focus:ring-2 focus:ring-yellow-400 min-w-0"
           />
           <button
             onClick={handleSearch}
             disabled={loading}
-            className="px-3 md:px-4 py-2 bg-blue-500 text-white font-black uppercase text-sm rounded-md border-3 border-black
+            className="px-3 py-2 bg-blue-500 text-white font-black uppercase text-xs sm:text-sm rounded-md border-3 border-black
                      shadow-[3px_3px_0px_0px_rgba(0,0,0,1)] hover:shadow-[1px_1px_0px_0px_rgba(0,0,0,1)]
                      hover:translate-x-[2px] hover:translate-y-[2px] transition-all
-                     disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-1"
+                     disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-1 flex-shrink-0 whitespace-nowrap"
           >
-            <Search className="w-4 h-4" />
-            <span className="hidden md:inline">{loading ? 'SEARCHING...' : 'SEARCH!'}</span>
+            <Search className="w-4 h-4 flex-shrink-0" />
+            <span>{loading ? 'SEARCHING...' : 'SEARCH!'}</span>
           </button>
         </div>
       </div>

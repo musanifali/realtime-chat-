@@ -12,6 +12,8 @@ import { ChatMessage, ChatTarget } from '../../types';
 import { SocketService } from '../../services/SocketService';
 import { VoiceEffect } from '../VoiceRecorder/VoiceRecorder';
 import { messageService } from '../../services/messageService';
+import { Menu } from 'lucide-react';
+import { soundManager } from '../../services/SoundManager';
 
 interface ChatAreaProps {
   chatTarget: ChatTarget | null;
@@ -24,6 +26,7 @@ interface ChatAreaProps {
   onKeyPress: (e: React.KeyboardEvent<HTMLInputElement>) => void;
   socketService: SocketService | null;
   onLoadHistory?: (messages: ChatMessage[], friendUsername: string) => void;
+  onToggleSidebar?: () => void;
 }
 
 const explosionTexts = ['KAPOW!', 'BAM!', 'ZAP!', 'BOOM!', 'POW!', 'WHAM!'];
@@ -39,6 +42,7 @@ export const ChatArea: React.FC<ChatAreaProps> = ({
   onKeyPress,
   socketService,
   onLoadHistory,
+  onToggleSidebar,
 }) => {
   const { explosions, triggerExplosion } = useComicExplosion();
   const currentUser = chatTarget?.username || null;
@@ -141,15 +145,42 @@ export const ChatArea: React.FC<ChatAreaProps> = ({
 
   if (!chatTarget) {
     return (
-      <div className="flex flex-col h-full items-center justify-center halftone-bg px-4" style={{ backgroundColor: 'var(--color-bg-primary)' }}>
-        <div className="text-center p-4 md:p-8">
-          <h2 className="text-3xl md:text-4xl font-black uppercase mb-4" style={{ color: 'var(--color-primary)', textShadow: '3px 3px 0 var(--color-border)' }}>
-            💬 SELECT A HERO!
-          </h2>
-          <p className="text-base md:text-lg font-bold" style={{ color: 'var(--color-text-secondary)' }}>
-            <span className="hidden sm:inline">Choose someone from the list to start chatting! 💥</span>
-            <span className="sm:hidden">Tap the menu to select! 💥</span>
-          </p>
+      <div className="flex flex-col h-full" style={{ backgroundColor: 'var(--color-bg-primary)' }}>
+        {/* Mobile Header with Menu Button */}
+        {onToggleSidebar && (
+          <div className="md:hidden flex items-center px-4 py-4 halftone-bg" style={{ backgroundColor: 'var(--color-secondary)', borderBottom: '4px solid var(--color-border)', boxShadow: '0 4px 0 var(--color-border)' }}>
+            <button
+              onClick={() => {
+                soundManager.playClick();
+                onToggleSidebar();
+              }}
+              className="flex-shrink-0 p-2 rounded-md transition-all duration-200"
+              style={{ 
+                background: 'var(--color-accent)', 
+                border: '3px solid var(--color-border)',
+                boxShadow: '3px 3px 0 var(--color-border)',
+              }}
+            >
+              <Menu className="w-5 h-5" style={{ color: 'var(--color-border)' }} />
+            </button>
+            <h1 className="flex-1 text-xl font-black uppercase text-center" style={{ color: 'white', textShadow: '3px 3px 0 var(--color-border)' }}>
+              💬 COMIC CHAT
+            </h1>
+            <div className="w-10"></div> {/* Spacer for centering */}
+          </div>
+        )}
+        
+        {/* Empty State Content */}
+        <div className="flex-1 flex items-center justify-center halftone-bg px-4">
+          <div className="text-center p-4 md:p-8">
+            <h2 className="text-3xl md:text-4xl font-black uppercase mb-4" style={{ color: 'var(--color-primary)', textShadow: '3px 3px 0 var(--color-border)' }}>
+              💬 SELECT A HERO!
+            </h2>
+            <p className="text-base md:text-lg font-bold" style={{ color: 'var(--color-text-secondary)' }}>
+              <span className="hidden sm:inline">Choose someone from the list to start chatting! 💥</span>
+              <span className="sm:hidden">Tap the menu to select! 💥</span>
+            </p>
+          </div>
         </div>
       </div>
     );
@@ -159,6 +190,7 @@ export const ChatArea: React.FC<ChatAreaProps> = ({
     <div className="flex flex-col h-full relative" style={{ backgroundColor: 'var(--color-bg-primary)' }}>
       <ChatHeader 
         chatTarget={chatTarget}
+        onToggleSidebar={onToggleSidebar}
       />
       
       <MessageList 
