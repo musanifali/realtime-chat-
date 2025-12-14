@@ -9,6 +9,7 @@
 ## 1. Server Setup
 
 ### Initial Dependencies
+
 ```bash
 # Update system
 sudo apt update && sudo apt upgrade -y
@@ -50,6 +51,7 @@ sudo apt install -y net-tools
 ## 2. Backend Deployment
 
 ### Directory Structure
+
 ```
 /home/ubuntu/realtime-chat-/
 ├── server/
@@ -62,6 +64,7 @@ sudo apt install -y net-tools
 ```
 
 ### Environment Variables (.env)
+
 **Location:** `/home/ubuntu/realtime-chat-/server/.env`
 
 ```bash
@@ -88,6 +91,7 @@ CORS_ORIGIN=https://bubu.servehttp.com
 ```
 
 ### PM2 Configuration
+
 ```bash
 # Navigate to server directory
 cd /home/ubuntu/realtime-chat-/server
@@ -104,6 +108,7 @@ pm2 startup
 ```
 
 ### PM2 Commands
+
 ```bash
 # View running processes
 pm2 list
@@ -129,6 +134,7 @@ pm2 flush
 ## 3. Frontend Deployment
 
 ### Build and Deploy
+
 ```bash
 # Build React app locally
 cd /path/to/local/realtime-chat/client
@@ -148,6 +154,7 @@ sudo cp -r dist/* /var/www/chat/
 ## 4. Nginx Configuration
 
 ### SSL Certificate Setup
+
 ```bash
 # Obtain SSL certificate from Let's Encrypt
 sudo certbot --nginx -d bubu.servehttp.com
@@ -165,6 +172,7 @@ sudo certbot renew --dry-run
 ```
 
 ### Nginx Configuration File
+
 **Location:** `/etc/nginx/sites-available/default`
 
 ```nginx
@@ -173,7 +181,7 @@ server {
     listen 80;
     listen [::]:80;
     server_name bubu.servehttp.com;
-    
+
     # Redirect all HTTP to HTTPS
     return 301 https://$server_name$request_uri;
 }
@@ -182,18 +190,18 @@ server {
 server {
     listen 443 ssl http2;
     listen [::]:443 ssl http2;
-    
+
     server_name bubu.servehttp.com;
-    
+
     # SSL certificate configuration
     ssl_certificate /etc/letsencrypt/live/bubu.servehttp.com/fullchain.pem;
     ssl_certificate_key /etc/letsencrypt/live/bubu.servehttp.com/privkey.pem;
-    
+
     # SSL settings
     ssl_protocols TLSv1.2 TLSv1.3;
     ssl_ciphers HIGH:!aNULL:!MD5;
     ssl_prefer_server_ciphers on;
-    
+
     root /var/www/chat;
     index index.html;
 
@@ -208,13 +216,13 @@ server {
         proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
         proxy_set_header X-Forwarded-Proto $scheme;
         proxy_cache_bypass $http_upgrade;
-        
+
         # CORS headers
         add_header 'Access-Control-Allow-Origin' '$http_origin' always;
         add_header 'Access-Control-Allow-Credentials' 'true' always;
         add_header 'Access-Control-Allow-Methods' 'GET, POST, PUT, DELETE, OPTIONS' always;
         add_header 'Access-Control-Allow-Headers' 'Content-Type, Authorization' always;
-        
+
         if ($request_method = 'OPTIONS') {
             return 204;
         }
@@ -235,7 +243,7 @@ server {
     # Serve static files
     location / {
         try_files $uri $uri/ /index.html;
-        
+
         location ~* \.(js|css|png|jpg|jpeg|gif|ico|svg|woff|woff2|ttf|eot)$ {
             expires 1y;
             add_header Cache-Control "public, immutable";
@@ -251,6 +259,7 @@ server {
 ```
 
 ### Nginx Symlink Setup
+
 ```bash
 # Remove old config symlink
 sudo rm /etc/nginx/sites-enabled/chat
@@ -270,11 +279,12 @@ sudo systemctl restart nginx
 ## 5. AWS Security Group Configuration
 
 ### Required Inbound Rules
-| Port | Protocol | Source | Description |
-|------|----------|--------|-------------|
-| 22 | TCP | 0.0.0.0/0 | SSH |
-| 80 | TCP | 0.0.0.0/0 | HTTP (redirects to HTTPS) |
-| 443 | TCP | 0.0.0.0/0 | HTTPS |
+
+| Port | Protocol | Source    | Description               |
+| ---- | -------- | --------- | ------------------------- |
+| 22   | TCP      | 0.0.0.0/0 | SSH                       |
+| 80   | TCP      | 0.0.0.0/0 | HTTP (redirects to HTTPS) |
+| 443  | TCP      | 0.0.0.0/0 | HTTPS                     |
 
 **Note:** Port 3001 (Node.js) should NOT be exposed - it's only accessible via Nginx reverse proxy.
 
@@ -283,6 +293,7 @@ sudo systemctl restart nginx
 ## 6. Database Management
 
 ### MongoDB Commands
+
 ```bash
 # Connect to MongoDB
 mongosh
@@ -306,6 +317,7 @@ exit
 ```
 
 ### Redis Commands
+
 ```bash
 # Connect to Redis
 redis-cli
@@ -321,6 +333,7 @@ exit
 ```
 
 ### Quick Database Reset
+
 ```bash
 # One-liner to reset everything
 mongosh --eval "use realtime-chat; db.dropDatabase();" && redis-cli FLUSHALL && pm2 restart chat-server
@@ -331,6 +344,7 @@ mongosh --eval "use realtime-chat; db.dropDatabase();" && redis-cli FLUSHALL && 
 ## 7. Troubleshooting Commands
 
 ### Check Service Status
+
 ```bash
 # Check all services
 sudo systemctl status mongod
@@ -345,6 +359,7 @@ sudo tail -f /var/log/nginx/access.log
 ```
 
 ### Network & Ports
+
 ```bash
 # Check listening ports
 sudo ss -tlnp | grep -E ':80|:443|:3001'
@@ -357,6 +372,7 @@ curl http://localhost:3001/health
 ```
 
 ### Restart Everything
+
 ```bash
 # Restart all services
 sudo systemctl restart mongod
@@ -370,14 +386,16 @@ pm2 restart chat-server
 ## 8. Client-Side Changes
 
 ### Authorization Header Fix
+
 **File:** `client/src/services/authService.ts`
 
 Added axios interceptor to include JWT token in requests:
+
 ```typescript
 // Add request interceptor to include Authorization header
 axios.interceptors.request.use(
   (config) => {
-    const token = localStorage.getItem('accessToken');
+    const token = localStorage.getItem("accessToken");
     if (token) {
       config.headers.Authorization = `Bearer ${token}`;
     }
@@ -388,14 +406,16 @@ axios.interceptors.request.use(
 ```
 
 ### Cookie Settings (Server)
+
 **File:** `server/src/controllers/AuthController.ts`
 
 Changed cookie settings for production:
+
 ```typescript
 const COOKIE_OPTIONS = {
   httpOnly: true,
   secure: false, // Set to true only if using HTTPS with proper domain
-  sameSite: 'lax' as const, // 'lax' works better for same-site requests through proxy
+  sameSite: "lax" as const, // 'lax' works better for same-site requests through proxy
   maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
 };
 ```
@@ -426,6 +446,7 @@ Node.js Server (PM2) - Port 3001
 ## 10. Deployment Checklist
 
 ### Initial Setup
+
 - [x] Install MongoDB, Redis, Node.js, PM2, Nginx
 - [x] Clone repository to server
 - [x] Build backend (`npm run build` in server/)
@@ -438,6 +459,7 @@ Node.js Server (PM2) - Port 3001
 - [x] Configure PM2 startup script
 
 ### After Code Changes
+
 1. Build locally: `npm run build` (server or client)
 2. Upload to server: `scp -r dist/* ubuntu@13.49.78.104:/path/`
 3. Restart services: `pm2 restart chat-server` or `sudo systemctl restart nginx`
@@ -458,13 +480,16 @@ Node.js Server (PM2) - Port 3001
 ## 12. Maintenance
 
 ### SSL Certificate Renewal
+
 Certificates auto-renew via certbot. Manual renewal:
+
 ```bash
 sudo certbot renew
 sudo systemctl reload nginx
 ```
 
 ### Update Application
+
 ```bash
 # On local machine, build new version
 npm run build
@@ -478,6 +503,7 @@ pm2 restart chat-server
 ```
 
 ### Monitor Resources
+
 ```bash
 # Check disk usage
 df -h
@@ -504,6 +530,7 @@ pm2 monit
 6. **Nginx Headers:** Security headers enabled (X-Frame-Options, CSP, etc.)
 
 ### Recommended Security Improvements
+
 ```bash
 # Enable MongoDB authentication
 mongosh
