@@ -6,8 +6,8 @@ import { generateAccessToken, generateRefreshToken, verifyRefreshToken } from '.
 
 const COOKIE_OPTIONS = {
   httpOnly: true,
-  secure: process.env.NODE_ENV === 'production', // HTTPS only in production
-  sameSite: 'strict' as const,
+  secure: false, // Set to true only if using HTTPS
+  sameSite: 'lax' as const, // 'lax' works better for same-site requests through proxy
   maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
 };
 
@@ -18,10 +18,14 @@ export class AuthController {
    */
   static async register(req: Request, res: Response): Promise<void> {
     try {
+      console.log('📝 Register request body:', req.body);
+      console.log('📝 Request headers:', req.headers);
+      
       const { username, email, password, displayName } = req.body;
 
       // Validate required fields
       if (!username || !email || !password || !displayName) {
+        console.log('❌ Validation failed - missing fields:', { username: !!username, email: !!email, password: !!password, displayName: !!displayName });
         res.status(400).json({ error: 'All fields are required' });
         return;
       }

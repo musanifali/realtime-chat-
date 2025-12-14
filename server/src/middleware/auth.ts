@@ -17,6 +17,9 @@ declare global {
  */
 export const authenticate = (req: Request, res: Response, next: NextFunction): void => {
   try {
+    console.log('🔐 Auth middleware - cookies:', req.cookies);
+    console.log('🔐 Auth middleware - authorization header:', req.headers.authorization);
+    
     // Try to get token from cookie first
     let token = req.cookies?.accessToken;
 
@@ -29,6 +32,7 @@ export const authenticate = (req: Request, res: Response, next: NextFunction): v
     }
 
     if (!token) {
+      console.log('❌ No token found in cookies or headers');
       res.status(401).json({ error: 'Access token is missing' });
       return;
     }
