@@ -2,7 +2,7 @@
 
 import { Router } from 'express';
 import { MessageController } from '../controllers/MessageController.js';
-import { authenticate } from '../middlewares/auth.js';
+import { authenticate } from '../middleware/auth.js';
 
 const router = Router();
 
