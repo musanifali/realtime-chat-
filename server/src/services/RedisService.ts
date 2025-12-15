@@ -327,7 +327,19 @@ export class RedisService {
       console.log('🧹 Cleaning up stale Redis data from previous session...');
       // Clear all online users from previous sessions
       if (this.useUpstash) {
-        await this.upstashClient!.del(USERS_KEY);
+        // Upstash free tier may not support DEL, so we'll just log
+        console.log('⚠️  Skipping DEL on Upstash (may not be supported in free tier)');
+        // Alternatively, we could remove all members individually
+        try {
+          const users = await this.upstashClient!.smembers(USERS_KEY);
+          if (users && users.length > 0) {
+            for (const user of users) {
+              await this.upstashClient!.srem(USERS_KEY, user);
+            }
+          }
+        } catch (e: any) {
+          console.warn('⚠️  Could not cleanup users:', e.message);
+        }
       } else {
         await this.publisher!.del(USERS_KEY);
       }

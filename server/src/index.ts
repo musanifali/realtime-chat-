@@ -11,7 +11,7 @@ import { connectDatabase, disconnectDatabase } from './config/database.js';
 
 import { validateEnvironment } from './config/env.js';
 import { SocketHandlers } from './handlers/SocketHandlers.js';
-import { PORT, REDIS_URL, SERVER_ID, CHANNEL, UPSTASH_REDIS_REST_URL, UPSTASH_REDIS_REST_TOKEN } from './config/constants.js';
+import { PORT, REDIS_URL, SERVER_ID, CHANNEL, UPSTASH_REDIS_REST_URL, UPSTASH_REDIS_REST_TOKEN, CORS_ORIGIN } from './config/constants.js';
 import type { ClientToServerEvents, ServerToClientEvents, InterServerEvents, SocketData } from './types/index.js';
 import { verifyAccessToken } from './utils/jwt.js';
 import { logger } from './utils/logger.js';
@@ -39,7 +39,17 @@ app.use(cookieParser());
 
 // CORS headers for API routes
 app.use((req, res, next) => {
-  res.header('Access-Control-Allow-Origin', req.headers.origin || '*');
+  const allowedOrigins = [
+    'http://localhost:5173',
+    'http://localhost:5174',
+    'http://localhost:3000',
+    CORS_ORIGIN,
+  ].filter(Boolean);
+  
+  const origin = req.headers.origin;
+  if (origin && allowedOrigins.includes(origin)) {
+    res.header('Access-Control-Allow-Origin', origin);
+  }
   res.header('Access-Control-Allow-Credentials', 'true');
   res.header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
   res.header('Access-Control-Allow-Headers', 'Content-Type, Authorization');
@@ -71,7 +81,12 @@ const httpServer = createServer(app);
 // ============================================
 const io = new Server<ClientToServerEvents, ServerToClientEvents, InterServerEvents, SocketData>(httpServer, {
   cors: {
-    origin: ['http://localhost:5173', 'http://localhost:5174', 'http://localhost:3000', 'http://13.49.78.104'],
+    origin: [
+      'http://localhost:5173',
+      'http://localhost:5174', 
+      'http://localhost:3000',
+      CORS_ORIGIN, // Production frontend URL from env
+    ].filter(Boolean),
     methods: ['GET', 'POST'],
     credentials: true
   },

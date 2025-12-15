@@ -9,6 +9,7 @@ export const REDIS_URL = env.REDIS_URL;
 export const UPSTASH_REDIS_REST_URL = env.UPSTASH_REDIS_REST_URL;
 export const UPSTASH_REDIS_REST_TOKEN = env.UPSTASH_REDIS_REST_TOKEN;
 export const CHANNEL = env.CHANNEL;
+export const CORS_ORIGIN = env.CORS_ORIGIN;
 
 // Redis keys
 export const USERS_KEY = 'online_users';
