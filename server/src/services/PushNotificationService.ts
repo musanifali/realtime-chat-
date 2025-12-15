@@ -142,9 +142,9 @@ export class PushNotificationService {
     message: string
   ): Promise<void> {
     const payload: PushPayload = {
-      title: `💬 ${senderName}`,
-      body: message.length > 100 ? message.substring(0, 100) + '...' : message,
-      tag: `message-${senderName}`,
+      title: '💬 BubuChat',
+      body: 'You have a new message!', // Generic message for privacy
+      tag: `message-${Date.now()}`, // Unique tag to show multiple notifications
       data: {
         type: 'message', // Will trigger longer vibration pattern
         sender: senderName,
