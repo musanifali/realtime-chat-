@@ -103,27 +103,23 @@ class NotificationService {
    * Show notification for new message
    */
   async notifyNewMessage(sender: string, message: string, isPrivate: boolean = true): Promise<void> {
+    const title = isPrivate ? `💬 ${sender}` : `💬 ${sender} (Room)`;
+    const body = message.length > 100 ? message.substring(0, 100) + '...' : message;
+
     // If tab is focused, show in-app toast notification
     if (document.hasFocus()) {
       console.log('📱 Tab focused, showing in-app toast notification');
       window.dispatchEvent(
         new CustomEvent('showToast', {
-          detail: { 
-            title: '💥 New Message!', 
-            body: '', // No message content for privacy
-            icon: '💬' 
-          },
+          detail: { title, body, icon: '💬' },
         })
       );
     } else {
       // Tab not focused, show browser notification
-      const title = '💬 BubuChat';
-      const body = 'You have a new message!'; // Generic message for privacy
-      
       console.log('🔔 Tab not focused, showing browser notification');
       await this.show(title, {
         body,
-        tag: `message-${Date.now()}`, // Unique tag to show multiple notifications
+        tag: `message-${sender}`,
       });
     }
   }

@@ -20,30 +20,15 @@ self.addEventListener('push', function(event) {
   }
 
   const title = data.title || 'BubuChat';
-  
-  // Different vibration patterns for different notification types
-  let vibrationPattern = [200, 100, 200]; // Default
-  
-  if (data.notificationType === 'message') {
-    vibrationPattern = [200, 100, 200, 100, 200]; // Long pattern for messages
-  } else if (data.notificationType === 'friend_request') {
-    vibrationPattern = [100, 50, 100]; // Quick pattern for friend requests
-  } else if (data.notificationType === 'friend_accepted') {
-    vibrationPattern = [300, 100, 300]; // Celebratory pattern
-  }
-  
   const options = {
     body: data.body || 'You have a new message!',
     icon: data.icon || '/pwa-192x192.png',
     badge: data.badge || '/pwa-192x192.png',
     tag: data.tag || 'notification',
-    data: {
-      ...data.data,
-      notificationType: data.notificationType || 'message',
-    },
-    requireInteraction: false,
-    silent: false, // System will use default notification sound
-    vibrate: vibrationPattern,
+    data: data.data || {},
+    requireInteraction: false,  // Changed to false - let system handle auto-dismiss
+    silent: false,
+    vibrate: [200, 100, 200],
     renotify: true,
   };
 

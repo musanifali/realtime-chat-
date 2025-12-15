@@ -21,6 +21,14 @@ export const MessageList: React.FC<MessageListProps> = ({
 }) => {
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
+  // Debug: Log when messages change
+  useEffect(() => {
+    console.log(`📱 [MessageList] Messages updated. Count: ${messages.length}`);
+    if (messages.length > 0) {
+      console.log(`📱 [MessageList] Last message:`, messages[messages.length - 1]);
+    }
+  }, [messages]);
+
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages]);

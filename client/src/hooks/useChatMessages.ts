@@ -97,12 +97,12 @@ export const useChatMessages = () => {
           setUnreadCounts(prev => {
             const newCounts = new Map(prev);
             newCounts.delete(targetFriend!);
-            console.log(`👁️ Currently viewing ${targetFriend}, clearing unread badge`);
+            console.log(`👁️ Currently viewing ${targetFriend}, clearing unread badge, NO notification`);
             return newCounts;
           });
           
-          // Still show notification even if viewing (for awareness)
-          notificationService.notifyNewMessage(targetFriend!, text, true);
+          // DO NOT show notification when actively viewing this chat
+          // User can already see the message in the chatbox
         } else {
           // Not viewing this chat OR not viewing any chat - increment unread
           setUnreadCounts(prev => {
@@ -113,7 +113,8 @@ export const useChatMessages = () => {
             return newCounts;
           });
 
-          // Show notification for new message
+          // Show notification ONLY when not viewing this specific chat
+          console.log(`🔔 Not viewing ${targetFriend}, showing notification`);
           notificationService.notifyNewMessage(targetFriend!, text, true);
         }
       }
