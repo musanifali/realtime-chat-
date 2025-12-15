@@ -30,8 +30,16 @@ self.addEventListener('push', function(event) {
     renotify: true,  // Alert user even if notification with same tag exists
   };
 
+  console.log('[Service Worker] Showing notification:', title, options);
+
   event.waitUntil(
     self.registration.showNotification(title, options)
+      .then(() => {
+        console.log('[Service Worker] ✅ Notification shown successfully');
+      })
+      .catch(error => {
+        console.error('[Service Worker] ❌ Error showing notification:', error);
+      })
   );
 });
 
