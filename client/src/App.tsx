@@ -8,6 +8,7 @@ import { SoundToggle } from './components/SoundToggle/SoundToggle';
 import { NotificationToggle } from './components/NotificationToggle/NotificationToggle';
 import { InstallPrompt } from './components/PWA/InstallPrompt';
 import { UpdatePrompt } from './components/PWA/UpdatePrompt';
+import { ToastContainer } from './components/Toast/Toast';
 import { useChatApp } from './hooks/useChatApp';
 import { filterMessagesForTarget } from './utils/messageFilter';
 import { LogOut } from 'lucide-react';
@@ -285,6 +286,9 @@ function App() {
       {/* PWA Components */}
       <InstallPrompt />
       <UpdatePrompt />
+      
+      {/* In-app Toast Notifications */}
+      <ToastContainer />
     </div>
   );
 }

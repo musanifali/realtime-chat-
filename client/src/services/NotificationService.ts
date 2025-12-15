@@ -106,10 +106,22 @@ class NotificationService {
     const title = isPrivate ? `💬 ${sender}` : `💬 ${sender} (Room)`;
     const body = message.length > 100 ? message.substring(0, 100) + '...' : message;
 
-    await this.show(title, {
-      body,
-      tag: `message-${sender}`,
-    });
+    // If tab is focused, show in-app toast notification
+    if (document.hasFocus()) {
+      console.log('📱 Tab focused, showing in-app toast notification');
+      window.dispatchEvent(
+        new CustomEvent('showToast', {
+          detail: { title, body, icon: '💬' },
+        })
+      );
+    } else {
+      // Tab not focused, show browser notification
+      console.log('🔔 Tab not focused, showing browser notification');
+      await this.show(title, {
+        body,
+        tag: `message-${sender}`,
+      });
+    }
   }
 
   /**
