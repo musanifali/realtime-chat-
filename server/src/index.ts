@@ -11,7 +11,7 @@ import { connectDatabase, disconnectDatabase } from './config/database.js';
 
 import { validateEnvironment } from './config/env.js';
 import { SocketHandlers } from './handlers/SocketHandlers.js';
-import { PORT, REDIS_URL, SERVER_ID, CHANNEL } from './config/constants.js';
+import { PORT, REDIS_URL, SERVER_ID, CHANNEL, UPSTASH_REDIS_REST_URL, UPSTASH_REDIS_REST_TOKEN } from './config/constants.js';
 import type { ClientToServerEvents, ServerToClientEvents, InterServerEvents, SocketData } from './types/index.js';
 import { verifyAccessToken } from './utils/jwt.js';
 import { logger } from './utils/logger.js';
@@ -82,7 +82,7 @@ const io = new Server<ClientToServerEvents, ServerToClientEvents, InterServerEve
 // ============================================
 // Initialize Services
 // ============================================
-const redisService = new RedisService(REDIS_URL);
+const redisService = new RedisService(REDIS_URL, UPSTASH_REDIS_REST_URL, UPSTASH_REDIS_REST_TOKEN);
 const broadcastService = new BroadcastService(redisService, io);
 const pubSubService = new PubSubService(redisService, broadcastService, io);
 const socketHandlers = new SocketHandlers(redisService, pubSubService, broadcastService);
@@ -96,15 +96,20 @@ const socketHandlers = new SocketHandlers(redisService, pubSubService, broadcast
     await connectDatabase();
     logger.db('Connected to MongoDB');
     
-    // Connect to Redis
-    await redisService.connect();
-    logger.redis('Connected to Redis');
-    
-    // Cleanup stale data from previous sessions
-    await redisService.cleanupOnStartup();
-    
-    // Subscribe to Redis channel
-    await pubSubService.setupSubscription();
+    // Connect to Redis (non-fatal if fails)
+    try {
+      await redisService.connect();
+      logger.redis('Connected to Redis');
+      
+      // Cleanup stale data from previous sessions
+      await redisService.cleanupOnStartup();
+      
+      // Subscribe to Redis channel
+      await pubSubService.setupSubscription();
+    } catch (redisError: any) {
+      logger.error('⚠️  Redis connection failed - app will work with reduced functionality', redisError);
+      console.warn('⚠️  Running without Redis - online status tracking may be limited');
+    }
   } catch (error) {
     logger.error('Connection error', error);
     process.exit(1);

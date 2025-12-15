@@ -6,6 +6,8 @@ import { env } from './env.js';
 export const PORT = env.PORT;
 export const SERVER_ID = env.SERVER_ID;
 export const REDIS_URL = env.REDIS_URL;
+export const UPSTASH_REDIS_REST_URL = env.UPSTASH_REDIS_REST_URL;
+export const UPSTASH_REDIS_REST_TOKEN = env.UPSTASH_REDIS_REST_TOKEN;
 export const CHANNEL = env.CHANNEL;
 
 // Redis keys

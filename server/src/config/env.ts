@@ -50,6 +50,10 @@ export const env = {
   MONGODB_URI: requireEnv('MONGODB_URI', 'mongodb://localhost:27017/realtime-chat'),
   REDIS_URL: requireEnv('REDIS_URL', 'redis://localhost:6379'),
   
+  // Upstash Redis REST API (optional, fallback for serverless)
+  UPSTASH_REDIS_REST_URL: process.env.UPSTASH_REDIS_REST_URL || '',
+  UPSTASH_REDIS_REST_TOKEN: process.env.UPSTASH_REDIS_REST_TOKEN || '',
+  
   // JWT
   JWT_SECRET: requireEnv('JWT_SECRET'),
   JWT_REFRESH_SECRET: requireEnv('JWT_REFRESH_SECRET'),
