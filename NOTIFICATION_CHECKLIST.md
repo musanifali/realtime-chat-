@@ -3,6 +3,7 @@
 ## ✅ Fixed Issues:
 
 ### Client Side:
+
 1. ✅ Fixed TypeScript errors in NotificationService (removed vibrate, renotify)
 2. ✅ Fixed unused variable in NotificationToggle component
 3. ✅ Fixed Uint8Array type casting in PushNotificationService
@@ -12,6 +13,7 @@
 7. ✅ Updated VAPID public key in PushNotificationService
 
 ### Server Side:
+
 1. ✅ Added VAPID keys to env.ts configuration
 2. ✅ Updated PushNotificationService to use env config
 3. ✅ Added web-push package (already installed)
@@ -22,6 +24,7 @@
 8. ✅ Integrated push notifications in socket handlers (handlePrivateMessage)
 
 ### PWA:
+
 1. ✅ Created custom service worker for push events (sw-push.js)
 2. ✅ Updated vite.config to import push handler
 3. ✅ Configured VAPID keys in .env file
@@ -29,6 +32,7 @@
 ## 🧪 How to Test:
 
 ### 1. Build Everything:
+
 ```bash
 # Terminal 1 - Build client
 cd client
@@ -40,6 +44,7 @@ npm run build
 ```
 
 ### 2. Start Services:
+
 ```bash
 # Make sure MongoDB is running
 # Make sure Redis is running (docker)
@@ -55,6 +60,7 @@ npm run dev
 ### 3. Test Notifications:
 
 #### In-App Notifications (When Window Not Focused):
+
 1. Open app in browser
 2. Click bell icon → Allow notifications
 3. Open another tab or minimize window
@@ -62,6 +68,7 @@ npm run dev
 5. Should see browser notification!
 
 #### Push Notifications (When App Closed):
+
 1. Install PWA (Add to Home Screen)
 2. Enable notifications via bell icon
 3. Close the app completely
@@ -69,19 +76,24 @@ npm run dev
 5. Should receive push notification!
 
 ### 4. Check Browser Console:
+
 Should see:
+
 - ✅ "Service Worker registered"
 - ✅ "Push subscription saved"
 - ✅ "Subscribed to push notifications"
 
 ### 5. Check Server Console:
+
 Should see:
+
 - ✅ "Push subscription saved for user: [userId]"
 - ✅ "Push notification sent to subscription: ..."
 
 ## 🔍 Debugging:
 
 ### If notifications don't work:
+
 1. Check browser notification permission
 2. Open DevTools → Application → Service Workers (should see active SW)
 3. Check console for errors
@@ -89,12 +101,14 @@ Should see:
 5. Ensure HTTPS (push notifications require secure context)
 
 ### If push subscription fails:
+
 1. Check service worker is registered
 2. Verify PWA is properly installed
 3. Check /api/push/subscribe endpoint returns 200
 4. Look for errors in browser console
 
 ### If push doesn't send:
+
 1. Check server logs for "Push notification sent"
 2. Verify web-push package installed
 3. Ensure VAPID keys in server .env
@@ -103,6 +117,7 @@ Should see:
 ## 📱 What Works Now:
 
 ### Notification Service:
+
 - ✅ Request browser notification permission
 - ✅ Show notifications when window not focused
 - ✅ Auto-close after 5 seconds
@@ -111,6 +126,7 @@ Should see:
 - ✅ Toggle on/off via bell icon
 
 ### Push Notification Service:
+
 - ✅ Subscribe to push notifications
 - ✅ Save subscription to MongoDB
 - ✅ Send push when app is closed
@@ -119,6 +135,7 @@ Should see:
 - ✅ Unsubscribe support
 
 ### Server Integration:
+
 - ✅ Sends push on new message
 - ✅ Only sends if recipient not viewing chat
 - ✅ Stores subscriptions per user
@@ -136,6 +153,7 @@ Should see:
 ## 📊 Database:
 
 ### PushSubscription Collection:
+
 ```javascript
 {
   _id: ObjectId,
