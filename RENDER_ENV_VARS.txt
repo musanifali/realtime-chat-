@@ -1,0 +1,38 @@
+# Environment Variables for Render Backend Deployment
+# Copy these values when deploying to Render.com
+
+# ============================================
+# REQUIRED - Copy these EXACT values
+# ============================================
+
+NODE_ENV=production
+
+PORT=10000
+
+SERVER_ID=render-server-1
+
+CHANNEL=chat-channel
+
+MONGODB_URI=mongodb+srv://musanifali300_db_user:tk2ZFpbEwuuyLbza@cluster0.bx79um5.mongodb.net/realtime-chat?retryWrites=true&w=majority
+
+REDIS_URL=redis://default:AS_OAAIncDFlMjZjOTJlMzM3ODc0M2M2YWY5OTRiOWVhMjdhMjJhM3AxMTIyMzg@settled-terrier-12238.upstash.io:6379
+
+JWT_SECRET=rcFKQIoDsaNizdyw7q0pCBWg23ubtEAjV6nxkRSUH8JGf15TL4XvOhYmPZ9eMl
+
+JWT_REFRESH_SECRET=tvZ3UWiY0k8aDL7hQ5rxRpX4nBgVeIjPASFsOfmG9NcHTJwdybC6z2EqluKM1o
+
+VAPID_PUBLIC_KEY=BHuTBvbPG3o34gpIsWOxMBW_vDSG0QH7ybmBybvAMXAreiIjRekqxLrCS0o3uwNuEvHD368DUhqeUV1RVU7M5xU
+
+VAPID_PRIVATE_KEY=pec1N8RZEiM503nKKnATcy3N-daDv7EUbfaX4den9lM
+
+VAPID_SUBJECT=mailto:admin@bubuchat.com
+
+CORS_ORIGIN=https://bubuchat.vercel.app
+
+# ============================================
+# NOTES:
+# ============================================
+# - After frontend deploys to Vercel, update CORS_ORIGIN with actual Vercel URL
+# - Keep these values secure and private
+# - Never commit this file to git
+# ============================================
