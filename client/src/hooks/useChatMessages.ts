@@ -4,6 +4,7 @@ import { useState, useCallback } from 'react';
 import { ChatMessage } from '../types';
 import { createMessage } from '../utils/messageUtils';
 import { notificationService } from '../services/NotificationService';
+import { soundManager } from '../services/SoundManager';
 
 // Store messages per friend to avoid losing them when switching chats
 type MessageStore = Map<string, ChatMessage[]>;
@@ -88,6 +89,9 @@ export const useChatMessages = () => {
       // Increment unread count ONLY if message was actually added and not currently viewing that friend
       // AND clear unread if currently viewing (message is immediately read)
       if (messageAdded && type === 'private_received') {
+        // Always play sound for new messages
+        soundManager.playMessage();
+        
         if (currentFriend && targetFriend === currentFriend) {
           // Currently viewing this chat - clear unread count immediately
           setUnreadCounts(prev => {
@@ -96,6 +100,9 @@ export const useChatMessages = () => {
             console.log(`👁️ Currently viewing ${targetFriend}, clearing unread badge`);
             return newCounts;
           });
+          
+          // Still show notification even if viewing (for awareness)
+          notificationService.notifyNewMessage(targetFriend!, text, true);
         } else {
           // Not viewing this chat OR not viewing any chat - increment unread
           setUnreadCounts(prev => {

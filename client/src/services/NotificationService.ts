@@ -65,11 +65,6 @@ class NotificationService {
       return;
     }
 
-    // Don't show if window is focused
-    if (document.hasFocus()) {
-      return;
-    }
-
     // Check if notifications are supported
     if (!('Notification' in window)) {
       return;
@@ -91,8 +86,8 @@ class NotificationService {
         ...options,
       });
 
-      // Auto close after 5 seconds
-      setTimeout(() => notification.close(), 5000);
+      // Auto close after 8 seconds (increased for visibility)
+      setTimeout(() => notification.close(), 8000);
 
       // Focus window when notification is clicked
       notification.onclick = () => {

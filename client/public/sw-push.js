@@ -24,8 +24,10 @@ self.addEventListener('push', function(event) {
     badge: data.badge || '/pwa-192x192.png',
     tag: data.tag || 'notification',
     data: data.data || {},
-    requireInteraction: false,
-    silent: false
+    requireInteraction: true,  // Keep notification visible until user interacts
+    silent: false,  // Play sound
+    vibrate: [200, 100, 200],  // Vibration pattern for mobile
+    renotify: true,  // Alert user even if notification with same tag exists
   };
 
   event.waitUntil(

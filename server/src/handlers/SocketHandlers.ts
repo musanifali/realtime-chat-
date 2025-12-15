@@ -205,14 +205,21 @@ export class SocketHandlers {
       messageId: savedMessage._id.toString()
     });
 
-    // Send push notification to recipient (works even if app is closed)
+    // Send push notification ONLY if recipient is offline
     try {
-      await PushNotificationService.notifyNewMessage(
-        recipient._id.toString(),
-        username,
-        data.message
-      );
-      console.log(`${SERVER_ID}: 📱 Push notification sent to ${data.to}`);
+      const isRecipientOnline = await this.redisService.isUsernameTaken(data.to);
+      
+      if (!isRecipientOnline) {
+        // User is offline - send push notification
+        await PushNotificationService.notifyNewMessage(
+          recipient._id.toString(),
+          username,
+          data.message
+        );
+        console.log(`${SERVER_ID}: 📱 Push notification sent to OFFLINE user: ${data.to}`);
+      } else {
+        console.log(`${SERVER_ID}: ℹ️  User ${data.to} is ONLINE - skipping push notification`);
+      }
     } catch (error) {
       console.error(`${SERVER_ID}: ❌ Failed to send push notification:`, error);
       // Don't fail the message if push notification fails

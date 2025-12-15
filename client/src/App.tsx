@@ -13,6 +13,7 @@ import { filterMessagesForTarget } from './utils/messageFilter';
 import { LogOut } from 'lucide-react';
 import { soundManager } from './services/SoundManager';
 import { authService } from './services/authService';
+import { pushNotificationService } from './services/PushNotificationService';
 
 function App() {
   const [input, setInput] = useState('');
@@ -76,6 +77,12 @@ function App() {
         setUsername(user.username);
         // Auto-connect to socket with JWT immediately
         setTimeout(() => connect(), 100);
+        // Initialize push notifications to maintain subscriptions
+        setTimeout(() => {
+          pushNotificationService.initialize().then((hasSubscription) => {
+            console.log('🔔 Push notification status:', hasSubscription ? 'active' : 'inactive');
+          });
+        }, 200);
       } catch (error) {
         // Clear invalid token and set to unauthenticated
         authService.logout();

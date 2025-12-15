@@ -11,9 +11,6 @@ export function NotificationToggle() {
 
   useEffect(() => {
     setEnabled(notificationService.isEnabled());
-    
-    // Initialize push notifications
-    pushNotificationService.initialize();
   }, []);
 
   const handleToggle = async () => {

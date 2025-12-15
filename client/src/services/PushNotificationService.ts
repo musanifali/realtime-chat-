@@ -13,6 +13,7 @@ interface PushSubscriptionData {
 class PushNotificationService {
   private registration: ServiceWorkerRegistration | null = null;
   private subscription: PushSubscription | null = null;
+  private refreshInterval: number | null = null;
 
   /**
    * Initialize push notifications
@@ -32,14 +33,65 @@ class PushNotificationService {
       this.subscription = await this.registration.pushManager.getSubscription();
       
       if (this.subscription) {
-        console.log('Already subscribed to push notifications');
+        console.log('✅ Found existing push subscription');
+        // Refresh the subscription with server to ensure it's still valid
+        await this.sendSubscriptionToServer(this.subscription);
+        // Start periodic refresh
+        this.startSubscriptionRefresh();
         return true;
       }
 
       return false;
     } catch (error) {
-      console.error('Error initializing push notifications:', error);
+      console.error('❌ Error initializing push notifications:', error);
       return false;
+    }
+  }
+
+  /**
+   * Start periodic subscription refresh to keep it alive
+   */
+  private startSubscriptionRefresh(): void {
+    // Clear existing interval
+    if (this.refreshInterval) {
+      clearInterval(this.refreshInterval);
+    }
+
+    // Refresh subscription every 4 minutes to prevent expiration
+    this.refreshInterval = window.setInterval(async () => {
+      try {
+        if (this.subscription && this.registration) {
+          console.log('🔄 Refreshing push subscription...');
+          // Check if subscription is still valid
+          const currentSub = await this.registration.pushManager.getSubscription();
+          
+          if (!currentSub) {
+            console.warn('⚠️ Push subscription lost, resubscribing...');
+            // Re-subscribe if lost
+            const notificationsEnabled = localStorage.getItem('notifications_enabled') !== 'false';
+            if (notificationsEnabled) {
+              await this.subscribe();
+            }
+          } else {
+            // Refresh with server
+            await this.sendSubscriptionToServer(currentSub);
+            this.subscription = currentSub;
+            console.log('✅ Push subscription refreshed');
+          }
+        }
+      } catch (error) {
+        console.error('❌ Error refreshing push subscription:', error);
+      }
+    }, 4 * 60 * 1000); // 4 minutes
+  }
+
+  /**
+   * Stop subscription refresh
+   */
+  private stopSubscriptionRefresh(): void {
+    if (this.refreshInterval) {
+      clearInterval(this.refreshInterval);
+      this.refreshInterval = null;
     }
   }
 
@@ -81,14 +133,17 @@ class PushNotificationService {
         applicationServerKey: convertedVapidKey as BufferSource,
       });
 
-      console.log('Push notification subscription successful');
+      console.log('✅ Push notification subscription successful');
 
       // Send subscription to your server
       await this.sendSubscriptionToServer(this.subscription);
 
+      // Start periodic refresh to keep subscription alive
+      this.startSubscriptionRefresh();
+
       return true;
     } catch (error) {
-      console.error('Error subscribing to push notifications:', error);
+      console.error('❌ Error subscribing to push notifications:', error);
       return false;
     }
   }
@@ -98,6 +153,9 @@ class PushNotificationService {
    */
   async unsubscribe(): Promise<boolean> {
     try {
+      // Stop refresh interval
+      this.stopSubscriptionRefresh();
+
       if (!this.subscription) {
         console.warn('No active subscription to unsubscribe');
         return false;
@@ -109,11 +167,11 @@ class PushNotificationService {
       await this.removeSubscriptionFromServer(this.subscription);
 
       this.subscription = null;
-      console.log('Unsubscribed from push notifications');
+      console.log('✅ Unsubscribed from push notifications');
       
       return true;
     } catch (error) {
-      console.error('Error unsubscribing from push notifications:', error);
+      console.error('❌ Error unsubscribing from push notifications:', error);
       return false;
     }
   }
