@@ -1,6 +1,7 @@
 // client/src/services/PushNotificationService.ts
 
 import { notificationService } from './NotificationService';
+import { API_BASE_URL } from '../config/constants';
 
 interface PushSubscriptionData {
   endpoint: string;
@@ -191,7 +192,7 @@ class PushNotificationService {
 
       const token = localStorage.getItem('token');
       
-      const response = await fetch('/api/push/subscribe', {
+      const response = await fetch(`${API_BASE_URL}/api/push/subscribe`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -218,7 +219,7 @@ class PushNotificationService {
     try {
       const token = localStorage.getItem('token');
       
-      const response = await fetch('/api/push/unsubscribe', {
+      const response = await fetch(`${API_BASE_URL}/api/push/unsubscribe`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

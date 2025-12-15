@@ -1,10 +1,10 @@
 // client/src/services/authService.ts
 
 import axios from 'axios';
+import { API_BASE_URL } from '../config/constants';
 
-// Use relative path for production (nginx proxy), localhost for dev
-const API_URL = import.meta.env.VITE_API_URL || 
-  (import.meta.env.DEV ? 'http://localhost:3001/api' : '/api');
+// Use the centralized API URL configuration
+const API_URL = `${API_BASE_URL}/api`;
 
 axios.defaults.withCredentials = true; // Enable cookies
 

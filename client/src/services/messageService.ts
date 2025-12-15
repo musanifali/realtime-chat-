@@ -1,8 +1,9 @@
 // client/src/services/messageService.ts
 
 import axios from 'axios';
+import { API_BASE_URL } from '../config/constants';
 
-const API_URL = import.meta.env.VITE_API_URL || '/api';
+const API_URL = `${API_BASE_URL}/api`;
 
 axios.defaults.withCredentials = true;
 
