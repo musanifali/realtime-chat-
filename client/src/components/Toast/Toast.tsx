@@ -68,41 +68,41 @@ export const Toast: React.FC<ToastProps> = ({ message, onClose, duration = 3000 
         
         {/* Main notification card */}
         <div 
-          className="relative rounded-2xl p-4 pr-12 min-w-[280px] max-w-[320px] transform -rotate-1 group-hover:rotate-0 transition-all duration-300"
+          className="relative rounded-2xl p-5 min-w-[300px] max-w-[340px] transform -rotate-1 group-hover:rotate-0 transition-all duration-300"
           style={{
             background: 'linear-gradient(135deg, var(--color-primary) 0%, var(--color-secondary) 100%)',
             border: '3px solid var(--color-border)',
             boxShadow: '4px 4px 0 var(--color-border)',
           }}
         >
-          {/* Notification icon */}
-          <div className="flex items-center gap-4">
+          {/* Content - centered layout */}
+          <div className="flex flex-col items-center justify-center text-center gap-3">
+            {/* Large icon at top */}
             <div 
-              className="flex-shrink-0 w-12 h-12 rounded-full flex items-center justify-center text-2xl transform group-hover:scale-110 transition-transform"
+              className="w-16 h-16 rounded-full flex items-center justify-center text-4xl transform group-hover:scale-110 group-hover:rotate-12 transition-all duration-300"
               style={{
                 background: 'white',
                 border: '3px solid var(--color-border)',
-                boxShadow: '2px 2px 0 var(--color-border)',
+                boxShadow: '3px 3px 0 var(--color-border)',
               }}
             >
               {message.icon || '💬'}
             </div>
             
-            {/* Message text */}
-            <div className="flex-1 min-w-0">
-              <h3 
-                className="font-black text-base uppercase tracking-wide mb-1"
-                style={{
-                  color: 'white',
-                  textShadow: '2px 2px 0 var(--color-border)',
-                }}
-              >
-                {message.title}
-              </h3>
-            </div>
+            {/* Message title - centered */}
+            <h3 
+              className="font-black text-xl uppercase tracking-wider"
+              style={{
+                color: 'white',
+                textShadow: '3px 3px 0 var(--color-border)',
+                letterSpacing: '0.05em',
+              }}
+            >
+              {message.title}
+            </h3>
           </div>
           
-          {/* Close button */}
+          {/* Close button - top right corner */}
           <button
             onClick={(e) => {
               e.stopPropagation();
@@ -112,7 +112,7 @@ export const Toast: React.FC<ToastProps> = ({ message, onClose, duration = 3000 
                 onClose();
               }, 400);
             }}
-            className="absolute top-3 right-3 w-8 h-8 rounded-full flex items-center justify-center font-black text-lg transform hover:scale-125 hover:rotate-90 transition-all duration-300"
+            className="absolute top-2 right-2 w-8 h-8 rounded-full flex items-center justify-center font-black text-xl transform hover:scale-125 hover:rotate-90 transition-all duration-300"
             style={{
               background: 'rgba(255, 255, 255, 0.9)',
               border: '2px solid var(--color-border)',
@@ -123,16 +123,24 @@ export const Toast: React.FC<ToastProps> = ({ message, onClose, duration = 3000 
             ×
           </button>
           
-          {/* Comic effect lines */}
+          {/* Comic effect decorations */}
           <div 
-            className="absolute -top-2 -left-2 w-6 h-6 rounded-full opacity-50"
+            className="absolute -top-2 -left-2 w-8 h-8 rounded-full opacity-60 animate-pulse"
             style={{
               background: 'white',
               border: '2px solid var(--color-border)',
             }}
           />
           <div 
-            className="absolute -bottom-1 -right-1 w-4 h-4 rounded-full opacity-50"
+            className="absolute -bottom-2 -right-2 w-6 h-6 rounded-full opacity-60 animate-pulse"
+            style={{
+              background: 'white',
+              border: '2px solid var(--color-border)',
+              animationDelay: '0.5s',
+            }}
+          />
+          <div 
+            className="absolute top-1/2 -left-3 w-5 h-5 rounded-full opacity-50"
             style={{
               background: 'white',
               border: '2px solid var(--color-border)',
