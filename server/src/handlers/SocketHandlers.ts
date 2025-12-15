@@ -4,6 +4,7 @@ import { Socket } from 'socket.io';
 import { RedisService } from '../services/RedisService.js';
 import { PubSubService } from '../services/PubSubService.js';
 import { BroadcastService } from '../services/BroadcastService.js';
+import { PushNotificationService } from '../services/PushNotificationService.js';
 import { ClientToServerEvents, ServerToClientEvents, InterServerEvents, SocketData } from '../types/index.js';
 import { SERVER_ID } from '../config/constants.js';
 
@@ -203,6 +204,19 @@ export class SocketHandlers {
       message: data.message,
       messageId: savedMessage._id.toString()
     });
+
+    // Send push notification to recipient (works even if app is closed)
+    try {
+      await PushNotificationService.notifyNewMessage(
+        recipient._id.toString(),
+        username,
+        data.message
+      );
+      console.log(`${SERVER_ID}: 📱 Push notification sent to ${data.to}`);
+    } catch (error) {
+      console.error(`${SERVER_ID}: ❌ Failed to send push notification:`, error);
+      // Don't fail the message if push notification fails
+    }
 
     console.log(`${SERVER_ID}: ${username} → ${data.to} (private): ${data.message}`);
   }

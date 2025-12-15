@@ -1,6 +1,6 @@
 // client/src/components/GifSticker/GifSearch.tsx
 import React, { useState, useEffect, useRef, useCallback } from 'react';
-import { Search, Loader2 } from 'lucide-react';
+import { Loader2 } from 'lucide-react';
 import { soundManager } from '../../services/SoundManager';
 
 interface GifSearchProps {
@@ -24,7 +24,7 @@ export const GifSearch: React.FC<GifSearchProps> = ({ onSelect, onClose }) => {
   const [offset, setOffset] = useState(0);
   const [hasMore, setHasMore] = useState(true);
   const scrollRef = useRef<HTMLDivElement>(null);
-  const searchTimeoutRef = useRef<NodeJS.Timeout>();
+  const searchTimeoutRef = useRef<number>();
   const offsetRef = useRef(0);
 
   // Using Giphy API

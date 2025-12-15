@@ -1,7 +1,7 @@
 // client/src/components/Friends/UserSearch.tsx
 
 import { useState } from 'react';
-import { Search, UserPlus, Clock, Check, X, Ban } from 'lucide-react';
+import { Search, UserPlus, Clock, Check, Ban } from 'lucide-react';
 import { friendService, SearchResult } from '../../services/friendService';
 import { soundManager } from '../../services/SoundManager';
 

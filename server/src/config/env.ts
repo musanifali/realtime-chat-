@@ -62,6 +62,11 @@ export const env = {
   // CORS
   CORS_ORIGIN: requireEnv('CORS_ORIGIN', 'http://localhost:5173'),
   
+  // VAPID Keys for Push Notifications
+  VAPID_PUBLIC_KEY: process.env.VAPID_PUBLIC_KEY || 'BHuTBvbPG3o34gpIsWOxMBW_vDSG0QH7ybmBybvAMXAreiIjRekqxLrCS0o3uwNuEvHD368DUhqeUV1RVU7M5xU',
+  VAPID_PRIVATE_KEY: process.env.VAPID_PRIVATE_KEY || 'pec1N8RZEiM503nKKnATcy3N-daDv7EUbfaX4den9lM',
+  VAPID_SUBJECT: process.env.VAPID_SUBJECT || 'mailto:admin@bubuchat.com',
+  
   // Features
   ENABLE_RATE_LIMITING: process.env.ENABLE_RATE_LIMITING !== 'false',
   MAX_MESSAGES_PER_MINUTE: parseInt(process.env.MAX_MESSAGES_PER_MINUTE || '30'),

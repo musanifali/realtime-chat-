@@ -5,11 +5,12 @@ import { FriendsContainer } from './components/Friends/FriendsContainer';
 import { UserInfo } from './components/Sidebar/UserInfo';
 import { ChatArea } from './components/Chat/ChatArea';
 import { SoundToggle } from './components/SoundToggle/SoundToggle';
+import { NotificationToggle } from './components/NotificationToggle/NotificationToggle';
 import { InstallPrompt } from './components/PWA/InstallPrompt';
 import { UpdatePrompt } from './components/PWA/UpdatePrompt';
 import { useChatApp } from './hooks/useChatApp';
 import { filterMessagesForTarget } from './utils/messageFilter';
-import { LogOut, Menu, X } from 'lucide-react';
+import { LogOut } from 'lucide-react';
 import { soundManager } from './services/SoundManager';
 import { authService } from './services/authService';
 
@@ -17,7 +18,6 @@ function App() {
   const [input, setInput] = useState('');
   const [showMobileSidebar, setShowMobileSidebar] = useState(false);
   const [isExiting, setIsExiting] = useState(false);
-  const [menuClicked, setMenuClicked] = useState(false);
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [isCheckingAuth, setIsCheckingAuth] = useState(true);
   
@@ -217,7 +217,13 @@ function App() {
           />
         </div>
         
-        <div className="p-3 md:p-4" style={{ borderTop: '4px solid var(--color-border)', boxShadow: '0 -4px 0 var(--color-primary)' }}>
+        <div className="p-3 md:p-4 space-y-3" style={{ borderTop: '4px solid var(--color-border)', boxShadow: '0 -4px 0 var(--color-primary)' }}>
+          {/* Toggles Row */}
+          <div className="flex gap-2 justify-center">
+            <SoundToggle />
+            <NotificationToggle />
+          </div>
+
           <button
             onClick={handleLogout}
             className={`w-full flex items-center justify-center gap-2 px-3 md:px-4 py-2 md:py-3 transition-all duration-200 font-black uppercase text-xs md:text-sm ${isExiting ? 'animate-pulse' : ''}`}

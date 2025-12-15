@@ -3,6 +3,7 @@
 import { useState, useCallback } from 'react';
 import { ChatMessage } from '../types';
 import { createMessage } from '../utils/messageUtils';
+import { notificationService } from '../services/NotificationService';
 
 // Store messages per friend to avoid losing them when switching chats
 type MessageStore = Map<string, ChatMessage[]>;
@@ -104,6 +105,9 @@ export const useChatMessages = () => {
             console.log(`📬 Unread count for ${targetFriend}: ${currentCount} -> ${currentCount + 1} (currentFriend: ${currentFriend || 'none'})`);
             return newCounts;
           });
+
+          // Show notification for new message
+          notificationService.notifyNewMessage(targetFriend!, text, true);
         }
       }
     },
