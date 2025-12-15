@@ -190,7 +190,7 @@ class PushNotificationService {
         },
       };
 
-      const token = localStorage.getItem('token');
+      const token = localStorage.getItem('accessToken');
       
       const response = await fetch(`${API_BASE_URL}/api/push/subscribe`, {
         method: 'POST',
@@ -217,7 +217,7 @@ class PushNotificationService {
    */
   private async removeSubscriptionFromServer(subscription: PushSubscription): Promise<void> {
     try {
-      const token = localStorage.getItem('token');
+      const token = localStorage.getItem('accessToken');
       
       const response = await fetch(`${API_BASE_URL}/api/push/unsubscribe`, {
         method: 'POST',
