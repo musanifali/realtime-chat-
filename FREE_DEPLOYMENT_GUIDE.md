@@ -4,15 +4,15 @@
 
 Migrate from AWS EC2 (paid) to completely **FREE** platforms while maintaining all features:
 
-| Component | Current (AWS) | Free Replacement | Cost Savings |
-|-----------|---------------|------------------|--------------|
-| **Backend** | EC2 ($5-10/mo) | Render Free | **$5-10/mo** |
-| **Database** | MongoDB Local | MongoDB Atlas M0 | **Free** |
-| **Cache** | Redis Local | Upstash Redis | **Free** |
-| **Frontend** | EC2 + Nginx | Vercel/Netlify | **Free** |
-| **SSL** | Manual | Automatic | **Free** |
-| **Process Manager** | PM2 | Built-in | **Free** |
-| **Total Savings** | - | - | **$60-120/year** |
+| Component           | Current (AWS)  | Free Replacement | Cost Savings     |
+| ------------------- | -------------- | ---------------- | ---------------- |
+| **Backend**         | EC2 ($5-10/mo) | Render Free      | **$5-10/mo**     |
+| **Database**        | MongoDB Local  | MongoDB Atlas M0 | **Free**         |
+| **Cache**           | Redis Local    | Upstash Redis    | **Free**         |
+| **Frontend**        | EC2 + Nginx    | Vercel/Netlify   | **Free**         |
+| **SSL**             | Manual         | Automatic        | **Free**         |
+| **Process Manager** | PM2            | Built-in         | **Free**         |
+| **Total Savings**   | -              | -                | **$60-120/year** |
 
 ---
 
@@ -98,6 +98,7 @@ Migrate from AWS EC2 (paid) to completely **FREE** platforms while maintaining a
 3. Save this URL
 
 **Alternative: Use Redis REST API** (recommended for serverless):
+
 ```
 UPSTASH_REDIS_REST_URL=https://us1-tops-shark-12345.upstash.io
 UPSTASH_REDIS_REST_TOKEN=YOUR_TOKEN
@@ -216,6 +217,7 @@ git push
 3. Click **"New +"** → **"Web Service"**
 4. Connect your GitHub repository: `bubuchat`
 5. Configure:
+
    - **Name:** `bubuchat-backend`
    - **Region:** Oregon (or closest)
    - **Branch:** `main`
@@ -243,6 +245,7 @@ git push
 7. Click **"Create Web Service"**
 
 **Wait for Deployment** (5-10 minutes):
+
 - Render will build and deploy automatically
 - You'll get a URL like: `https://bubuchat-backend.onrender.com`
 
@@ -269,15 +272,17 @@ VITE_SOCKET_URL=https://bubuchat-backend.onrender.com
 **Update `client/src/config/constants.ts`:**
 
 ```typescript
-export const API_BASE_URL = import.meta.env.VITE_API_URL || 
-  (import.meta.env.PROD 
-    ? 'https://bubuchat-backend.onrender.com' 
-    : 'http://localhost:3001');
+export const API_BASE_URL =
+  import.meta.env.VITE_API_URL ||
+  (import.meta.env.PROD
+    ? "https://bubuchat-backend.onrender.com"
+    : "http://localhost:3001");
 
-export const SOCKET_URL = import.meta.env.VITE_SOCKET_URL || 
-  (import.meta.env.PROD 
-    ? 'https://bubuchat-backend.onrender.com' 
-    : 'http://localhost:3001');
+export const SOCKET_URL =
+  import.meta.env.VITE_SOCKET_URL ||
+  (import.meta.env.PROD
+    ? "https://bubuchat-backend.onrender.com"
+    : "http://localhost:3001");
 ```
 
 **Commit Changes:**
@@ -333,6 +338,7 @@ vercel --prod
 6. Click **"Deploy"**
 
 **Your Frontend URL:**
+
 - You'll get: `https://bubuchat.vercel.app`
 - Or custom domain if you set one up
 
@@ -438,6 +444,7 @@ mongorestore --uri="mongodb+srv://bubuchat-admin:PASSWORD@cluster.mongodb.net/re
 ### Environment Variables
 
 **Backend (Render):**
+
 ```env
 NODE_ENV=production
 PORT=3001
@@ -452,6 +459,7 @@ CORS_ORIGIN=https://bubuchat.vercel.app
 ```
 
 **Frontend (Vercel):**
+
 ```env
 VITE_API_URL=https://bubuchat-backend.onrender.com
 VITE_SOCKET_URL=https://bubuchat-backend.onrender.com
@@ -466,21 +474,25 @@ VITE_SOCKET_URL=https://bubuchat-backend.onrender.com
 ⚠️ **Auto-Sleep After 15 Minutes of Inactivity**
 
 **Problem:** Free tier services sleep after 15 min of no requests.
+
 - First request after sleep takes ~30 seconds to wake up
 - Users will experience delay on first visit
 
 **Solutions:**
 
 **Option 1: Accept the Delay** (Simplest)
+
 - Show loading message: "Waking up server, please wait..."
 - Most users won't notice after first load
 
 **Option 2: Keep-Alive Ping** (External Service)
+
 - Use [UptimeRobot](https://uptimerobot.com/) (Free)
 - Ping your backend every 5 minutes
 - Keeps service awake 24/7
 
 **Setup UptimeRobot:**
+
 1. Sign up at UptimeRobot.com
 2. Add New Monitor:
    - Type: HTTP(s)
@@ -489,6 +501,7 @@ VITE_SOCKET_URL=https://bubuchat-backend.onrender.com
 3. This keeps your backend alive
 
 **Option 3: Upgrade to Paid** ($7/month)
+
 - No sleep
 - Better performance
 - Still cheaper than AWS EC2
@@ -502,6 +515,7 @@ VITE_SOCKET_URL=https://bubuchat-backend.onrender.com
 - **Backups:** Manual only (no auto-backups)
 
 **If you exceed 512MB:**
+
 - Upgrade to M2 ($9/month) for 2GB
 - Or implement data retention policy (delete old messages)
 
@@ -514,6 +528,7 @@ VITE_SOCKET_URL=https://bubuchat-backend.onrender.com
 - **Global replication**
 
 **If you exceed limits:**
+
 - Upgrade to Pay-as-you-go ($0.20 per 100K commands)
 - Or optimize Redis usage (use for PubSub only, not session storage)
 
@@ -522,6 +537,7 @@ VITE_SOCKET_URL=https://bubuchat-backend.onrender.com
 ### WebSocket Considerations
 
 **Render supports WebSockets** but:
+
 - Free tier has connection time limits
 - May disconnect after 5 minutes of inactivity
 - Implement reconnection logic (already in your code ✅)
@@ -533,6 +549,7 @@ VITE_SOCKET_URL=https://bubuchat-backend.onrender.com
 After deployment, test all features:
 
 - [ ] **Registration & Login**
+
   ```bash
   curl -X POST https://bubuchat-backend.onrender.com/api/auth/register \
     -H "Content-Type: application/json" \
@@ -540,21 +557,25 @@ After deployment, test all features:
   ```
 
 - [ ] **Frontend Loads**
+
   - Visit: `https://bubuchat.vercel.app`
   - Should see login screen
 
 - [ ] **WebSocket Connection**
+
   - Login as two users
   - Send message
   - Should receive instantly
 
 - [ ] **Push Notifications**
+
   - Enable notifications
   - Close PWA
   - Send message from another device
   - Should receive push notification
 
 - [ ] **PWA Installation**
+
   - Visit on mobile
   - "Add to Home Screen" should appear
   - Install and test offline
@@ -571,12 +592,15 @@ After deployment, test all features:
 Enable automatic deployments on git push:
 
 **Render:**
+
 - Already auto-deploys on push to `main` branch ✅
 
 **Vercel:**
+
 - Already auto-deploys on push to `main` branch ✅
 
 **Workflow:**
+
 ```bash
 # Make changes
 git add .
@@ -626,6 +650,7 @@ git push
 ### Backend Won't Start on Render
 
 **Check Logs:**
+
 ```
 Render Dashboard → bubuchat-backend → Logs
 ```
@@ -633,10 +658,12 @@ Render Dashboard → bubuchat-backend → Logs
 **Common Issues:**
 
 1. **Missing Environment Variables**
+
    - Go to Environment tab
    - Add missing vars
 
 2. **Build Failed**
+
    - Check `package.json` scripts
    - Ensure `build` command exists
 
@@ -646,25 +673,29 @@ Render Dashboard → bubuchat-backend → Logs
 ### Frontend Can't Connect to Backend
 
 **Check CORS:**
+
 ```javascript
 // In server, ensure CORS_ORIGIN matches frontend URL
 CORS_ORIGIN=https://bubuchat.vercel.app
 ```
 
 **Check API URL:**
+
 ```javascript
 // In client/src/config/constants.ts
-export const API_BASE_URL = 'https://bubuchat-backend.onrender.com';
+export const API_BASE_URL = "https://bubuchat-backend.onrender.com";
 ```
 
 ### MongoDB Connection Issues
 
 **Check Connection String:**
+
 - Must include database name: `/realtime-chat`
 - Password must be URL-encoded
 - IP whitelist includes 0.0.0.0/0
 
 **Test Connection:**
+
 ```bash
 mongosh "mongodb+srv://user:pass@cluster.mongodb.net/realtime-chat"
 ```
@@ -672,11 +703,13 @@ mongosh "mongodb+srv://user:pass@cluster.mongodb.net/realtime-chat"
 ### Redis Connection Issues
 
 **Check Redis URL Format:**
+
 ```
 redis://default:PASSWORD@hostname:6379
 ```
 
 **Test Connection:**
+
 ```bash
 redis-cli -u redis://default:PASSWORD@hostname:6379 PING
 ```
@@ -687,23 +720,23 @@ redis-cli -u redis://default:PASSWORD@hostname:6379 PING
 
 ### Before (AWS)
 
-| Service | Cost/Month |
-|---------|------------|
-| EC2 t2.micro | $8.50 |
-| Data Transfer | $1-2 |
-| **Total** | **~$10/mo** |
-| **Annual** | **~$120/year** |
+| Service       | Cost/Month     |
+| ------------- | -------------- |
+| EC2 t2.micro  | $8.50          |
+| Data Transfer | $1-2           |
+| **Total**     | **~$10/mo**    |
+| **Annual**    | **~$120/year** |
 
 ### After (Free Platforms)
 
-| Service | Cost/Month |
-|---------|------------|
-| Render Free | $0 |
-| MongoDB Atlas M0 | $0 |
-| Upstash Redis Free | $0 |
-| Vercel Free | $0 |
-| **Total** | **$0/mo** |
-| **Annual** | **$0/year** |
+| Service            | Cost/Month  |
+| ------------------ | ----------- |
+| Render Free        | $0          |
+| MongoDB Atlas M0   | $0          |
+| Upstash Redis Free | $0          |
+| Vercel Free        | $0          |
+| **Total**          | **$0/mo**   |
+| **Annual**         | **$0/year** |
 
 ### **Savings: $120/year** 💰
 
@@ -714,14 +747,17 @@ redis-cli -u redis://default:PASSWORD@hostname:6379 PING
 ### Optional Enhancements
 
 1. **Custom Domain** (Free)
+
    - Vercel: Settings → Domains → Add custom domain
    - Render: Settings → Custom Domain
 
 2. **Monitoring Alerts**
+
    - UptimeRobot: Email alerts when backend goes down
    - Sentry: Error tracking (free tier)
 
 3. **Analytics**
+
    - Google Analytics (free)
    - Vercel Analytics (free)
 
@@ -734,6 +770,7 @@ redis-cli -u redis://default:PASSWORD@hostname:6379 PING
 ## 📝 Summary
 
 ✅ **What You Get:**
+
 - Fully functional chat app
 - All features working (WebSocket, Push, PWA)
 - Automatic SSL/HTTPS
@@ -742,6 +779,7 @@ redis-cli -u redis://default:PASSWORD@hostname:6379 PING
 - Better reliability than single EC2 instance
 
 ✅ **What You Save:**
+
 - $120/year in AWS costs
 - No server management
 - No SSL certificate management
@@ -749,6 +787,7 @@ redis-cli -u redis://default:PASSWORD@hostname:6379 PING
 - No Nginx configuration
 
 ✅ **Trade-offs:**
+
 - Backend sleeps after 15min inactivity (use UptimeRobot to solve)
 - 512MB MongoDB storage (sufficient for most use cases)
 - 10K Redis commands/day (plenty for small-medium apps)
@@ -784,6 +823,7 @@ vercel --prod
 If you encounter issues:
 
 1. **Check Logs:**
+
    - Render: Dashboard → Service → Logs
    - Vercel: Dashboard → Deployment → Function Logs
    - MongoDB: Atlas → Monitoring

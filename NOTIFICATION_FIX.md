@@ -12,16 +12,19 @@ Notifications were stopping after approximately 5 minutes due to:
 ## Root Causes
 
 ### 1. Subscription Expiration
+
 - Browser push subscriptions can expire if not refreshed
 - No mechanism to check if subscription was still valid
 - Server may have lost track of subscriptions
 
 ### 2. Service Worker Lifecycle
+
 - When service worker updates, push subscriptions can be lost
 - No automatic re-subscription after SW update
 - No validation that subscription persists across SW updates
 
 ### 3. Initialization Timing
+
 - Push notifications only initialized in NotificationToggle component
 - Not initialized on app load
 - Subscriptions not checked/refreshed on page reload
@@ -31,12 +34,13 @@ Notifications were stopping after approximately 5 minutes due to:
 ### 1. Automatic Subscription Refresh (PushNotificationService.ts)
 
 **Added periodic refresh mechanism:**
+
 ```typescript
 private startSubscriptionRefresh(): void {
   this.refreshInterval = window.setInterval(async () => {
     // Check subscription every 4 minutes
     const currentSub = await this.registration.pushManager.getSubscription();
-    
+
     if (!currentSub) {
       // Re-subscribe if lost
       await this.subscribe();
@@ -49,6 +53,7 @@ private startSubscriptionRefresh(): void {
 ```
 
 **Benefits:**
+
 - ✅ Keeps subscription alive by refreshing every 4 minutes
 - ✅ Automatically re-subscribes if subscription is lost
 - ✅ Updates server with current subscription state
@@ -57,10 +62,11 @@ private startSubscriptionRefresh(): void {
 ### 2. Enhanced Initialization (PushNotificationService.ts)
 
 **Improved initialization to validate existing subscriptions:**
+
 ```typescript
 async initialize(): Promise<boolean> {
   this.subscription = await this.registration.pushManager.getSubscription();
-  
+
   if (this.subscription) {
     console.log('✅ Found existing push subscription');
     // Refresh the subscription with server
@@ -74,6 +80,7 @@ async initialize(): Promise<boolean> {
 ```
 
 **Benefits:**
+
 - ✅ Finds and validates existing subscriptions
 - ✅ Refreshes subscription with server on startup
 - ✅ Starts refresh interval automatically
@@ -82,16 +89,19 @@ async initialize(): Promise<boolean> {
 ### 3. App-Level Initialization (App.tsx)
 
 **Added push notification initialization after authentication:**
+
 ```typescript
 useEffect(() => {
   const checkAuth = async () => {
     // ... authentication logic ...
-    
+
     // Initialize push notifications to maintain subscriptions
     setTimeout(() => {
       pushNotificationService.initialize().then((hasSubscription) => {
-        console.log('🔔 Push notification status:', 
-          hasSubscription ? 'active' : 'inactive');
+        console.log(
+          "🔔 Push notification status:",
+          hasSubscription ? "active" : "inactive"
+        );
       });
     }, 200);
   };
@@ -100,6 +110,7 @@ useEffect(() => {
 ```
 
 **Benefits:**
+
 - ✅ Initializes push notifications on every app load
 - ✅ Works independently of notification toggle button
 - ✅ Ensures subscriptions are active before user interaction
@@ -108,16 +119,18 @@ useEffect(() => {
 ### 4. Cleanup on Unsubscribe (PushNotificationService.ts)
 
 **Added proper cleanup when unsubscribing:**
+
 ```typescript
 async unsubscribe(): Promise<boolean> {
   // Stop refresh interval
   this.stopSubscriptionRefresh();
-  
+
   // ... unsubscribe logic ...
 }
 ```
 
 **Benefits:**
+
 - ✅ Stops unnecessary refresh interval when notifications disabled
 - ✅ Cleans up resources properly
 - ✅ Prevents memory leaks
@@ -222,7 +235,7 @@ Check MongoDB for push subscriptions:
 
 ```javascript
 // In MongoDB shell or Compass
-db.pushsubscriptions.find({}).pretty()
+db.pushsubscriptions.find({}).pretty();
 
 // You should see:
 // - endpoint (browser push endpoint)
@@ -236,24 +249,28 @@ db.pushsubscriptions.find({}).pretty()
 ### Console Logs to Watch
 
 **On App Load:**
+
 ```
 ✅ Found existing push subscription
 🔔 Push notification status: active
 ```
 
 **Every 4 Minutes:**
+
 ```
 🔄 Refreshing push subscription...
 ✅ Push subscription refreshed
 ```
 
 **On Subscription Loss:**
+
 ```
 ⚠️ Push subscription lost, resubscribing...
 ✅ Push notification subscription successful
 ```
 
 **On New Subscription:**
+
 ```
 ✅ Push notification subscription successful
 ✅ Push subscription refreshed
@@ -278,6 +295,7 @@ db.pushsubscriptions.find({}).pretty()
 ### Server-Side Considerations
 
 The server-side `PushNotificationService` already handles:
+
 - ✅ Invalid subscriptions (410/404 errors)
 - ✅ Auto-removal of dead endpoints
 - ✅ Multiple devices per user
@@ -285,32 +303,35 @@ The server-side `PushNotificationService` already handles:
 
 ## What's Fixed
 
-| Issue | Before | After |
-|-------|--------|-------|
-| **5 min timeout** | ❌ Notifications stopped | ✅ Works indefinitely |
-| **Page reload** | ❌ Lost subscription | ✅ Auto-reconnects |
-| **SW update** | ❌ Subscription cleared | ✅ Persists across updates |
-| **Long sessions** | ❌ Required re-enable | ✅ Stays active |
-| **Background refresh** | ❌ None | ✅ Every 4 minutes |
-| **Auto recovery** | ❌ Manual re-enable | ✅ Automatic resubscribe |
+| Issue                  | Before                   | After                      |
+| ---------------------- | ------------------------ | -------------------------- |
+| **5 min timeout**      | ❌ Notifications stopped | ✅ Works indefinitely      |
+| **Page reload**        | ❌ Lost subscription     | ✅ Auto-reconnects         |
+| **SW update**          | ❌ Subscription cleared  | ✅ Persists across updates |
+| **Long sessions**      | ❌ Required re-enable    | ✅ Stays active            |
+| **Background refresh** | ❌ None                  | ✅ Every 4 minutes         |
+| **Auto recovery**      | ❌ Manual re-enable      | ✅ Automatic resubscribe   |
 
 ## Next Steps
 
 ### For Production Deployment
 
 1. **Build and deploy** with these fixes:
+
    ```bash
    cd client
    npm run build
    ```
 
 2. **Test in production**:
+
    - Enable notifications
    - Wait 10 minutes
    - Send test message
    - Verify notification received
 
 3. **Monitor logs**:
+
    ```bash
    pm2 logs chat-server
    # Watch for: "✅ Push notification sent"
@@ -320,8 +341,8 @@ The server-side `PushNotificationService` already handles:
    ```javascript
    // Remove old/invalid subscriptions
    db.pushsubscriptions.deleteMany({
-     updatedAt: { $lt: new Date(Date.now() - 7*24*60*60*1000) }
-   })
+     updatedAt: { $lt: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000) },
+   });
    ```
 
 ### Performance Impact

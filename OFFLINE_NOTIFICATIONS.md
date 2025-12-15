@@ -7,12 +7,14 @@ Push notifications now intelligently detect if a user is **online or offline** a
 ## The Problem Before
 
 **Old Behavior:**
+
 - Push notifications sent to ALL users
 - Even if user was actively chatting (online)
 - Resulted in duplicate notifications
 - Wasted server resources and battery
 
 **Example:**
+
 ```
 User A sends message to User B
 User B is online and chatting
@@ -22,11 +24,13 @@ User B is online and chatting
 ## The Solution Now
 
 **New Smart Behavior:**
+
 - Check if recipient is online (connected via WebSocket)
 - **If ONLINE**: Skip push notification (they'll get it via WebSocket)
 - **If OFFLINE**: Send push notification (app is closed)
 
 **Example:**
+
 ```
 User A sends message to User B
 
@@ -102,6 +106,7 @@ Users are tracked in **Redis Set** called `chat:users`:
 - **Query online status** → Check if username exists in set
 
 **Redis Commands Used:**
+
 ```redis
 SADD chat:users "username"     # User goes online
 SREM chat:users "username"     # User goes offline
@@ -196,21 +201,25 @@ User A sends message to User B
 ## Benefits
 
 ### 1. **Battery Life Saved**
+
 - No unnecessary push notifications
 - Push only when truly needed
 - Reduces wake-ups on mobile devices
 
 ### 2. **Better User Experience**
+
 - No duplicate notifications
 - Online users: instant WebSocket delivery
 - Offline users: reliable push delivery
 
 ### 3. **Server Resources Saved**
+
 - Fewer push API calls
 - Reduced network traffic
 - Lower costs (push services often charge per notification)
 
 ### 4. **Smart Delivery**
+
 - Right notification method at right time
 - WebSocket for online (instant, low latency)
 - Push for offline (reliable, works when app closed)
@@ -218,6 +227,7 @@ User A sends message to User B
 ## Statistics
 
 ### Before Optimization:
+
 ```
 100 messages sent
 100 push notifications sent
@@ -226,6 +236,7 @@ Result: 50% wasted push notifications
 ```
 
 ### After Optimization:
+
 ```
 100 messages sent
 50 push notifications sent (only to offline users)
@@ -238,17 +249,20 @@ Result: 100% efficient delivery
 ### Console Logs to Watch
 
 **When recipient is ONLINE:**
+
 ```
 ℹ️  User john is ONLINE - skipping push notification
 ```
 
 **When recipient is OFFLINE:**
+
 ```
 📱 Push notification sent to OFFLINE user: john
 ✅ Push notification sent successfully
 ```
 
 **When push fails (invalid subscription):**
+
 ```
 ❌ Failed to send push notification: [error details]
 🗑️ Removing invalid subscription
@@ -257,6 +271,7 @@ Result: 100% efficient delivery
 ### Redis Monitoring
 
 Check online users:
+
 ```bash
 redis-cli
 > SMEMBERS chat:users
@@ -268,6 +283,7 @@ redis-cli
 ```
 
 Check if specific user is online:
+
 ```bash
 redis-cli
 > SISMEMBER chat:users "john"
@@ -277,20 +293,24 @@ redis-cli
 ## Edge Cases Handled
 
 ### 1. Redis Connection Lost
+
 ```typescript
 if (!this.isConnected()) {
-  console.warn('⚠️  Redis not connected');
-  return false;  // Assume offline, send push
+  console.warn("⚠️  Redis not connected");
+  return false; // Assume offline, send push
 }
 ```
+
 **Behavior:** If Redis is down, assume user is offline and send push (safer).
 
 ### 2. Multiple Devices
+
 - User can be online on multiple devices
 - If ANY device is connected → user is "online"
 - Push only sent if ALL devices are disconnected
 
 ### 3. Connection Flicker
+
 - User loses connection briefly (network hiccup)
 - Redis immediately marks as offline
 - Push notification sent
@@ -299,6 +319,7 @@ if (!this.isConnected()) {
 **Solution:** Message deduplication (already implemented via messageId).
 
 ### 4. Logged Out vs Disconnected
+
 - **Logged out:** User explicitly logged out → removed from Redis → offline
 - **Disconnected:** Connection lost → removed from Redis → offline
 - **Both cases:** Receive push notification if message arrives
@@ -316,10 +337,10 @@ const isRecipientOnline = await this.redisService.isUsernameTaken(data.to);
 if (!isRecipientOnline) {
   // Wait 5 seconds to see if user reconnects
   await new Promise(resolve => setTimeout(resolve, 5000));
-  
+
   // Check again
   const stillOffline = !(await this.redisService.isUsernameTaken(data.to));
-  
+
   if (stillOffline) {
     // Send push only if still offline after grace period
     await PushNotificationService.notifyNewMessage(...);
@@ -343,17 +364,20 @@ if (!isRecipientOnline && userPrefs.pushNotificationsEnabled) {
 ## Deployment Steps
 
 1. **Build Server:**
+
    ```bash
    cd server
    npm run build
    ```
 
 2. **Restart Server:**
+
    ```bash
    pm2 restart chat-server
    ```
 
 3. **Monitor Logs:**
+
    ```bash
    pm2 logs chat-server
    # Watch for:
@@ -371,11 +395,13 @@ if (!isRecipientOnline && userPrefs.pushNotificationsEnabled) {
 ### Issue: Offline users not receiving push
 
 **Check:**
+
 1. Is user subscribed to push? Check `pushsubscriptions` collection
 2. Is VAPID key configured? Check server logs
 3. Is push subscription valid? Old subscriptions might be expired
 
 **Fix:**
+
 ```bash
 # Check MongoDB for subscriptions
 db.pushsubscriptions.find({ userId: ObjectId("...") })
@@ -387,11 +413,13 @@ db.pushsubscriptions.find({ userId: ObjectId("...") })
 ### Issue: Online users still receiving push
 
 **Check:**
+
 1. Is Redis connected? Check server logs
 2. Is user in Redis set? `redis-cli SMEMBERS chat:users`
 3. Is WebSocket connected? Check client console
 
 **Fix:**
+
 ```bash
 # Verify Redis connection
 redis-cli PING
@@ -422,12 +450,12 @@ See "Configuration" section above for delay implementation.
 
 ## Key Metrics
 
-| Metric | Before | After |
-|--------|--------|-------|
-| **Push notifications/day** | 10,000 | 5,000 |
-| **Wasted notifications** | ~50% | 0% |
-| **Battery impact** | High | Low |
-| **User satisfaction** | Annoyed (duplicates) | Happy (smart) |
-| **Server costs** | Higher | Lower |
+| Metric                     | Before               | After         |
+| -------------------------- | -------------------- | ------------- |
+| **Push notifications/day** | 10,000               | 5,000         |
+| **Wasted notifications**   | ~50%                 | 0%            |
+| **Battery impact**         | High                 | Low           |
+| **User satisfaction**      | Annoyed (duplicates) | Happy (smart) |
+| **Server costs**           | Higher               | Lower         |
 
 🎉 **Your offline notification system is now production-ready!**

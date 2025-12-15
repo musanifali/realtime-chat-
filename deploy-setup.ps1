@@ -19,7 +19,8 @@ if (-not (Test-Path ".git")) {
     Write-Host "   Initializing Git repository..." -ForegroundColor Gray
     git init
     Write-Host "   ✅ Git initialized" -ForegroundColor Green
-} else {
+}
+else {
     Write-Host "   ✅ Git already initialized" -ForegroundColor Green
 }
 
@@ -31,30 +32,33 @@ $filesCreated = 0
 
 if (Test-Path "render.yaml") {
     Write-Host "   ✅ render.yaml already exists" -ForegroundColor Green
-} else {
+}
+else {
     Write-Host "   ⚠️  render.yaml not found - please create it manually" -ForegroundColor Yellow
 }
 
 if (Test-Path "client\.env.production") {
     Write-Host "   ✅ client/.env.production already exists" -ForegroundColor Green
-} else {
+}
+else {
     Write-Host "   ⚠️  client/.env.production not found - please create it manually" -ForegroundColor Yellow
 }
 
 if (Test-Path "client\vercel.json") {
     Write-Host "   ✅ client/vercel.json already exists" -ForegroundColor Green
-} else {
+}
+else {
     Write-Host "   ⚠️  client/vercel.json not found - please create it manually" -ForegroundColor Yellow
 }
 
 # Step 3: Generate secrets
 Write-Host "`n🔐 Step 3: Generating JWT Secrets..." -ForegroundColor Yellow
 Write-Host "   JWT_SECRET:" -ForegroundColor Gray
-$jwtSecret = -join ((48..57) + (65..90) + (97..122) | Get-Random -Count 64 | ForEach-Object {[char]$_})
+$jwtSecret = -join ((48..57) + (65..90) + (97..122) | Get-Random -Count 64 | ForEach-Object { [char]$_ })
 Write-Host "   $jwtSecret" -ForegroundColor Cyan
 
 Write-Host "`n   JWT_REFRESH_SECRET:" -ForegroundColor Gray
-$jwtRefreshSecret = -join ((48..57) + (65..90) + (97..122) | Get-Random -Count 64 | ForEach-Object {[char]$_})
+$jwtRefreshSecret = -join ((48..57) + (65..90) + (97..122) | Get-Random -Count 64 | ForEach-Object { [char]$_ })
 Write-Host "   $jwtRefreshSecret" -ForegroundColor Cyan
 
 Write-Host "`n   💾 Save these secrets - you'll need them for Render!" -ForegroundColor Yellow
@@ -66,11 +70,13 @@ if (Test-Path "server\.env") {
     if ($envContent -match "VAPID_PUBLIC_KEY") {
         Write-Host "   ✅ VAPID keys found in server/.env" -ForegroundColor Green
         Write-Host "   📝 Copy these keys to Render environment variables" -ForegroundColor Yellow
-    } else {
+    }
+    else {
         Write-Host "   ⚠️  VAPID keys not found in server/.env" -ForegroundColor Yellow
         Write-Host "   Generate them with: cd server; npx web-push generate-vapid-keys" -ForegroundColor Gray
     }
-} else {
+}
+else {
     Write-Host "   ⚠️  server/.env not found" -ForegroundColor Yellow
     Write-Host "   Generate VAPID keys with: cd server; npx web-push generate-vapid-keys" -ForegroundColor Gray
 }
@@ -80,7 +86,8 @@ Write-Host "`n📦 Step 5: Verifying server package.json..." -ForegroundColor Ye
 $packageJson = Get-Content "server\package.json" | ConvertFrom-Json
 if ($packageJson.scripts.build -and $packageJson.scripts.start) {
     Write-Host "   ✅ Build and start scripts configured" -ForegroundColor Green
-} else {
+}
+else {
     Write-Host "   ⚠️  Missing scripts in server/package.json" -ForegroundColor Yellow
     Write-Host "   Add these to scripts section:" -ForegroundColor Gray
     Write-Host '   "build": "tsc"' -ForegroundColor Gray
@@ -96,7 +103,8 @@ if ($gitStatus) {
     Write-Host "`n   Run these commands to commit:" -ForegroundColor Yellow
     Write-Host "   git add ." -ForegroundColor Cyan
     Write-Host "   git commit -m 'Prepare for free platform deployment'" -ForegroundColor Cyan
-} else {
+}
+else {
     Write-Host "   ✅ No uncommitted changes" -ForegroundColor Green
 }
 

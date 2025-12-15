@@ -98,6 +98,7 @@ export class PushNotificationService {
         icon: payload.icon || '/pwa-192x192.png',
         badge: payload.badge || '/pwa-192x192.png',
         tag: payload.tag || 'notification',
+        notificationType: payload.data?.type || 'message', // For custom vibration patterns
         data: payload.data || {},
       });
 
@@ -145,7 +146,7 @@ export class PushNotificationService {
       body: message.length > 100 ? message.substring(0, 100) + '...' : message,
       tag: `message-${senderName}`,
       data: {
-        type: 'message',
+        type: 'message', // Will trigger longer vibration pattern
         sender: senderName,
         url: '/',
       },

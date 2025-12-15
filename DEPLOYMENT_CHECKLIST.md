@@ -74,6 +74,7 @@ npx web-push generate-vapid-keys
 ```
 
 Save the output:
+
 ```
 Public Key: BHuTBvbPG3o34gpIsW...
 Private Key: pec1N8RZEiM503nKK...
@@ -87,6 +88,7 @@ Private Key: pec1N8RZEiM503nKK...
 ```
 
 Run twice to get two different secrets:
+
 - [ ] JWT_SECRET: `<save this>`
 - [ ] JWT_REFRESH_SECRET: `<save this>`
 
@@ -151,6 +153,7 @@ Should return: `{"status":"ok","server":"render-server-1"}`
 ### 11. Update Frontend URLs
 
 - [ ] Edit `client/.env.production`:
+
   ```env
   VITE_API_URL=https://bubuchat-backend.onrender.com
   VITE_SOCKET_URL=https://bubuchat-backend.onrender.com
@@ -268,11 +271,13 @@ mongorestore --uri="mongodb+srv://bubuchat-admin:PASSWORD@cluster.mongodb.net/re
 ### 16. Test All Features
 
 **Basic Authentication:**
+
 - [ ] Register new user on Vercel frontend
 - [ ] Login with credentials
 - [ ] JWT token works
 
 **Messaging:**
+
 - [ ] Open two browsers (different users)
 - [ ] Send friend request
 - [ ] Accept friend request
@@ -280,11 +285,13 @@ mongorestore --uri="mongodb+srv://bubuchat-admin:PASSWORD@cluster.mongodb.net/re
 - [ ] Messages appear in real-time ✅
 
 **WebSocket:**
+
 - [ ] Send message
 - [ ] Typing indicator works
 - [ ] Real-time delivery works ✅
 
 **Push Notifications:**
+
 - [ ] Enable notifications (bell icon)
 - [ ] Check browser permission granted
 - [ ] Minimize browser/PWA
@@ -292,6 +299,7 @@ mongorestore --uri="mongodb+srv://bubuchat-admin:PASSWORD@cluster.mongodb.net/re
 - [ ] Receive push notification ✅
 
 **PWA Installation:**
+
 - [ ] Visit on mobile browser
 - [ ] "Add to Home Screen" appears
 - [ ] Install PWA
@@ -299,6 +307,7 @@ mongorestore --uri="mongodb+srv://bubuchat-admin:PASSWORD@cluster.mongodb.net/re
 - [ ] Push notifications work when app closed ✅
 
 **Offline Notifications:**
+
 - [ ] User A online
 - [ ] User B completely closes app (offline)
 - [ ] User A sends message to User B
@@ -324,12 +333,14 @@ mongorestore --uri="mongodb+srv://bubuchat-admin:PASSWORD@cluster.mongodb.net/re
 ### 18. Custom Domain (Optional)
 
 **On Vercel:**
+
 - [ ] Go to Project Settings → Domains
 - [ ] Add custom domain: `bubuchat.yourdomain.com`
 - [ ] Add DNS records as instructed
 - [ ] SSL automatically configured ✅
 
 **On Render:**
+
 - [ ] Go to Service Settings → Custom Domain
 - [ ] Add custom domain: `api.bubuchat.yourdomain.com`
 - [ ] Add DNS records
@@ -339,23 +350,27 @@ mongorestore --uri="mongodb+srv://bubuchat-admin:PASSWORD@cluster.mongodb.net/re
 ### 19. Monitoring & Alerts
 
 **Error Tracking:**
+
 - [ ] Sign up for Sentry (free tier)
 - [ ] Add Sentry to frontend and backend
 - [ ] Receive error alerts
 
 **Uptime Alerts:**
+
 - [ ] UptimeRobot sends email when backend down
 - [ ] Vercel sends email on deployment failures
 
 ### 20. Database Backups
 
 **Manual Backups:**
+
 ```powershell
 # Weekly backup
 mongodump --uri="mongodb+srv://user:pass@cluster.mongodb.net/realtime-chat" --out=C:\backups\$(Get-Date -Format "yyyy-MM-dd")
 ```
 
 **Automated Backups:**
+
 - [ ] Create GitHub Action to backup weekly
 - [ ] Store backups in GitHub (private repo) or cloud storage
 
@@ -366,16 +381,19 @@ mongodump --uri="mongodb+srv://user:pass@cluster.mongodb.net/realtime-chat" --ou
 ### 21. Optimize for Production
 
 **Frontend:**
+
 - [ ] PWA caches assets (already done ✅)
 - [ ] Code splitting enabled (Vite does this ✅)
 - [ ] Images optimized (check file sizes)
 
 **Backend:**
+
 - [ ] MongoDB indexes created (already done ✅)
 - [ ] Redis used for PubSub (already done ✅)
 - [ ] Rate limiting enabled (add if needed)
 
 **Monitoring:**
+
 - [ ] Check MongoDB Atlas metrics
 - [ ] Check Upstash Redis usage
 - [ ] Check Render logs for errors
@@ -421,25 +439,29 @@ mongodump --uri="mongodb+srv://user:pass@cluster.mongodb.net/realtime-chat" --ou
 ### 25. Track Your Usage (Stay within free limits)
 
 **MongoDB Atlas:**
+
 - Free tier: 512MB storage
 - Check: Atlas Dashboard → Cluster → Metrics
-- [ ] Currently using: _____MB / 512MB
+- [ ] Currently using: **\_**MB / 512MB
 
 **Upstash Redis:**
+
 - Free tier: 10,000 commands/day
 - Check: Upstash Console → Database → Metrics
-- [ ] Currently using: _____commands / 10,000/day
+- [ ] Currently using: **\_**commands / 10,000/day
 
 **Render:**
+
 - Free tier: 750 hours/month (one service)
 - Auto-sleeps after 15min inactivity
 - Check: Render Dashboard → Service → Metrics
 - [ ] Using UptimeRobot to keep awake: Yes/No
 
 **Vercel:**
+
 - Free tier: 100GB bandwidth/month
 - Check: Vercel Dashboard → Usage
-- [ ] Currently using: _____GB / 100GB
+- [ ] Currently using: **\_**GB / 100GB
 
 ---
 
@@ -448,21 +470,25 @@ mongodump --uri="mongodb+srv://user:pass@cluster.mongodb.net/realtime-chat" --ou
 ### Common Issues
 
 **Backend won't start:**
+
 - Check Render logs for errors
 - Verify all environment variables are set
 - Check MongoDB connection string is correct
 
 **Frontend can't connect:**
+
 - Verify CORS_ORIGIN matches Vercel URL
 - Check VITE_API_URL is correct
 - Hard refresh browser (Ctrl+Shift+R)
 
 **Push notifications not working:**
+
 - Check VAPID keys are set correctly
 - Verify user has granted browser permission
 - Check subscription exists in MongoDB
 
 **WebSocket disconnects:**
+
 - Normal for Render free tier (reconnects automatically)
 - Check reconnection logic in client code
 
@@ -480,6 +506,7 @@ mongodump --uri="mongodb+srv://user:pass@cluster.mongodb.net/realtime-chat" --ou
 **Total Cost: $0/month** 🎉
 
 **Next Steps:**
+
 1. Share your app with friends
 2. Monitor usage to stay within free limits
 3. Consider upgrading if you exceed limits
@@ -504,6 +531,7 @@ mongodump --uri="mongodb+srv://user:pass@cluster.mongodb.net/realtime-chat" --ou
 - Need faster performance
 
 **Paid Tier Costs (if needed):**
+
 - Render: $7/month (no sleep)
 - MongoDB: $9/month (2GB storage)
 - Upstash: Pay-as-you-go ($0.20/100K commands)
@@ -513,6 +541,6 @@ mongodump --uri="mongodb+srv://user:pass@cluster.mongodb.net/realtime-chat" --ou
 
 ---
 
-**Date Deployed:** _______________
-**Deployed By:** _______________
+**Date Deployed:** ******\_\_\_******
+**Deployed By:** ******\_\_\_******
 **Version:** 1.0.0
