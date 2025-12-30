@@ -9,7 +9,7 @@ import { PubSubService } from './services/PubSubService.js';
 import { BroadcastService } from './services/BroadcastService.js';
 import { connectDatabase, disconnectDatabase } from './config/database.js';
 
-import { validateEnvironment } from './config/env.js';
+import { validateEnvironment, env } from './config/env.js';
 import { SocketHandlers } from './handlers/SocketHandlers.js';
 import { PORT, REDIS_URL, SERVER_ID, CHANNEL } from './config/constants.js';
 import type { ClientToServerEvents, ServerToClientEvents, InterServerEvents, SocketData } from './types/index.js';
@@ -80,7 +80,7 @@ const io = new Server<ClientToServerEvents, ServerToClientEvents, InterServerEve
 // ============================================
 // Initialize Services
 // ============================================
-const redisService = new RedisService(REDIS_URL);
+const redisService = new RedisService(REDIS_URL, env.UPSTASH_REST_URL, env.UPSTASH_REST_TOKEN);
 const broadcastService = new BroadcastService(redisService, io);
 const pubSubService = new PubSubService(redisService, broadcastService, io);
 const socketHandlers = new SocketHandlers(redisService, pubSubService, broadcastService);
