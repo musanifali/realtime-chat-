@@ -16,8 +16,11 @@ export const useChatApp = () => {
   const [chatTarget, setChatTarget] = useState<ChatTarget | null>(null);
 
   const { socketService, chatService, connect: connectSocket, disconnect: disconnectSocket } = useSocketConnection();
-  const { messages, addMessage, loadHistory, clearMessages, getUnreadCount, unreadCounts, updateMessageId } = useChatMessages();
+  const { messageStore, getMessagesForFriend, addMessage, loadHistory, clearMessages, getUnreadCount, unreadCounts, updateMessageId, updateMessageReaction } = useChatMessages();
   const { allUsers, updateUserList, clearUsers } = useUserManagement();
+
+  // Derive messages from messageStore for current chatTarget
+  const messages = chatTarget ? getMessagesForFriend(chatTarget.username) : [];
 
   // Setup socket event handlers
   const setupSocketHandlers = useCallback(() => {
@@ -246,6 +249,7 @@ export const useChatApp = () => {
     getUnreadCount,
     unreadCounts,
     updateMessageId,
+    updateMessageReaction,
     
     // User state
     allUsers,
@@ -253,5 +257,7 @@ export const useChatApp = () => {
     // Actions
     chatService,
     socketService,
+  };
+};
   };
 };

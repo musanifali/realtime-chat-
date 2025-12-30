@@ -3,6 +3,7 @@
 import { useState, useCallback } from 'react';
 import { ChatMessage } from '../types';
 import { createMessage } from '../utils/messageUtils';
+import { soundManager } from '../services/SoundManager';
 
 // Store messages per friend to avoid losing them when switching chats
 type MessageStore = Map<string, ChatMessage[]>;
@@ -10,11 +11,12 @@ type UnreadCounts = Map<string, number>;
 
 export const useChatMessages = () => {
   const [messageStore, setMessageStore] = useState<MessageStore>(new Map());
-  const [currentFriend, setCurrentFriend] = useState<string | null>(null);
   const [unreadCounts, setUnreadCounts] = useState<UnreadCounts>(new Map());
 
-  // Get messages for the current friend
-  const messages = currentFriend ? (messageStore.get(currentFriend) || []) : [];
+  // Get messages for a specific friend
+  const getMessagesForFriend = useCallback((friendUsername: string): ChatMessage[] => {
+    return messageStore.get(friendUsername) || [];
+  }, [messageStore]);
 
   const addMessage = useCallback(
     (
@@ -22,7 +24,7 @@ export const useChatMessages = () => {
       text: string,
       username?: string,
       friendUsername?: string,
-      messageId?: string  // Add messageId to track unique messages
+      messageId?: string
     ): void => {
       const newMessage = createMessage(type, text, username);
       if (messageId) {
@@ -38,7 +40,6 @@ export const useChatMessages = () => {
       // Determine which friend this message is for
       let targetFriend = friendUsername;
       if (!targetFriend && username) {
-        // Extract friend username from "From X" or "To X" format
         const match = username.match(/(?:From|To)\s+(.+)/);
         if (match) {
           targetFriend = match[1];
@@ -55,7 +56,7 @@ export const useChatMessages = () => {
       setMessageStore(prev => {
         const friendMessages = prev.get(targetFriend!) || [];
         
-        // Check for duplicate by ID first (most reliable)
+        // Check for duplicate by ID
         if (messageId) {
           const duplicateById = friendMessages.find(msg => msg.id === messageId);
           if (duplicateById) {
@@ -64,12 +65,12 @@ export const useChatMessages = () => {
           }
         }
         
-        // Fallback: Check for duplicate by text and timestamp (for real-time messages without ID yet)
+        // Check for duplicate by text and timestamp
         const now = Date.now();
         const recentDuplicate = friendMessages.find(msg => 
           msg.text === text && 
           msg.type === type &&
-          (now - msg.timestamp.getTime()) < 3000 // Within 3 seconds
+          (now - msg.timestamp.getTime()) < 3000
         );
         
         if (recentDuplicate) {
@@ -84,98 +85,60 @@ export const useChatMessages = () => {
         return newMap;
       });
       
-      // Increment unread count ONLY if message was actually added and not currently viewing that friend
-      // AND clear unread if currently viewing (message is immediately read)
+      // Play sound and increment unread for received messages
       if (messageAdded && type === 'private_received') {
-        if (currentFriend && targetFriend === currentFriend) {
-          // Currently viewing this chat - clear unread count immediately
-          setUnreadCounts(prev => {
-            const newCounts = new Map(prev);
-            newCounts.delete(targetFriend!);
-            console.log(`👁️ Currently viewing ${targetFriend}, clearing unread badge`);
-            return newCounts;
-          });
-        } else {
-          // Not viewing this chat OR not viewing any chat - increment unread
-          setUnreadCounts(prev => {
-            const newCounts = new Map(prev);
-            const currentCount = newCounts.get(targetFriend!) || 0;
-            newCounts.set(targetFriend!, currentCount + 1);
-            console.log(`📬 Unread count for ${targetFriend}: ${currentCount} -> ${currentCount + 1} (currentFriend: ${currentFriend || 'none'})`);
-            return newCounts;
-          });
-        }
+        soundManager.playReceive();
+        setUnreadCounts(prev => {
+          const newCounts = new Map(prev);
+          const currentCount = newCounts.get(targetFriend!) || 0;
+          newCounts.set(targetFriend!, currentCount + 1);
+          console.log(`📬 Incremented unread for ${targetFriend}: ${currentCount + 1}`);
+          return newCounts;
+        });
       }
     },
-    [currentFriend]
+    []
   );
 
   const loadHistory = useCallback((historyMessages: ChatMessage[], friendUsername: string) => {
     console.log(`📚 [useChatMessages] loadHistory called for ${friendUsername}: ${historyMessages.length} messages`);
     
-    // Set current friend FIRST so subsequent messages know we're viewing this chat
-    setCurrentFriend(friendUsername);
-    console.log(`📚 [useChatMessages] Set currentFriend to: ${friendUsername}`);
-    
-    // Only update messages if history has data, otherwise keep existing messages
     setMessageStore(prev => {
       const existingMessages = prev.get(friendUsername) || [];
-      console.log(`📚 [useChatMessages] Existing messages in store for ${friendUsername}: ${existingMessages.length}`);
-      console.log(`📚 [useChatMessages] New history messages: ${historyMessages.length}`);
+      console.log(`📚 [useChatMessages] Existing: ${existingMessages.length}, New history: ${historyMessages.length}`);
       
       const newMap = new Map(prev);
       
-      // If history is empty but we have existing messages, keep them (don't delete!)
+      // If history is empty but we have existing messages, keep them
       if (historyMessages.length === 0 && existingMessages.length > 0) {
         console.log(`⚠️ [useChatMessages] History empty, keeping ${existingMessages.length} existing messages`);
-        // Don't change the map, keep existing messages
         return prev;
       }
       
-      // If we have history, replace with it (authoritative source)
+      // Replace with history (authoritative source)
       newMap.set(friendUsername, historyMessages);
       console.log(`📚 [useChatMessages] Set ${historyMessages.length} messages for ${friendUsername}`);
-      if (historyMessages.length > 0) {
-        console.log(`📚 [useChatMessages] First message:`, historyMessages[0]);
-        console.log(`📚 [useChatMessages] Last message:`, historyMessages[historyMessages.length - 1]);
-      }
       return newMap;
     });
     
-    // Clear unread count for this friend when viewing their chat
+    // Clear unread count when viewing chat
     setUnreadCounts(prev => {
-      const currentCount = prev.get(friendUsername) || 0;
-      console.log(`🔔 [useChatMessages] Current unread count for ${friendUsername}: ${currentCount}`);
       const newCounts = new Map(prev);
       newCounts.delete(friendUsername);
       console.log(`🔔 [useChatMessages] Cleared unread badge for ${friendUsername}`);
-      console.log(`🔔 [useChatMessages] Remaining unread counts:`, Array.from(newCounts.entries()));
       return newCounts;
     });
   }, []);
 
   const clearMessages = useCallback(() => {
     setMessageStore(new Map());
-    setCurrentFriend(null);
     setUnreadCounts(new Map());
-  }, []);
-  
-  const switchToFriend = useCallback((friendUsername: string) => {
-    setCurrentFriend(friendUsername);
-    
-    // Clear unread count when switching to a friend
-    setUnreadCounts(prev => {
-      const newCounts = new Map(prev);
-      newCounts.delete(friendUsername);
-      return newCounts;
-    });
   }, []);
   
   const getUnreadCount = useCallback((friendUsername: string): number => {
     return unreadCounts.get(friendUsername) || 0;
   }, [unreadCounts]);
 
-  // Update message ID after server confirms (replaces temp ID with real DB ID)
   const updateMessageId = useCallback((friendUsername: string, tempId: string, realId: string) => {
     setMessageStore(prev => {
       const friendMessages = prev.get(friendUsername);
@@ -191,14 +154,37 @@ export const useChatMessages = () => {
     });
   }, []);
 
+  const updateMessageReaction = useCallback((friendUsername: string, messageId: string, emoji: string, username: string, action: 'add' | 'remove') => {
+    setMessageStore(prev => {
+      const friendMessages = prev.get(friendUsername);
+      if (!friendMessages) return prev;
+      
+      const updatedMessages = friendMessages.map(msg => {
+        if (msg.id !== messageId) return msg;
+        
+        const reactions = msg.reactions || [];
+        if (action === 'add') {
+          return { ...msg, reactions: [...reactions, { emoji, username }] };
+        } else {
+          return { ...msg, reactions: reactions.filter(r => !(r.emoji === emoji && r.username === username)) };
+        }
+      });
+      
+      const newMap = new Map(prev);
+      newMap.set(friendUsername, updatedMessages);
+      return newMap;
+    });
+  }, []);
+
   return {
-    messages,
+    messageStore,
+    getMessagesForFriend,
     addMessage,
     loadHistory,
     clearMessages,
-    switchToFriend,
     getUnreadCount,
     unreadCounts,
     updateMessageId,
+    updateMessageReaction,
   };
 };

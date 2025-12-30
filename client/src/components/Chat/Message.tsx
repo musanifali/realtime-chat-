@@ -33,9 +33,8 @@ export const Message: React.FC<MessageProps> = ({ message, isOwn, currentUsernam
   const [floatingEmojis, setFloatingEmojis] = useState<{ id: number; emoji: string }[]>([]);
 
   useEffect(() => {
-    // Play receive sound and animate for received messages
+    // Animate for received messages (sound is played by socket handler)
     if (!isOwn && message.type !== 'system') {
-      soundManager.playReceive();
       setJustReceived(true);
       setTimeout(() => setJustReceived(false), 600);
     }
