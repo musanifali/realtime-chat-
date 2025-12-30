@@ -259,5 +259,3 @@ export const useChatApp = () => {
     socketService,
   };
 };
-  };
-};
