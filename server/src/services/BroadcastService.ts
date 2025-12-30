@@ -11,7 +11,13 @@ export class BroadcastService {
   ) {}
 
   async broadcastUserList(): Promise<void> {
-    const users = await this.redisService.getAllUsers();
-    this.io.emit('user_list', users);
+    try {
+      const users = await this.redisService.getAllUsers();
+      this.io.emit('user_list', users);
+    } catch (error: any) {
+      console.warn('⚠️  Failed to broadcast user list (Redis not connected):', error.message);
+      // In single-server mode without Redis, broadcast empty list or local users
+      this.io.emit('user_list', []);
+    }
   }
 }

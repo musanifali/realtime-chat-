@@ -94,15 +94,21 @@ const socketHandlers = new SocketHandlers(redisService, pubSubService, broadcast
     await connectDatabase();
     logger.db('Connected to MongoDB');
     
-    // Connect to Redis
-    await redisService.connect();
-    logger.redis('Connected to Redis');
-    
-    // Cleanup stale data from previous sessions
-    await redisService.cleanupOnStartup();
-    
-    // Subscribe to Redis channel
-    await pubSubService.setupSubscription();
+    // Try to connect to Redis (optional, app works without it)
+    try {
+      await redisService.connect();
+      logger.redis('Connected to Redis');
+      
+      // Cleanup stale data from previous sessions
+      await redisService.cleanupOnStartup();
+      
+      // Subscribe to Redis channel
+      await pubSubService.setupSubscription();
+    } catch (redisError: any) {
+      logger.error('Redis connection failed - continuing without Redis (single server mode)', { error: redisError.message });
+      console.log('⚠️  App will work in single-server mode without Redis pub/sub');
+      console.log('⚠️  To enable multi-server support, configure UPSTASH_REST_URL and UPSTASH_REST_TOKEN');
+    }
   } catch (error) {
     logger.error('Connection error', error);
     process.exit(1);

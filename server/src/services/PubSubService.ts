@@ -14,15 +14,31 @@ export class PubSubService {
   ) {}
 
   async publishMessage(data: RedisMessage): Promise<void> {
-    await this.redisService.publish(CHANNEL, JSON.stringify(data));
-    console.log(`${SERVER_ID}: Published:`, data.type);
+    try {
+      if (!this.redisService.isConnected()) {
+        console.warn('⚠️  Redis not connected, skipping pub/sub publish');
+        return;
+      }
+      await this.redisService.publish(CHANNEL, JSON.stringify(data));
+      console.log(`${SERVER_ID}: Published:`, data.type);
+    } catch (error: any) {
+      console.warn('⚠️  Failed to publish to Redis:', error.message);
+    }
   }
 
   async setupSubscription(): Promise<void> {
-    await this.redisService.subscribe(CHANNEL, (rawMessage: string) => {
-      this.handleRedisMessage(rawMessage);
-    });
-    console.log(`${SERVER_ID}: Subscribed to "${CHANNEL}"`);
+    try {
+      if (!this.redisService.isConnected()) {
+        console.warn('⚠️  Redis not connected, skipping pub/sub subscription');
+        return;
+      }
+      await this.redisService.subscribe(CHANNEL, (rawMessage: string) => {
+        this.handleRedisMessage(rawMessage);
+      });
+      console.log(`${SERVER_ID}: Subscribed to "${CHANNEL}"`);
+    } catch (error: any) {
+      console.warn('⚠️  Failed to setup Redis subscription:', error.message);
+    }
   }
 
   private handleRedisMessage(rawMessage: string): void {
