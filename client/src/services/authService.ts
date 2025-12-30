@@ -2,9 +2,28 @@
 
 import axios from 'axios';
 
-// Use relative path for production (nginx proxy), localhost for dev
-const API_URL = import.meta.env.VITE_API_URL || 
-  (import.meta.env.DEV ? 'http://localhost:3001/api' : '/api');
+// Use environment variable or auto-detect based on domain
+const getApiUrl = () => {
+  // If explicitly set, use it
+  if (import.meta.env.VITE_API_URL) {
+    return import.meta.env.VITE_API_URL;
+  }
+  
+  // Development: use localhost
+  if (import.meta.env.DEV) {
+    return 'http://localhost:3001/api';
+  }
+  
+  // Production: check if we're on Vercel (bubuchats.vercel.app)
+  if (window.location.hostname.includes('vercel.app') || window.location.hostname.includes('bubuchats')) {
+    return 'https://bubuchat-backend.onrender.com/api';
+  }
+  
+  // Fallback: same origin with /api prefix (for self-hosted with nginx)
+  return '/api';
+};
+
+const API_URL = getApiUrl();
 
 axios.defaults.withCredentials = true; // Enable cookies
 

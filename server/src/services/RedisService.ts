@@ -328,8 +328,17 @@ export class RedisService {
     try {
       console.log('🧹 Cleaning up stale Redis data from previous session...');
       // Clear all online users from previous sessions
+      // Note: DEL command may not be available on free tier, skip if fails
       if (this.useUpstash) {
-        await this.upstashClient!.del(USERS_KEY);
+        try {
+          await this.upstashClient!.del(USERS_KEY);
+        } catch (delError: any) {
+          if (delError.message?.includes('NOPERM') || delError.message?.includes('no permissions')) {
+            console.log('⚠️  DEL command not available on free tier - skipping cleanup');
+          } else {
+            throw delError;
+          }
+        }
       } else {
         await this.publisher!.del(USERS_KEY);
       }
